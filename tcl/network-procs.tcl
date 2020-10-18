@@ -43,7 +43,7 @@ namespace eval ws::aframevr {
         {-chat "chat"}
         channel msg
     } {
-        ns_log warning "Received $msg"
+        # ns_log warning "Received $msg"
 
         try {
             # Parse the message
