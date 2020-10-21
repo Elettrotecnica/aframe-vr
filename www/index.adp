@@ -9,11 +9,6 @@
        set username [person::name -person_id $user_id]
    }
 
-   set host [ad_host]
-   set wsProtocol [expr {[ns_conn protocol] eq "http" ? "ws" : "wss"}]
-   set port [ns_config [ns_driversection] port [ns_conn port]]
-   set baseUrl [string trimright $host:$port]
-   set wsUri $wsProtocol://$baseUrl/aframe-vr/connect
  %>
 <html>
   <head>
@@ -96,7 +91,9 @@
     </a-scene>
     <script>
       window.addEventListener('load', function () {
-          var wsURI = '<%= $wsUri %>';
+          var proto = location.protocol == "https:" ? "wss:" : "ws:";
+          var wsURI = proto + "//" + location.host + "/aframe-vr/connect";
+
           var userId = "client" + '<%= $user_id %>';
           var userName = "<%= $username %>";
 
