@@ -260,5 +260,9 @@ function NetworkedAframe (conf) {
 	websocket.addEventListener("error", function(e) {
             console.error(e.data);
         });
+
+        setInterval(function() {
+            websocket.send("ping");
+        }, 60000);
     };
 }

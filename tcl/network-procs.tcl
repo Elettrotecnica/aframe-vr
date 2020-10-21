@@ -43,6 +43,10 @@ namespace eval ws::aframevr {
         {-chat "chat"}
         channel msg
     } {
+        if {$msg eq "ping"} {
+            ns_log notice "websocket '$chat', channel '$channel': ping received."
+            return
+        }
         # ns_log warning "Received $msg"
 
         try {
