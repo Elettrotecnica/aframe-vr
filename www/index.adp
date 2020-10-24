@@ -23,6 +23,7 @@
       <a-assets>
         <img src="images/grid.png" id="grid">
         <img id="sky" src="images/sky.png"/>
+        <img id="boxTexture" src="images/mYmmbrp.jpg">
 	<!-- Templates -->
 
         <!-- Avatar -->
@@ -82,6 +83,9 @@
       <a-entity light="color: ffaaff; intensity: 1.5" position="5 5 5"></a-entity>
       <a-entity light="color: white; intensity: 0.5" position="-5 5 15"></a-entity>
       <a-entity light="color: white; type: ambient;"></a-entity>
+
+      <a-box src="#boxTexture" position="0 2 -5" rotation="0 45 45" scale="2 2 2"
+         animation="property: object3D.position.y; to: 5; dir: alternate; dur: 2000; loop: true; clockSynced: true"></a-box>
 
       <a-sky src="#sky" rotation="0 -90 0"></a-sky>
 
