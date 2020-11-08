@@ -167,7 +167,7 @@ function NetworkedAframe (conf) {
         }
 
         if (selfCleanup) {
-            _selfCleanup(data.id);
+            _selfCleanup(el, data.id);
         }
     }
 
@@ -180,14 +180,16 @@ function NetworkedAframe (conf) {
         }));
     }
 
-    function _selfCleanup(id) {
-        // Add an event listeners on page unload which will
-        // notify peers about an item being deleted
+    function _selfCleanup(el, id) {
+        // Add an event listeners whenever VR is being left to notify
+        // peers about an item being deleted
         //console.log("Setting " + id + " for deletion on disconnect");
-        window.addEventListener('beforeunload', (event) => {
+        function handler(e) {
             console.log("Unloading, deleting " + id);
             _remoteDelete(id);
-        });
+        }
+        window.addEventListener('beforeunload', handler);
+        el.sceneEl.addEventListener('exit-vr', handler);
     }
 
     function _onMessage(e) {
@@ -228,7 +230,7 @@ function NetworkedAframe (conf) {
         _delete(data);
     }
 
-    this.attach = function(el, data, selfCleanup) {
+    this.attach = function(el, data, selfCleanup = true) {
         // Attach an existing element (e.g. the camera element)
         // to a remote object (e.g. an avatar) so that changes
         // happening on the existing element are reflected on
@@ -241,6 +243,15 @@ function NetworkedAframe (conf) {
         data.rotation = JSON.stringify(el.getAttribute("rotation"));
 
         _remoteCreate(el, data, selfCleanup);
+
+        // VR enabled devices that re-enter the experience will be
+        // relogged in
+        if (selfCleanup) {
+            var self = this;
+            el.sceneEl.addEventListener("enter-vr", function() {
+                self.attach(el, data, selfCleanup);
+            });
+        }
     };
 
     this.create = function(data, selfCleanup) {
