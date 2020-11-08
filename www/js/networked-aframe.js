@@ -119,6 +119,9 @@ function NetworkedAframe (conf) {
         if (data.name) {
             _updateNestedProperty(el, "name", data.name);
         }
+        if (data.gesture) {
+            el.setAttribute("remote-hand-controls", "gesture", data.gesture);
+        }
     }
 
     function _delete(data) {
@@ -151,6 +154,17 @@ function NetworkedAframe (conf) {
                 rotation: JSON.stringify(e.detail)
             }));
 	});
+
+        // This is a hand: also track gestures
+        if (el.components["hand-controls"]) {
+            el.addEventListener('elGesture', e => {
+                websocket.send(JSON.stringify({
+                    id: data.id,
+                    type: "update",
+                    gesture: e.detail.gesture
+                }));
+	    });
+        }
 
         if (selfCleanup) {
             _selfCleanup(data.id);
@@ -223,8 +237,8 @@ function NetworkedAframe (conf) {
         // case of an avatar, generating the item locally would
         // obstruct the field of view.
         data.type = "create";
-        data.position = JSON.stringify(camera.getAttribute("position"));
-        data.rotation = JSON.stringify(camera.getAttribute("rotation"));
+        data.position = JSON.stringify(el.getAttribute("position"));
+        data.rotation = JSON.stringify(el.getAttribute("rotation"));
 
         _remoteCreate(el, data, selfCleanup);
     };
@@ -242,7 +256,7 @@ function NetworkedAframe (conf) {
         _remoteDelete(data.id);
     };
 
-    this.connect = function(onConnect) {
+    this.connect = function() {
         // Connect to the websocket backend.
         if ("WebSocket" in window) {
 	    websocket = new WebSocket(wsURI);
@@ -251,7 +265,6 @@ function NetworkedAframe (conf) {
 	}
         websocket.onopen = function(e) {
             console.log("Connected");
-            onConnect();
         };
 	websocket.addEventListener("close", function(e) {
             console.log("Disconnected.");
@@ -264,5 +277,7 @@ function NetworkedAframe (conf) {
         setInterval(function() {
             websocket.send("ping");
         }, 60000);
+
+        return websocket;
     };
 }
