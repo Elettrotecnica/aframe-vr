@@ -15,7 +15,7 @@
     <meta charset="utf-8">
     <title>Hello, WebVR! • A-Frame</title>
     <meta name="description" content="Hello, WebVR! • A-Frame">
-    <script src="js/aframe.min.js"></script>
+    <script src="js/aframe-master.min.js"></script>
     <script src="js/networked-aframe.js"></script>
   </head>
   <body>
@@ -28,7 +28,7 @@
 
         <!-- Avatar -->
         <template id="avatar-template">
-          <a-entity class="avatar" shadow>
+          <a-entity class="avatar" scale="0.5 0.5 0.5" shadow>
             <a-sphere data-color
                       class="head"
                       color="#ffffff"
@@ -72,6 +72,14 @@
         <template id="box-template">
           <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9" shadow></a-box>
         </template>
+        <template id="leftHand">
+          <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+        </template>
+        <template id="rightHand">
+          <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+        </template>
+
+
 
         <!-- /Templates -->
       </a-assets>
@@ -91,6 +99,8 @@
 
       <a-camera id="camera">
       </a-camera>
+      <a-entity id="myLeftHand" hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+      <a-entity id="myRightHand" hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
 
     </a-scene>
     <script>
@@ -106,7 +116,8 @@
               scene: "a-scene"
           });
 
-          function onConnect () {
+          var ws = naf.connect();
+          ws.addEventListener("open", function() {
               // Attach the camera on the avatar template
               var camera = document.querySelector("#camera");
               naf.attach(camera, {
@@ -127,9 +138,46 @@
               //         "z": Math.random() * 3 -3
               //     })
               // });
+          });
+
+          // Not all clients will support controllers, therefore, we
+          // attach the hands to the network only upon controller
+          // connection. We need the connection to be active for
+          // attachment to happen, therefore we check if websocket is
+          // already open and attach an event listener in case it
+          // isn't.
+          var handAttached = {};
+          function attachHand(el, id, hand) {
+              if (!handAttached[hand]) {
+                  naf.attach(el, {
+                      id: id + "-" + hand + "-hand",
+                      template: "#" + hand +"Hand"
+                  });
+                  handAttached[hand] = true;
+              }
           }
 
-          naf.connect(onConnect);
+          var leftHand = document.querySelector("#myLeftHand");
+          leftHand.addEventListener("controllerconnected", function() {
+              if (ws.readyState === WebSocket.OPEN) {
+                  attachHand(leftHand, userId, "left");
+              } else {
+                  ws.addEventListener("open", function() {
+                      attachHand(leftHand, userId, "left");
+                  });
+              }
+          });
+
+          var rightHand = document.querySelector("#myRightHand");
+          rightHand.addEventListener("controllerconnected", function() {
+              if (ws.readyState === WebSocket.OPEN) {
+                  attachHand(rightHand, userId, "right");
+              } else {
+                  ws.addEventListener("open", function() {
+                      attachHand(rightHand, userId, "right");
+                  });
+              }
+          });
       });
       </script>
   </body>
