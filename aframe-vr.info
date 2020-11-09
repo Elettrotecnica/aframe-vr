@@ -8,19 +8,21 @@
     <singleton-p>f</singleton-p>
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>f</inherit-templates-p>
-    
-    <version name="0.1d" url="http://openacs.org/repository/download/apm/aframe-vr-0.1d.apm">
+    <auto-mount>aframe-vr</auto-mount>
+
+    <version name="0.2d" url="http://openacs.org/repository/download/apm/aframe-vr-0.2d.apm">
         <owner url="mailto:apisano@wu.ac.at">Antonio Pisano</owner>
         <summary>VR networked environments based on A-Frame</summary>
+        <release-date>2020-10-30</release-date>
         <description format="text/html">VR networked environments based on A-Frame</description>
         <maturity>0</maturity>
 
-        <provides url="aframe-vr" version="0.1d"/>
-        <!-- No dependency information -->
+        <provides url="aframe-vr" version="0.2d"/>
 
         <callbacks>
         </callbacks>
         <parameters>
+        <!-- No version parameters -->
         </parameters>
 
     </version>
