@@ -16,6 +16,7 @@
     <title>Hello, WebVR! • A-Frame</title>
     <meta name="description" content="Hello, WebVR! • A-Frame">
     <script src="js/aframe-master.min.js"></script>
+    <script src="js/aframe-teleport-controls.js"></script>
     <script src="js/networked-aframe.js"></script>
   </head>
   <body>
@@ -97,10 +98,19 @@
 
       <a-sky src="#sky" rotation="0 -90 0"></a-sky>
 
-      <a-camera id="camera">
-      </a-camera>
-      <a-entity id="myLeftHand" hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
-      <a-entity id="myRightHand" hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+      <a-entity id="myCameraRig">
+        <!-- camera -->
+        <a-camera id="camera"></a-camera>
+        <!-- hand controls -->
+        <a-entity id="myLeftHand"
+                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
+                  hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc">
+        </a-entity>
+        <a-entity id="myRightHand"
+                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
+                  hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc">
+        </a-entity>
+      </a-entity>
 
     </a-scene>
     <script>
