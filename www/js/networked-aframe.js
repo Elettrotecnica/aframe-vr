@@ -1,50 +1,68 @@
-// https://github.com/urish/aframe-camera-events
-//
-// The MIT License (MIT)
+// Inspired by https://github.com/urish/aframe-camera-events
 
-// Copyright (c) 2018 Uri Shaked and contributors
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-
-AFRAME.registerComponent('rotation-listener', {
+AFRAME.registerComponent('absolute-rotation-listener', {
+  getNewValue() {
+    // We need to calculate the absolute rotation: it is often the
+    // case that items such as the camera are enclosed in a
+    // "cameraRig" and this element would be the one rotating. The
+    // items on the remote counterpart are always attached directly to
+    // the scene, so their positioning is absolute anyway.
+    // Might be streamlined using the api, but would need
+    // conversion...
+    // var worldRotation = this.el.object3D.getWorldQuaternion(new THREE.Quaternion());
+    const newValue = {'x': 0, 'y': 0, 'z': 0};
+    var el = this.el;
+    while (el && el !== this.el.sceneEl) {
+      const parentValue = el.getAttribute('rotation');
+      newValue.x+= parentValue.x;
+      newValue.y+= parentValue.y;
+      newValue.z+= parentValue.z;
+      el = el.parentElement;
+    }
+    return newValue;
+  },
   tick() {
-    const newValue = this.el.getAttribute('rotation');
+    const newValue = this.getNewValue();
     const stringCoords = AFRAME.utils.coordinates.stringify(newValue);
     if (this.lastValue !== stringCoords) {
-      this.el.emit('rotationChanged', newValue);
+      this.el.emit('absoluteRotationChanged', newValue);
       this.lastValue = stringCoords;
     }
-  },
+  }
 });
 
-AFRAME.registerComponent('position-listener', {
+AFRAME.registerComponent('absolute-position-listener', {
+  getNewValue() {
+    // We need to calculate the absolute position: it is often the
+    // case that items such as the camera are enclosed in a
+    // "cameraRig" and this element would be the one moving. The items
+    // on the remote counterpart are always attached directly to the
+    // scene, so their positioning is absolute anyway.  The api does
+    // not help us here, as the worldPosition would not take into
+    // account things such as the visor pose, that the position
+    // attribute embeds transparently and the position would have a y
+    // of 0.
+    // const newValue = this.el.object3D.getWorldPosition(new THREE.Vector3());
+    const newValue = {'x': 0, 'y': 0, 'z': 0};
+    var el = this.el;
+    while (el && el !== this.el.sceneEl) {
+      const parentValue = el.getAttribute('position');
+      newValue.x+= parentValue.x;
+      newValue.y+= parentValue.y;
+      newValue.z+= parentValue.z;
+      el = el.parentElement;
+    }
+    return newValue;
+  },
   tick() {
-    const newValue = this.el.getAttribute('position');
+    const newValue = this.getNewValue();
     const stringCoords = AFRAME.utils.coordinates.stringify(newValue);
     if (this.lastValue !== stringCoords) {
-      this.el.emit('positionChanged', newValue);
+      this.el.emit('absolutePositionChanged', newValue);
       this.lastValue = stringCoords;
     }
-  },
+  }
 });
-
-////
 
 
 //
@@ -138,16 +156,16 @@ function NetworkedAframe (conf) {
         data.type = "create";
         websocket.send(JSON.stringify(data));
 
-	el.setAttribute("position-listener", "");
-	el.addEventListener('positionChanged', e => {
+	el.setAttribute("absolute-position-listener", "");
+	el.addEventListener('absolutePositionChanged', e => {
             websocket.send(JSON.stringify({
                 id: data.id,
                 type: "update",
                 position: JSON.stringify(e.detail)
             }));
 	});
-        el.setAttribute("rotation-listener", "");
-	el.addEventListener('rotationChanged', e => {
+        el.setAttribute("absolute-rotation-listener", "");
+	el.addEventListener('absoluteRotationChanged', e => {
             websocket.send(JSON.stringify({
                 id: data.id,
                 type: "update",
