@@ -20,7 +20,7 @@
     <script src="js/networked-aframe.js"></script>
   </head>
   <body>
-    <a-scene>
+    <a-scene oacs-networked-scene="wsURI">
       <a-assets>
         <img src="images/grid.png" id="grid">
         <img id="sky" src="images/sky.png"/>
@@ -100,95 +100,22 @@
 
       <a-entity id="myCameraRig">
         <!-- camera -->
-        <a-camera id="camera"></a-camera>
+        <a-camera id="camera"
+                  oacs-networked-entity="networkId: client<%= $user_id %>; template: #avatar-template; name: <%= $username %>">
+        </a-camera>
         <!-- hand controls -->
         <a-entity id="myLeftHand"
                   teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
-                  hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc">
+                  hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="networkId: client<%= $user_id %>-left-hand; template: #leftHand; color: #ffcccc">
         </a-entity>
         <a-entity id="myRightHand"
                   teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
-                  hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc">
+                  hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="networkId: client<%= $user_id %>-right-hand; template: #rightHand; color: #ffcccc">
         </a-entity>
       </a-entity>
 
     </a-scene>
-    <script>
-      window.addEventListener('load', function () {
-          var proto = location.protocol == "https:" ? "wss:" : "ws:";
-          var wsURI = proto + "//" + location.host + "/aframe-vr/connect";
-
-          var userId = "client" + '<%= $user_id %>';
-          var userName = "<%= $username %>";
-
-          var naf = new NetworkedAframe({
-              wsURI: wsURI,
-              scene: "a-scene"
-          });
-
-          var ws = naf.connect();
-          ws.addEventListener("open", function() {
-              // Attach the camera on the avatar template
-              var camera = document.querySelector("#camera");
-              naf.attach(camera, {
-                  id: userId,
-                  name: userName,
-                  template: "#avatar-template",
-                  color: "#" + Math.random().toString(16).substr(2,6)
-              });
-
-              // Example: creating a box in a random position in the
-              // VR room
-              // naf.create({
-              //     id: "box-" + Math.random().toString(16).substr(2,6),
-              //     template: "#box-template",
-              //     position: JSON.stringify({
-              //         "x": Math.random() * 2 -1,
-              //         "y": 0.5,
-              //         "z": Math.random() * 3 -3
-              //     })
-              // });
-          });
-
-          // Not all clients will support controllers, therefore, we
-          // attach the hands to the network only upon controller
-          // connection. We need the connection to be active for
-          // attachment to happen, therefore we check if websocket is
-          // already open and attach an event listener in case it
-          // isn't.
-          var handAttached = {};
-          function attachHand(el, id, hand) {
-              if (!handAttached[hand]) {
-                  naf.attach(el, {
-                      id: id + "-" + hand + "-hand",
-                      template: "#" + hand +"Hand"
-                  });
-                  handAttached[hand] = true;
-              }
-          }
-
-          var leftHand = document.querySelector("#myLeftHand");
-          leftHand.addEventListener("controllerconnected", function() {
-              if (ws.readyState === WebSocket.OPEN) {
-                  attachHand(leftHand, userId, "left");
-              } else {
-                  ws.addEventListener("open", function() {
-                      attachHand(leftHand, userId, "left");
-                  });
-              }
-          });
-
-          var rightHand = document.querySelector("#myRightHand");
-          rightHand.addEventListener("controllerconnected", function() {
-              if (ws.readyState === WebSocket.OPEN) {
-                  attachHand(rightHand, userId, "right");
-              } else {
-                  ws.addEventListener("open", function() {
-                      attachHand(rightHand, userId, "right");
-                  });
-              }
-          });
-      });
-      </script>
   </body>
 </html>
