@@ -101,18 +101,18 @@
       <a-entity id="myCameraRig">
         <!-- camera -->
         <a-camera id="camera"
-                  oacs-networked-entity="networkId: client<%= $user_id %>; template: #avatar-template; name: <%= $username %>">
+                  oacs-networked-entity="networkId: client-@user_id;literal@; template: #avatar-template; name: @username@">
         </a-camera>
         <!-- hand controls -->
         <a-entity id="myLeftHand"
                   teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
                   hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="networkId: client<%= $user_id %>-left-hand; template: #leftHand; color: #ffcccc">
+                  oacs-networked-entity="networkId: client-@user_id;literal@-left-hand; template: #leftHand; color: #ffcccc">
         </a-entity>
         <a-entity id="myRightHand"
                   teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
                   hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="networkId: client<%= $user_id %>-right-hand; template: #rightHand; color: #ffcccc">
+                  oacs-networked-entity="networkId: client-@user_id;literal@-right-hand; template: #rightHand; color: #ffcccc">
         </a-entity>
       </a-entity>
 
