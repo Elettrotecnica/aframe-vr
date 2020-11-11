@@ -20,7 +20,7 @@
     <script src="js/networked-aframe.js"></script>
   </head>
   <body>
-    <a-scene oacs-networked-scene="wsURI">
+    <a-scene oacs-networked-scene>
       <a-assets>
         <img src="images/grid.png" id="grid">
         <img id="sky" src="images/sky.png"/>
