@@ -234,78 +234,74 @@ AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   _attach: function () {
-    if (this.attached) {
-      return;
-    }
-
     var self = this;
+    function doAttach() {
+      const data = {
+        type: 'create',
+        id: self.networkId,
+        name: self.name,
+        template: self.template,
+        color: self.color,
+        position: JSON.stringify(self._getAbsolutePosition()),
+        rotation: JSON.stringify(self._getAbsoluteRotation())
+      };
+
+      self.networkedScene.send(data);
+
+      self.el.addEventListener('absolutePositionChanged', e => {
+        const data = {
+          id: self.networkId,
+          type: 'update',
+          position: JSON.stringify(e.detail)
+        };
+        self.networkedScene.send(data);
+      });
+
+      self.el.addEventListener('absoluteRotationChanged', e => {
+        const data = {
+          id: self.networkId,
+          type: 'update',
+          rotation: JSON.stringify(e.detail)
+        };
+        self.networkedScene.send(data);
+      });
+
+      // This is a hand: also track gestures
+      if (self.el.components['hand-controls']) {
+        self.el.addEventListener('elGesture', e => {
+          const data = {
+            id: self.networkId,
+            type: 'update',
+            gesture: e.detail.gesture
+          };
+          self.networkedScene.send(data);
+        });
+      }
+
+      if (self.selfCleanup) {
+        // window.onbeforeunload is not triggered easily on e.g. oculus,
+        // because one does seldom close the app explicitly. We delete
+        // the avatar on exit of immersive mode
+        if (AFRAME.utils.device.checkHeadsetConnected()) {
+          self.el.sceneEl.addEventListener('exit-vr', function() {
+            self.remove();
+          });
+        }
+        window.addEventListener('beforeunload', function() {
+          self.remove();
+        });
+      }
+    }
 
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
     if (this.el.components['hand-controls']) {
       this.el.addEventListener('controllerconnected', function() {
-        self._attach();
+        doAttach();
       });
-      return;
+    } else {
+      doAttach();
     }
-
-    const data = {
-      type: 'create',
-      id: this.networkId,
-      name: this.name,
-      template: this.template,
-      color: this.color,
-      position: JSON.stringify(this._getAbsolutePosition()),
-      rotation: JSON.stringify(this._getAbsoluteRotation())
-    };
-
-    this.networkedScene.send(data);
-
-    this.el.addEventListener('absolutePositionChanged', e => {
-      const data = {
-        id: self.networkId,
-        type: 'update',
-        position: JSON.stringify(e.detail)
-      };
-      self.networkedScene.send(data);
-    });
-
-    this.el.addEventListener('absoluteRotationChanged', e => {
-      const data = {
-        id: self.networkId,
-        type: 'update',
-        rotation: JSON.stringify(e.detail)
-      };
-      self.networkedScene.send(data);
-    });
-
-    // This is a hand: also track gestures
-    if (this.el.components['hand-controls']) {
-      this.el.addEventListener('elGesture', e => {
-        const data = {
-          id: self.networkId,
-          type: 'update',
-          gesture: e.detail.gesture
-        };
-        self.networkedScene.send(data);
-      });
-    }
-
-    if (this.selfCleanup) {
-      // window.onbeforeunload is not triggered easily on e.g. oculus,
-      // because one does seldom close the app explicitly. We delete
-      // the avatar on exit of immersive mode
-      if (AFRAME.utils.device.checkHeadsetConnected()) {
-        self.el.sceneEl.addEventListener('exit-vr', function() {
-          self.remove();
-        });
-      }
-      window.addEventListener('beforeunload', function() {
-        self.remove();
-      });
-    }
-
-    this.attached = true;
   },
 
   _getAbsolutePosition: function() {
