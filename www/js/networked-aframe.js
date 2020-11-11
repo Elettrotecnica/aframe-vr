@@ -62,7 +62,7 @@ AFRAME.registerSystem('oacs-networked-scene', {
         att = property;
       }
       e.setAttribute(att, value);
-      i++
+      i++;
     }
     if (i === 0) {
       el.setAttribute(property, value);
