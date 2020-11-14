@@ -16,7 +16,6 @@
     <title>Hello, WebVR! • A-Frame</title>
     <meta name="description" content="Hello, WebVR! • A-Frame">
     <script src="js/aframe-master.min.js"></script>
-    <script src="js/aframe-teleport-controls.js"></script>
     <script src="js/networked-aframe.js"></script>
   </head>
   <body>
