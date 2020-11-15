@@ -205,7 +205,7 @@ AFRAME.registerComponent('oacs-networked-entity', {
   init: function () {
     this.networkedScene = this.el.sceneEl.systems['oacs-networked-scene'];
     this.template = this.data.template;
-    this.networkId = this.data.networkId;
+    this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
     this.name = this.data.name;
     this.selfCleanup = this.data.selfCleanup;
 
