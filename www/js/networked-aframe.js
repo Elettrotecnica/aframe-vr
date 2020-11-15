@@ -228,74 +228,74 @@ AFRAME.registerComponent('oacs-networked-entity', {
     this.networkedScene.send(data);
   },
 
-  _attach: function () {
-    var self = this;
-    function doAttach() {
+  _doAttach: function () {
+    const data = {
+      type: 'create',
+      id: this.networkId,
+      name: this.name,
+      template: this.template,
+      color: this.color
+    };
+
+    this.networkedScene.send(data);
+
+    this.el.setAttribute('absolute-position-listener', '');
+    this.el.addEventListener('absolutePositionChanged', e => {
       const data = {
-        type: 'create',
-        id: self.networkId,
-        name: self.name,
-        template: self.template,
-        color: self.color
+        id: this.networkId,
+        type: 'update',
+        position: JSON.stringify(e.detail)
       };
+      this.networkedScene.send(data);
+    });
 
-      self.networkedScene.send(data);
+    this.el.setAttribute('absolute-rotation-listener', '');
+    this.el.addEventListener('absoluteRotationChanged', e => {
+      const data = {
+        id: this.networkId,
+        type: 'update',
+        rotation: JSON.stringify(e.detail)
+      };
+      this.networkedScene.send(data);
+    });
 
-      self.el.setAttribute('absolute-position-listener', '');
-      self.el.addEventListener('absolutePositionChanged', e => {
+    // This is a hand: also track gestures
+    if (this.el.components['hand-controls']) {
+      this.el.addEventListener('elGesture', e => {
         const data = {
-          id: self.networkId,
+          id: this.networkId,
           type: 'update',
-          position: JSON.stringify(e.detail)
+          gesture: e.detail.gesture
         };
-        self.networkedScene.send(data);
+        this.networkedScene.send(data);
       });
-
-      self.el.setAttribute('absolute-rotation-listener', '');
-      self.el.addEventListener('absoluteRotationChanged', e => {
-        const data = {
-          id: self.networkId,
-          type: 'update',
-          rotation: JSON.stringify(e.detail)
-        };
-        self.networkedScene.send(data);
-      });
-
-      // This is a hand: also track gestures
-      if (self.el.components['hand-controls']) {
-        self.el.addEventListener('elGesture', e => {
-          const data = {
-            id: self.networkId,
-            type: 'update',
-            gesture: e.detail.gesture
-          };
-          self.networkedScene.send(data);
-        });
-      }
-
-      if (self.selfCleanup) {
-        // window.onbeforeunload is not triggered easily on e.g. oculus,
-        // because one does seldom close the app explicitly. We delete
-        // the avatar on exit of immersive mode
-        if (AFRAME.utils.device.checkHeadsetConnected()) {
-          self.el.sceneEl.addEventListener('exit-vr', function() {
-            self.remove();
-          });
-        }
-        window.addEventListener('beforeunload', function() {
-          self.remove();
-        });
-      }
     }
 
+    if (this.thisCleanup) {
+      // window.onbeforeunload is not triggered easily on e.g. oculus,
+      // because one does seldom close the app explicitly. We delete
+      // the avatar on exit of immersive mode
+      if (AFRAME.utils.device.checkHeadsetConnected()) {
+        this.el.sceneEl.addEventListener('exit-vr', function() {
+          this.remove();
+        });
+      }
+      window.addEventListener('beforeunload', function() {
+        this.remove();
+      });
+    }
+  },
+
+  _attach: function () {
+    var self = this;
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
     if (this.el.components['hand-controls']) {
       this.el.addEventListener('controllerconnected', function() {
-        doAttach();
+        self._doAttach();
       });
     } else {
-      doAttach();
+      this._doAttach();
     }
   }
 });
