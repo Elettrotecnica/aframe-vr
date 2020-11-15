@@ -1,14 +1,15 @@
-//
-// OpenACS Networked A-Frame
-//
-// These components connect to the OpenACS websocket backend (or any
-// backend implementing the same message protocol) and provides the
-// api to create "shared" objects in the context of a subscription (or
-// "room"). Changes on the objects are broadcasted and reflected the
-// same for every participant.
-// The name is a not-so-subtle reference to another much better
-// engineered project with the same purposes based on NodeJS:
-// https://github.com/networked-aframe/networked-aframe
+/**
+ * OpenACS Networked A-Frame
+ *
+ * These components connect to the OpenACS websocket backend (or any
+ * backend implementing the same message protocol) and provides the
+ * api to create "shared" objects in the context of a subscription (or
+ * "room"). Changes on the objects are broadcasted and reflected the
+ * same for every participant.
+ * The name is a not-so-subtle reference to another much better
+ * engineered project with the same purposes based on NodeJS:
+ * https://github.com/networked-aframe/networked-aframe
+ */
 AFRAME.registerSystem('oacs-networked-scene', {
   schema: {
     wsURI: {type: 'string'}
@@ -24,24 +25,24 @@ AFRAME.registerSystem('oacs-networked-scene', {
     this.sceneEl = this.el.sceneEl;
   },
 
-  remove: function() {
+  remove: function () {
     if (this.websocket) {
       this.websocket.close();
     }
   },
 
-  send: function(data) {
+  send: function (data) {
     var self = this;
     if (this.websocket.readyState === WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(data));
     } else {
-      this.websocket.addEventListener('open', function() {
+      this.websocket.addEventListener('open', function () {
         self.websocket.send(JSON.stringify(data));
       });
     }
   },
 
-  _defaultWsURI: function() {
+  _defaultWsURI: function () {
     return (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/aframe-vr/connect';
   },
 
@@ -167,20 +168,20 @@ AFRAME.registerSystem('oacs-networked-scene', {
     } else {
       websocket = new MozWebSocket(this.wsURI);
     }
-    websocket.onopen = function(e) {
+    websocket.onopen = function (e) {
       console.log('Connected');
     };
-    websocket.addEventListener('close', function(e) {
+    websocket.addEventListener('close', function (e) {
       console.log('Disconnected.');
     });
-    websocket.addEventListener('message', function(e) {
+    websocket.addEventListener('message', function (e) {
       self._onMessage(e);
     });
-    websocket.addEventListener('error', function(e) {
+    websocket.addEventListener('error', function (e) {
       console.error(e.data);
     });
 
-    setInterval(function() {
+    setInterval(function () {
       if (websocket.readyState === WebSocket.OPEN) {
         websocket.send('ping');
       } else {
@@ -220,7 +221,7 @@ AFRAME.registerComponent('oacs-networked-entity', {
     this._attach();
   },
 
-  remove: function() {
+  remove: function () {
     var data = {
       id: this.networkId,
       type: 'delete'
@@ -229,6 +230,8 @@ AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   _doAttach: function () {
+    var self = this;
+
     const data = {
       type: 'create',
       id: this.networkId,
@@ -240,48 +243,48 @@ AFRAME.registerComponent('oacs-networked-entity', {
     this.networkedScene.send(data);
 
     this.el.setAttribute('absolute-position-listener', '');
-    this.el.addEventListener('absolutePositionChanged', e => {
+    this.el.addEventListener('absolutePositionChanged', function (e) {
       const data = {
-        id: this.networkId,
+        id: self.networkId,
         type: 'update',
         position: JSON.stringify(e.detail)
       };
-      this.networkedScene.send(data);
+      self.networkedScene.send(data);
     });
 
     this.el.setAttribute('absolute-rotation-listener', '');
-    this.el.addEventListener('absoluteRotationChanged', e => {
+    this.el.addEventListener('absoluteRotationChanged', function (e) {
       const data = {
-        id: this.networkId,
+        id: self.networkId,
         type: 'update',
         rotation: JSON.stringify(e.detail)
       };
-      this.networkedScene.send(data);
+      self.networkedScene.send(data);
     });
 
     // This is a hand: also track gestures
     if (this.el.components['hand-controls']) {
-      this.el.addEventListener('elGesture', e => {
+      this.el.addEventListener('elGesture', function (e) {
         const data = {
-          id: this.networkId,
+          id: self.networkId,
           type: 'update',
           gesture: e.detail.gesture
         };
-        this.networkedScene.send(data);
+        self.networkedScene.send(data);
       });
     }
 
-    if (this.thisCleanup) {
+    if (this.selfCleanup) {
       // window.onbeforeunload is not triggered easily on e.g. oculus,
       // because one does seldom close the app explicitly. We delete
       // the avatar on exit of immersive mode
-      if (AFRAME.utils.device.checkHeadsetConnected()) {
-        this.el.sceneEl.addEventListener('exit-vr', function() {
-          this.remove();
+      if (window.AFRAME.utils.device.checkHeadsetConnected()) {
+        this.el.sceneEl.addEventListener('exit-vr', function () {
+          self.remove();
         });
       }
-      window.addEventListener('beforeunload', function() {
-        this.remove();
+      window.addEventListener('beforeunload', function () {
+        self.remove();
       });
     }
   },
@@ -291,7 +294,7 @@ AFRAME.registerComponent('oacs-networked-entity', {
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
     if (this.el.components['hand-controls']) {
-      this.el.addEventListener('controllerconnected', function() {
+      this.el.addEventListener('controllerconnected', function () {
         self._doAttach();
       });
     } else {
