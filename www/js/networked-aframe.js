@@ -228,11 +228,6 @@ AFRAME.registerComponent('oacs-networked-entity', {
     this.networkedScene.send(data);
   },
 
-  tick: function() {
-    this._pollPosition();
-    this._pollRotation();
-  },
-
   _attach: function () {
     var self = this;
     function doAttach() {
@@ -241,13 +236,12 @@ AFRAME.registerComponent('oacs-networked-entity', {
         id: self.networkId,
         name: self.name,
         template: self.template,
-        color: self.color,
-        position: JSON.stringify(self._getAbsolutePosition()),
-        rotation: JSON.stringify(self._getAbsoluteRotation())
+        color: self.color
       };
 
       self.networkedScene.send(data);
 
+      self.el.setAttribute('absolute-position-listener', '');
       self.el.addEventListener('absolutePositionChanged', e => {
         const data = {
           id: self.networkId,
@@ -257,6 +251,7 @@ AFRAME.registerComponent('oacs-networked-entity', {
         self.networkedScene.send(data);
       });
 
+      self.el.setAttribute('absolute-rotation-listener', '');
       self.el.addEventListener('absoluteRotationChanged', e => {
         const data = {
           id: self.networkId,
@@ -301,67 +296,6 @@ AFRAME.registerComponent('oacs-networked-entity', {
       });
     } else {
       doAttach();
-    }
-  },
-
-  _getAbsolutePosition: function() {
-    // We need to calculate the absolute position: it is often the
-    // case that items such as the camera are enclosed in a
-    // "cameraRig" and this element would be the one moving. The items
-    // on the remote counterpart are always attached directly to the
-    // scene, so their positioning is absolute anyway.  The api does
-    // not help us here, as the worldPosition would not take into
-    // account things such as the visor pose, that the position
-    // attribute embeds transparently and the position would have a y
-    // of 0.
-    // const newValue = this.el.object3D.getWorldPosition(new THREE.Vector3());
-    const newValue = {'x': 0, 'y': 0, 'z': 0};
-    var el = this.el;
-    while (el && el !== this.el.sceneEl) {
-      const parentValue = el.getAttribute('position');
-      newValue.x+= parentValue.x;
-      newValue.y+= parentValue.y;
-      newValue.z+= parentValue.z;
-      el = el.parentElement;
-    }
-    return newValue;
-  },
-
-  _getAbsoluteRotation: function() {
-    // We need to calculate the absolute rotation: it is often the
-    // case that items such as the camera are enclosed in a
-    // "cameraRig" and this element would be the one rotating. The
-    // items on the remote counterpart are always attached directly
-    // to the scene, so their positioning is absolute anyway.  Might
-    // be streamlined using the api, but would need conversion...
-    // var worldRotation = this.el.object3D.getWorldQuaternion(new THREE.Quaternion());
-    const newValue = {'x': 0, 'y': 0, 'z': 0};
-    var el = this.el;
-    while (el && el !== this.el.sceneEl) {
-      const parentValue = el.getAttribute('rotation');
-      newValue.x+= parentValue.x;
-      newValue.y+= parentValue.y;
-      newValue.z+= parentValue.z;
-      el = el.parentElement;
-    }
-    return newValue;
-  },
-
-  _pollPosition: function() {
-    const newValue = this._getAbsolutePosition();
-    const stringCoords = AFRAME.utils.coordinates.stringify(newValue);
-    if (this.lastPosition !== stringCoords) {
-      this.el.emit('absolutePositionChanged', newValue);
-      this.lastPosition = stringCoords;
-    }
-  },
-
-  _pollRotation: function() {
-    const newValue = this._getAbsoluteRotation();
-    const stringCoords = AFRAME.utils.coordinates.stringify(newValue);
-    if (this.lastRotation !== stringCoords) {
-      this.el.emit('absoluteRotationChanged', newValue);
-      this.lastRotation = stringCoords;
     }
   }
 });
