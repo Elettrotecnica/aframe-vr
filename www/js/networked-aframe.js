@@ -10,7 +10,7 @@
  * engineered project with the same purposes based on NodeJS:
  * https://github.com/networked-aframe/networked-aframe
  */
-AFRAME.registerSystem('oacs-networked-scene', {
+window.AFRAME.registerSystem('oacs-networked-scene', {
   schema: {
     wsURI: {type: 'string'}
   },
@@ -33,7 +33,7 @@ AFRAME.registerSystem('oacs-networked-scene', {
 
   send: function (data) {
     var self = this;
-    if (this.websocket.readyState === WebSocket.OPEN) {
+    if (this.websocket.readyState === window.WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(data));
     } else {
       this.websocket.addEventListener('open', function () {
@@ -43,7 +43,9 @@ AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _defaultWsURI: function () {
-    return (location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + location.host + '/aframe-vr/connect';
+    var proto = window.location.protocol;
+    var host = window.location.host;
+    return (proto === 'https:' ? 'wss:' : 'ws:') + '//' + host + '/aframe-vr/connect';
   },
 
   _updateNestedProperty: function (el, property, value) {
@@ -57,7 +59,7 @@ AFRAME.registerSystem('oacs-networked-scene', {
     // changed).
     var i = 0;
     var elementsToUpdate = el.querySelectorAll('[data-' + property + ']');
-    for (e of elementsToUpdate) {
+    for (var e of elementsToUpdate) {
       var att = e.getAttribute('data-' + property);
       if (att.length <= 0) {
         att = property;
@@ -125,17 +127,17 @@ AFRAME.registerSystem('oacs-networked-scene', {
     // Handle the different kinds of websocket events
     var m = JSON.parse(e.data);
     switch (m.type) {
-    case 'create':
-      this._onRemoteCreate(m);
-      break;
-    case 'delete':
-      this._onRemoteDelete(m);
-      break;
-    case 'update':
-      this._onRemoteUpdate(m);
-      break;
-    default:
-      console.error('Invalid message type: ' + m.type);
+      case 'create':
+        this._onRemoteCreate(m);
+        break;
+      case 'delete':
+        this._onRemoteDelete(m);
+        break;
+      case 'update':
+        this._onRemoteUpdate(m);
+        break;
+      default:
+        console.error('Invalid message type: ' + m.type);
     }
   },
 
@@ -161,12 +163,13 @@ AFRAME.registerSystem('oacs-networked-scene', {
 
   _connect: function () {
     var self = this;
+    var websocket;
 
     // Connect to the websocket backend.
     if ('WebSocket' in window) {
-      websocket = new WebSocket(this.wsURI);
+      websocket = new window.WebSocket(this.wsURI);
     } else {
-      websocket = new MozWebSocket(this.wsURI);
+      websocket = new window.MozWebSocket(this.wsURI);
     }
     websocket.onopen = function (e) {
       console.log('Connected');
@@ -182,7 +185,7 @@ AFRAME.registerSystem('oacs-networked-scene', {
     });
 
     setInterval(function () {
-      if (websocket.readyState === WebSocket.OPEN) {
+      if (websocket.readyState === window.WebSocket.OPEN) {
         websocket.send('ping');
       } else {
         console.warn('Not connected, attempting reconnection...');
@@ -194,7 +197,7 @@ AFRAME.registerSystem('oacs-networked-scene', {
   }
 });
 
-AFRAME.registerComponent('oacs-networked-entity', {
+window.AFRAME.registerComponent('oacs-networked-entity', {
   schema: {
     networkId: {type: 'string'},
     template: {type: 'string'},
@@ -215,7 +218,7 @@ AFRAME.registerComponent('oacs-networked-entity', {
 
     this.color = this.data.color;
     if (this.color.length === 0) {
-      this.color = '#' + Math.random().toString(16).substr(2,6);
+      this.color = '#' + Math.random().toString(16).substr(2, 6);
     }
 
     this._attach();
