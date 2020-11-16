@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <%
+   auth::require_login
    # Allow unauthenticated users to enter as visitors
    set user_id [ad_conn user_id]
    if {$user_id == 0} {
@@ -17,6 +18,9 @@
     <meta name="description" content="Hello, WebVR! • A-Frame">
     <script src="js/aframe-master.min.js"></script>
     <script src="js/networked-aframe.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/6.4.0/adapter.min.js" ></script>
+    <script src="js/janus.js" ></script>
+    <script src="js/aframe-janus-videoroom.js"></script>
   </head>
   <body>
     <a-scene oacs-networked-scene>
@@ -99,22 +103,22 @@
 
       <a-entity id="myCameraRig">
         <!-- camera -->
-        <a-camera id="camera"
-                  oacs-networked-entity="networkId: client-@user_id;literal@; template: #avatar-template; name: @username@">
+        <a-camera id="client@user_id;literal@"
+                  oacs-networked-entity="template: #avatar-template; name: @username@"
+                  janus-videoroom-entity="room: 1234">
         </a-camera>
         <!-- hand controls -->
-        <a-entity id="myLeftHand"
-                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
+        <a-entity id="client@user_id;literal@-left-hand"
+                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick;"
                   hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="networkId: client-@user_id;literal@-left-hand; template: #leftHand; color: #ffcccc">
+                  oacs-networked-entity="template: #leftHand; color: #ffcccc">
         </a-entity>
-        <a-entity id="myRightHand"
-                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: #camera; button: thumbstick;"
+        <a-entity id="client@user_id;literal@-right-hand"
+                  teleport-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick;"
                   hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="networkId: client-@user_id;literal@-right-hand; template: #rightHand; color: #ffcccc">
+                  oacs-networked-entity="template: #rightHand; color: #ffcccc">
         </a-entity>
       </a-entity>
-
     </a-scene>
   </body>
 </html>
