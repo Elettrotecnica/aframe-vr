@@ -10,22 +10,17 @@
  * subscription's id or display property, depending on whether your
  * Janus plugin is configured to support string ids.
  *
- * Using string ids might be useful in the future in hybrid scenarios,
- * where people from outside VR subscribe to the room (e.g. to share
- * their screens or camera and be projected on a screen), as allows to
- * free the display property of our subscription and show
- * human-readable names to the external peer.
+ * Using string ids is useful in hybrid scenarios, where people from
+ * outside VR subscribe to the room (e.g. to share their screens or
+ * camera and be projected on a a-video element), as allows to free
+ * the display property of our subscription and show human-readable
+ * names to the external peer.
  *
  * Using the Janus API either via javascript or using the wrapper
  * provided in this package, is possible to create and configure the
  * room parameters on the fly or at a certain point in time (e.g. at
  * server startup or upon package intantiation).
  *
- *  Limitations and todos:
- * - currently, only audio chat use case is supported. In the future,
- *   might be possible to add also support for video and
- *   screensharing (e.g. outputting a webRTC video stream on a
- *   surface).
 */
 window.AFRAME.registerComponent('janus-videoroom-entity', {
   schema: {
@@ -218,7 +213,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             jsep: jsep,
             // Add data:true here if you want to subscribe to datachannels as well
             // (obviously only works if the publisher offered them in the first place)
-            media: { audioRecv: true, videoRecv: false, audioSend: false, videoSend: false },
+            media: { audioRecv: true, videoRecv: true, audioSend: false, videoSend: false },
             success: function (jsep) {
               window.Janus.debug('Got SDP!', jsep);
               var body = { request: 'start', room: self.room };
@@ -241,13 +236,33 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       },
       onremotestream: function (stream) {
         window.Janus.debug('Remote feed #' + remoteFeed.rfid + ', stream:', stream);
-        // We got a stream from a peer. Check if it has audio and
-        // attach it to the corresponding element.
-        const audioTracks = stream.getAudioTracks();
-        if (audioTracks && audioTracks.length > 0) {
-          const e = document.getElementById(self.stringIds ? id : display);
-          if (e && !e.getAttribute('mediastream-sound')) {
-            e.setAttribute('mediastream-sound', '');
+        const e = document.getElementById(self.stringIds ? id : display);
+        if (e) {
+          // If this is a video stream, check that the element is a
+          // a-video and set this stream as its source using a dummy
+          // video element created on the fly.
+          const videoTracks = stream.getVideoTracks();
+          if (videoTracks &&
+              videoTracks.length > 0 &&
+              !e.src &&
+              e.tagName === 'A-VIDEO') {
+            var v = document.createElement('video');
+            v.autoplay = true;
+            v.srcObject = stream;
+            v.id = e.id + '-video';
+            document.body.appendChild(v);
+            e.setAttribute('src', '#' + v.id);
+            return;
+          }
+
+          // Audio is the fallback and what you should expect for
+          // avatars of people inside of VR.
+          const audioTracks = stream.getAudioTracks();
+          console.log(audioTracks);
+          if (audioTracks &&
+              audioTracks.length > 0 &&
+              !e.getAttribute('mediastream-sound')) {
+              e.setAttribute('mediastream-sound', '');
             e.components['mediastream-sound'].setMediaStream(stream);
           }
         }
