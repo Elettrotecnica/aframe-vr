@@ -237,32 +237,40 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       onremotestream: function (stream) {
         window.Janus.debug('Remote feed #' + remoteFeed.rfid + ', stream:', stream);
         const e = document.getElementById(self.stringIds ? id : display);
-        if (e) {
-          // If this is a video stream, check that the element is a
-          // a-video and set this stream as its source using a dummy
-          // video element created on the fly.
+        // Check that element exists and is an aframe element
+        if (e && e.object3D) {
+          // Create two separate mediastreams for video and audio.
           const videoTracks = stream.getVideoTracks();
-          if (videoTracks &&
-              videoTracks.length > 0 &&
-              !e.src &&
-              e.tagName === 'A-VIDEO') {
-            var v = document.createElement('video');
-            v.autoplay = true;
-            v.srcObject = stream;
-            v.id = e.id + '-video';
-            document.body.appendChild(v);
-            e.setAttribute('src', '#' + v.id);
-            return;
+          var videoStream;
+          if (videoTracks && videoTracks.length > 0) {
+            videoStream = new MediaStream(videoTracks);
           }
 
-          // Audio is the fallback and what you should expect for
-          // avatars of people inside of VR.
           const audioTracks = stream.getAudioTracks();
-          console.log(audioTracks);
-          if (audioTracks &&
-              audioTracks.length > 0 &&
-              !e.getAttribute('mediastream-sound')) {
-              e.setAttribute('mediastream-sound', '');
+          var audioStream;
+          if (audioTracks && audioTracks.length > 0) {
+            audioStream = new MediaStream(audioTracks);
+          }
+
+          // Attach video to the element. Will become its material's
+          // texture.
+          if (videoStream) {
+            var videoId = e.id + '-video';
+            var v = document.getElementById(videoId);
+            if (!v) {
+              v = document.createElement('video');
+              v.autoplay = true;
+              v.id = videoId;
+              document.body.appendChild(v);
+            }
+            v.srcObject = videoStream;
+            e.setAttribute('material', 'src', '#' + v.id);
+          }
+
+          // Attach audio to the element.
+          // TODO: right now we assume audio to be positional.
+          if (audioStream) {
+            e.setAttribute('mediastream-sound', '');
             e.components['mediastream-sound'].setMediaStream(stream);
           }
         }
