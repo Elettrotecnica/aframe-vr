@@ -5,31 +5,37 @@
  *
  * This component enables audio chat via webRTC by grabbing the
  * microphone and subscribing to specified videoroom plugin
- * instance. Subscriptions from my peers are attached to the element
- * (normally, the avatar) specified by their networkId property (by
- * default, the element id of the component entity).
+ * instance. When a new publisher is available, the peer's MediaStream
+ * is attached to the entity with id corresponding to the
+ * subscription's id or display property, depending on whether your
+ * Janus plugin is configured to support string ids.
+ *
+ * Using string ids might be useful in the future in hybrid scenarios,
+ * where people from outside VR subscribe to the room (e.g. to share
+ * their screens or camera and be projected on a screen), as allows to
+ * free the display property of our subscription and show
+ * human-readable names to the external peer.
+ *
+ * Using the Janus API either via javascript or using the wrapper
+ * provided in this package, is possible to create and configure the
+ * room parameters on the fly or at a certain point in time (e.g. at
+ * server startup or upon package intantiation).
  *
  *  Limitations and todos:
  * - currently, only audio chat use case is supported. In the future,
  *   might be possible to add also support for video and
  *   screensharing (e.g. outputting a webRTC video stream on a
  *   surface).
- * - the element id we attach our peer's mediastream to, is specified
- *   via the display property of the connection, which would be
- *   normally used to set my human-readable username. This makes it
- *   harder to use the videoroom in hybrid scenarions were clients
- *   outside aframe want to participate (e.g. to share their
- *   screens).
- * - the room id now needs to be known in advance. One improvement
- *   would be to create the room on the fly if it does not exist using
- *   janus api
 */
 window.AFRAME.registerComponent('janus-videoroom-entity', {
   schema: {
     URI: {type: 'string'},
-    room: {type: 'int'},
-    networkId: {type: 'string'},
+    room: {type: 'string'},
+    pin: {type: 'string', default: ''},
+    id: {type: 'string'},
+    display: {type: 'string'},
     debug: {type: 'boolean', default: false},
+    stringIds: {type: 'boolean', default: false},
     muted: {type: 'boolean', default: false}
   },
 
@@ -46,12 +52,26 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     }
 
     this.room = this.data.room;
+    this.pin = this.data.pin;
 
     this.debug = this.data.debug;
-    // Janus videoroom plugin wants integer ids. To send a HTML id, I
-    // resort to use the display property, which would be meant for the
-    // human readable username...
-    this.display = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
+    // By default, Janus videoroom plugin wants integer ids, but one
+    // can set the 'string_ids' property to true in the plugin conf to
+    // use strings. In such setup, one must also set 'stringIds'
+    // component flag to true.
+    var id = this.data.id ? this.data.id : this.el.getAttribute('id');
+    this.stringIds = this.data.stringIds;
+    if (this.stringIds) {
+      // With string ids I can use the display property for the human
+      // readable username, which would just be ignored otherwise.
+      this.id = id;
+      this.display = this.data.name ? this.data.name : this.id;
+    } else {
+      this.id = null;
+      this.display = id;
+      // If ids are numbers, then we have to cast the room id as well
+      this.room = parseInt(this.room, 10);
+    }
 
     this.id = null;
     this.janus = null;
@@ -79,6 +99,15 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         this.pluginHandle.unmuteAudio();
       }
     }
+  },
+
+  _removeRemoteFeed: function (feed) {
+    var e = document.getElementById(this.stringIds ? feed.rfid : feed.rfdisplay);
+    if (e) {
+      e.removeAttribute('mediastream-sound');
+    }
+    window.Janus.debug('Feed ' + feed.rfid + ' (' + feed.rfdisplay + ') has left the room, detaching');
+    feed.detach();
   },
 
   _defaultURI: function () {
@@ -137,6 +166,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         var subscribe = {
           request: 'join',
           room: self.room,
+          pin: self.pin,
           ptype: 'subscriber',
           feed: id,
           private_id: self.privateId
@@ -211,9 +241,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       },
       onremotestream: function (stream) {
         window.Janus.debug('Remote feed #' + remoteFeed.rfid + ', stream:', stream);
+        // We got a stream from a peer. Check if it has audio and
+        // attach it to the corresponding element.
         const audioTracks = stream.getAudioTracks();
         if (audioTracks && audioTracks.length > 0) {
-          const e = document.getElementById(display);
+          const e = document.getElementById(self.stringIds ? id : display);
           if (e && !e.getAttribute('mediastream-sound')) {
             e.setAttribute('mediastream-sound', '');
             e.components['mediastream-sound'].setMediaStream(stream);
@@ -253,9 +285,13 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   var register = {
                     request: 'join',
                     room: self.room,
+                    pin: self.pin,
                     ptype: 'publisher',
                     display: self.display
                   };
+                  if (this.id) {
+                    register.id = this.id;
+                  }
                   self.pluginHandle.send({ message: register });
                 },
                 error: function (error) {
@@ -322,12 +358,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         window.Janus.log('Publisher left: ' + leaving);
                         remoteFeed = self.feeds[leaving];
                         if (remoteFeed) {
-                          e = document.getElementById(remoteFeed.rfdisplay);
-                          if (e) {
-                            e.removeAttribute('mediastream-sound');
-                          }
-                          window.Janus.debug('Feed ' + remoteFeed.rfid + ' (' + remoteFeed.rfdisplay + ') has left the room, detaching');
-                          remoteFeed.detach();
+                          self._removeRemoteFeed(remoteFeed);
                           delete self.feeds[leaving];
                         }
                       } else if (msg['unpublished']) {
@@ -341,13 +372,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         }
                         remoteFeed = self.feeds[unpublished];
                         if (remoteFeed) {
-                          e = document.getElementById(remoteFeed.rfdisplay);
-                          if (e) {
-                            e.removeAttribute('mediastream-sound');
-                          }
-                          window.Janus.debug('Feed ' + remoteFeed.rfid + ' (' + remoteFeed.rfdisplay + ') has left the room, detaching');
-                          remoteFeed.detach();
-                          delete self.feeds[leaving];
+                          self._removeRemoteFeed(remoteFeed);
+                          delete self.feeds[unpublished];
                         }
                       } else if (msg['error']) {
                         if (msg['error_code'] === 426) {
