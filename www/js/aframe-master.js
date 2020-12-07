@@ -53547,7 +53547,7 @@ function extend() {
 },{}],51:[function(_dereq_,module,exports){
 module.exports={
   "name": "aframe",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "A web framework for building virtual reality experiences.",
   "homepage": "https://aframe.io/",
   "main": "dist/aframe-master.js",
@@ -53566,7 +53566,7 @@ module.exports={
     "lint:fix": "semistandard --fix",
     "precommit": "npm run lint",
     "prepush": "node scripts/testOnlyCheck.js",
-    "prerelease": "node scripts/release.js 1.0.3 1.0.4",
+    "prerelease": "node scripts/release.js 1.0.4 1.1.0",
     "start": "npm run dev",
     "start:https": "cross-env SSL=true npm run dev",
     "test": "karma start ./tests/karma.conf.js",
@@ -53594,7 +53594,7 @@ module.exports={
     "present": "0.0.6",
     "promise-polyfill": "^3.1.0",
     "super-animejs": "^3.1.0",
-    "super-three": "^0.122.0",
+    "super-three": "^0.123.1",
     "three-bmfont-text": "dmarcos/three-bmfont-text#1babdf8507c731a18f8af3b807292e2b9740955e",
     "webvr-polyfill": "^0.10.12"
   },
@@ -53724,7 +53724,7 @@ module.exports.Component = registerComponent('absolute-position-listener', {
   })()
 });
 
-},{"../core/component":114}],53:[function(_dereq_,module,exports){
+},{"../core/component":116}],53:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -53771,7 +53771,7 @@ module.exports.Component = registerComponent('absolute-rotation-listener', {
   })()
 });
 
-},{"../core/component":114}],54:[function(_dereq_,module,exports){
+},{"../core/component":116}],54:[function(_dereq_,module,exports){
 var anime = _dereq_('super-animejs');
 var components = _dereq_('../core/component').components;
 var registerComponent = _dereq_('../core/component').registerComponent;
@@ -54411,7 +54411,7 @@ function isRawProperty (data) {
          data.property.startsWith(STRING_OBJECT3D);
 }
 
-},{"../core/component":114,"../lib/three":162,"../utils":188,"super-animejs":34}],55:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils":190,"super-animejs":34}],55:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 
@@ -54503,7 +54503,62 @@ module.exports.Component = registerComponent('camera', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162}],56:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164}],56:[function(_dereq_,module,exports){
+var registerComponent = _dereq_('../core/component').registerComponent;
+
+/**
+ * A stupid component allowing to switch the material currently active
+ * on a mesh, with that found on another mesh belonging to a different
+ * entity.
+ *
+ * Implemented as a low-cost solution to reuse default a-frame
+ * hand-controls hands giving them the skin of another model.
+ *
+*/
+module.exports.Component = registerComponent('copy-material', {
+  schema: {
+    from: {type: 'selector'},
+    fromObjectName: {type: 'string'},
+    toObjectName: {type: 'string'}
+  },
+
+  init: function () {
+    this.fromObject = null;
+    this.toObject = null;
+    this.attempts = 20;
+  },
+
+  update: function () {
+    var self = this;
+
+    if (!this.data.toObjectName) {
+      this.toObject = this.el.getObject3D('mesh');
+    } else {
+      this.toObject = this.el.object3D.getObjectByName(this.data.toObjectName);
+    }
+
+    if (!this.data.fromObjectName) {
+      this.fromObject = this.data.from.getObject3D('mesh');
+    } else {
+      this.fromObject = this.data.from.object3D.getObjectByName(this.data.fromObjectName);
+    }
+
+    if (!this.toObject ||
+        !this.toObject.material ||
+        !this.fromObject ||
+        !this.fromObject.material) {
+      if ((this.attempts--) > 0) {
+        setTimeout(function () {
+          self.update();
+        }, 50);
+      }
+    } else {
+      this.toObject.material = this.fromObject.material;
+    }
+  }
+});
+
+},{"../core/component":116}],57:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var utils = _dereq_('../utils/');
@@ -54924,7 +54979,7 @@ module.exports.Component = registerComponent('cursor', {
   }
 });
 
-},{"../core/component":114,"../utils/":188}],57:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190}],58:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -55131,7 +55186,7 @@ module.exports.Component = registerComponent('daydream-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],58:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],59:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -55337,7 +55392,7 @@ module.exports.Component = registerComponent('gearvr-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],59:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],60:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -55502,7 +55557,7 @@ module.exports.Component = registerComponent('generic-tracked-controller-control
   }
 });
 
-},{"../core/component":114,"../utils/bind":182,"../utils/tracked-controls":197}],60:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/bind":184,"../utils/tracked-controls":199}],61:[function(_dereq_,module,exports){
 var geometries = _dereq_('../core/geometry').geometries;
 var geometryNames = _dereq_('../core/geometry').geometryNames;
 var registerComponent = _dereq_('../core/component').registerComponent;
@@ -55581,7 +55636,7 @@ module.exports.Component = registerComponent('geometry', {
   }
 });
 
-},{"../core/component":114,"../core/geometry":115,"../lib/three":162}],61:[function(_dereq_,module,exports){
+},{"../core/component":116,"../core/geometry":117,"../lib/three":164}],62:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -55629,7 +55684,7 @@ module.exports.Component = registerComponent('gltf-model', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/":188}],62:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/":190}],63:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -56056,7 +56111,7 @@ function isViveController (trackedControls) {
   return isVive;
 }
 
-},{"../core/component":114}],63:[function(_dereq_,module,exports){
+},{"../core/component":116}],64:[function(_dereq_,module,exports){
 /* global THREE, XRRigidTransform, XRHand */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
@@ -56384,7 +56439,7 @@ module.exports.Component = registerComponent('hand-tracking-controls', {
 });
 
 
-},{"../core/component":114,"../utils/bind":182,"../utils/tracked-controls":197}],64:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/bind":184,"../utils/tracked-controls":199}],65:[function(_dereq_,module,exports){
 _dereq_('./animation');
 _dereq_('./camera');
 _dereq_('./cursor');
@@ -56438,11 +56493,13 @@ _dereq_('./scene/vr-mode-ui');
 /** Downstream Components */
 _dereq_('./absolute-position-listener');
 _dereq_('./absolute-rotation-listener');
+_dereq_('./copy-material');
 _dereq_('./mediastream-sound');
+_dereq_('./readyplayerme-avatar');
 _dereq_('./remote-hand-controls');
 _dereq_('./teleport-controls');
 
-},{"./absolute-position-listener":52,"./absolute-rotation-listener":53,"./animation":54,"./camera":55,"./cursor":56,"./daydream-controls":57,"./gearvr-controls":58,"./generic-tracked-controller-controls":59,"./geometry":60,"./gltf-model":61,"./hand-controls":62,"./hand-tracking-controls":63,"./laser-controls":65,"./layer":66,"./light":67,"./line":68,"./link":69,"./look-controls":70,"./magicleap-controls":71,"./material":72,"./mediastream-sound":73,"./obj-model":74,"./oculus-go-controls":75,"./oculus-touch-controls":76,"./position":77,"./raycaster":78,"./remote-hand-controls":79,"./rotation":80,"./scale":81,"./scene/background":82,"./scene/debug":83,"./scene/device-orientation-permission-ui":84,"./scene/embedded":85,"./scene/fog":86,"./scene/inspector":87,"./scene/keyboard-shortcuts":88,"./scene/pool":89,"./scene/screenshot":90,"./scene/stats":91,"./scene/vr-mode-ui":92,"./shadow":93,"./sound":94,"./teleport-controls":95,"./text":96,"./tracked-controls":99,"./tracked-controls-webvr":97,"./tracked-controls-webxr":98,"./valve-index-controls":100,"./visible":101,"./vive-controls":102,"./vive-focus-controls":103,"./wasd-controls":104,"./windows-motion-controls":105}],65:[function(_dereq_,module,exports){
+},{"./absolute-position-listener":52,"./absolute-rotation-listener":53,"./animation":54,"./camera":55,"./copy-material":56,"./cursor":57,"./daydream-controls":58,"./gearvr-controls":59,"./generic-tracked-controller-controls":60,"./geometry":61,"./gltf-model":62,"./hand-controls":63,"./hand-tracking-controls":64,"./laser-controls":66,"./layer":67,"./light":68,"./line":69,"./link":70,"./look-controls":71,"./magicleap-controls":72,"./material":73,"./mediastream-sound":74,"./obj-model":75,"./oculus-go-controls":76,"./oculus-touch-controls":77,"./position":78,"./raycaster":79,"./readyplayerme-avatar":80,"./remote-hand-controls":81,"./rotation":82,"./scale":83,"./scene/background":84,"./scene/debug":85,"./scene/device-orientation-permission-ui":86,"./scene/embedded":87,"./scene/fog":88,"./scene/inspector":89,"./scene/keyboard-shortcuts":90,"./scene/pool":91,"./scene/screenshot":92,"./scene/stats":93,"./scene/vr-mode-ui":94,"./shadow":95,"./sound":96,"./teleport-controls":97,"./text":98,"./tracked-controls":101,"./tracked-controls-webvr":99,"./tracked-controls-webxr":100,"./valve-index-controls":102,"./visible":103,"./vive-controls":104,"./vive-focus-controls":105,"./wasd-controls":106,"./windows-motion-controls":107}],66:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var utils = _dereq_('../utils/');
 
@@ -56564,7 +56621,7 @@ registerComponent('laser-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/":188}],66:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190}],67:[function(_dereq_,module,exports){
 /* global THREE, XRRigidTransform, XRWebGLBinding */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var utils = _dereq_('../utils/');
@@ -56972,7 +57029,7 @@ function blitTexture (gl, texture, subImage, textureEl) {
   gl.deleteFramebuffer(xrReadFramebuffer);
 }
 
-},{"../core/component":114,"../utils/":188}],67:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190}],68:[function(_dereq_,module,exports){
 var bind = _dereq_('../utils/bind');
 var diff = _dereq_('../utils').diff;
 var debug = _dereq_('../utils/debug');
@@ -57261,7 +57318,7 @@ module.exports.Component = registerComponent('light', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils":188,"../utils/bind":182,"../utils/debug":184}],68:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils":190,"../utils/bind":184,"../utils/debug":186}],69:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -57339,7 +57396,7 @@ function isEqualVec3 (a, b) {
   return (a.x === b.x && a.y === b.y && a.z === b.z);
 }
 
-},{"../core/component":114}],69:[function(_dereq_,module,exports){
+},{"../core/component":116}],70:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
@@ -57711,7 +57768,7 @@ registerShader('portal', {
 });
 /* eslint-enable */
 
-},{"../core/component":114,"../core/shader":124,"../lib/three":162}],70:[function(_dereq_,module,exports){
+},{"../core/component":116,"../core/shader":126,"../lib/three":164}],71:[function(_dereq_,module,exports){
 /* global DeviceOrientationEvent  */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -58197,7 +58254,7 @@ module.exports.Component = registerComponent('look-controls', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/":188}],71:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/":190}],72:[function(_dereq_,module,exports){
 var bind = _dereq_('../utils/bind');
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -58377,7 +58434,7 @@ module.exports.Component = registerComponent('magicleap-controls', {
 
 });
 
-},{"../core/component":114,"../utils/bind":182,"../utils/tracked-controls":197}],72:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/bind":184,"../utils/tracked-controls":199}],73:[function(_dereq_,module,exports){
 /* global Promise */
 var utils = _dereq_('../utils/');
 var component = _dereq_('../core/component');
@@ -58648,7 +58705,7 @@ function disposeMaterial (material, system) {
   system.unregisterMaterial(material);
 }
 
-},{"../core/component":114,"../core/shader":124,"../lib/three":162,"../utils/":188}],73:[function(_dereq_,module,exports){
+},{"../core/component":116,"../core/shader":126,"../lib/three":164,"../utils/":190}],74:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
 
@@ -58800,7 +58857,7 @@ module.exports.Component = registerComponent('mediastream-sound', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162}],74:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164}],75:[function(_dereq_,module,exports){
 var debug = _dereq_('../utils/debug');
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -58903,7 +58960,7 @@ module.exports.Component = registerComponent('obj-model', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/debug":184}],75:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/debug":186}],76:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -59107,7 +59164,7 @@ module.exports.Component = registerComponent('oculus-go-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],76:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],77:[function(_dereq_,module,exports){
 var bind = _dereq_('../utils/bind');
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -59452,7 +59509,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],77:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],78:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 module.exports.Component = registerComponent('position', {
@@ -59470,7 +59527,7 @@ module.exports.Component = registerComponent('position', {
   }
 });
 
-},{"../core/component":114}],78:[function(_dereq_,module,exports){
+},{"../core/component":116}],79:[function(_dereq_,module,exports){
 /* global MutationObserver */
 
 var registerComponent = _dereq_('../core/component').registerComponent;
@@ -59523,6 +59580,7 @@ module.exports.Component = registerComponent('raycaster', {
     objects: {default: ''},
     origin: {type: 'vec3'},
     showLine: {default: false},
+    lineColor: {default: 'white'},
     useWorldCoordinates: {default: false}
   },
 
@@ -59849,6 +59907,7 @@ module.exports.Component = registerComponent('raycaster', {
     // given by data.direction, then we apply a scalar to give it a length.
     this.lineData.start = data.origin;
     this.lineData.end = endVec3.copy(this.unitLineEndVec3).multiplyScalar(length);
+    this.lineData.color = data.lineColor;
     el.setAttribute('line', this.lineData);
   },
 
@@ -59905,7 +59964,154 @@ function copyArray (a, b) {
   }
 }
 
-},{"../core/component":114,"../lib/three":162,"../utils/":188}],79:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/":190}],80:[function(_dereq_,module,exports){
+/* global THREE */
+var registerComponent = _dereq_('../core/component').registerComponent;
+
+/**
+ * A component providing a bit of facility to use avatars from
+ * https://readyplayer.me/.
+ *
+ * Features:
+
+ * - generate separate entities from each node in the model tree, so
+ *   that e.g. hands can be moved or rotated separately from the rest
+ *   of the body. This works by specifying sub-templates to the entity
+ *   named after the nodes we want to expand.
+ * - allow to hide certain parts of the model, so that e.g. one can
+ *   use only the head and no hands.
+ *
+ * Model is automatically rotated 180° (default would face the user)
+ * and offset 65cm, so that head is at 0 level with respect to its
+ * containing entity.
+ *
+ * Inspired by the "inflation" approach used in Mozilla Hubs
+ *
+ */
+module.exports.Component = registerComponent('readyplayerme-avatar', {
+  schema: {
+    model: {type: 'model'},
+    hands: {type: 'boolean', default: true},
+    shirt: {type: 'boolean', default: true},
+    head: {type: 'boolean', default: true}
+  },
+
+  init: function () {
+    this.model = null;
+    this.animations = null;
+  },
+
+  _inflate: function (node) {
+    if (node.type === 'SkinnedMesh') {
+      switch (node.name) {
+        case 'Wolf3D_Hands':
+          node.visible = this.data.hands;
+          break;
+        case 'Wolf3D_Shirt':
+          node.visible = this.data.shirt;
+          break;
+        default:
+          node.visible = this.data.head;
+      }
+    }
+
+    // inflate subtrees first so that we can determine whether or not this node needs to be inflated
+    const childrenEntities = [];
+    const children = node.children.slice(0); // setObject3D mutates the node's parent, so we have to copy
+    for (const child of children) {
+      const childEntity = this._inflate(child);
+      if (childEntity) {
+        childrenEntities.push(childEntity);
+      }
+    }
+
+    const nodeTemplate = this.el.querySelector('template[data-name=\'' + node.name + '\'');
+    if (node.name !== 'Scene' && !nodeTemplate && childrenEntities.length === 0) {
+      // This node won't become an entity
+      return;
+    }
+
+    const el = nodeTemplate ? nodeTemplate.content.firstElementChild.cloneNode(true) : document.createElement('a-entity');
+
+    if (node.name === 'Scene') {
+      // Compensate that the model is turned the other way around and
+      // offset from the ground around 65cm, by countering this on the
+      // scene element.
+      el.setAttribute('position', '0 -0.65 0');
+      el.setAttribute('rotation', '0 180 0');
+    }
+
+    for (const childEntity of childrenEntities) {
+      el.appendChild(childEntity);
+    }
+
+    // Remove invalid CSS class name characters.
+    const className = (node.name || node.uuid).replace(/[^\w-]/g, '');
+    el.classList.add(className);
+
+    // AFRAME rotation component expects rotations in YXZ, convert it
+    if (node.rotation.order !== 'YXZ') {
+      node.rotation.setFromQuaternion(node.quaternion, 'YXZ');
+    }
+
+    // Copy over the object's transform to the THREE.Group and reset the actual transform of the Object3D
+    // all updates to the object should be done through the THREE.Group wrapper
+    el.object3D.position.copy(node.position);
+    el.object3D.rotation.copy(node.rotation);
+    el.object3D.matrixNeedsUpdate = true;
+
+    node.matrixAutoUpdate = false;
+    node.matrix.identity();
+    node.matrix.decompose(node.position, node.rotation, node.scale);
+
+    el.setObject3D(node.type.toLowerCase(), node);
+    // el.setObject3D('mesh', node);
+
+    // Set the name of the `THREE.Group` to match the name of the node,
+    // so that templates can be attached to the correct AFrame entity.
+    el.object3D.name = node.name;
+
+    // Set the uuid of the `THREE.Group` to match the uuid of the node,
+    // so that `THREE.PropertyBinding` will find (and later animate)
+    // the group. See `PropertyBinding.findNode`:
+    // https://github.com/mrdoob/three.js/blob/dev/src/animation/PropertyBinding.js#L211
+    el.object3D.uuid = node.uuid;
+    node.uuid = THREE.Math.generateUUID();
+
+    return el;
+  },
+
+  update: function () {
+    var self = this;
+    var el = this.el;
+    var src = this.data.model;
+
+    if (!src) { return; }
+
+    this.remove();
+
+    this.el.addEventListener('model-loaded', function (e) {
+      var gltfModel = self.el.components['gltf-model'];
+      // self.animations = gltfModel.animations;
+      // self.mixer = new THREE.AnimationMixer(el.object3D);
+      self.animations = gltfModel.model.animations;
+      self.mixer = gltfModel.model.mixer;
+
+      const inflated = self._inflate(gltfModel.model);
+      if (inflated) {
+        el.appendChild(inflated);
+      }
+    });
+
+    this.el.setAttribute('gltf-model', src);
+  },
+
+  remove: function () {
+    this.el.removeAttribute('gltf-model');
+  }
+});
+
+},{"../core/component":116}],81:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -60074,7 +60280,7 @@ module.exports.Component = registerComponent('remote-hand-controls', {
   }
 });
 
-},{"../core/component":114}],80:[function(_dereq_,module,exports){
+},{"../core/component":116}],82:[function(_dereq_,module,exports){
 var degToRad = _dereq_('../lib/three').Math.degToRad;
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -60097,7 +60303,7 @@ module.exports.Component = registerComponent('rotation', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162}],81:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164}],83:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 // Avoids triggering a zero-determinant which makes object3D matrix non-invertible.
@@ -60124,7 +60330,7 @@ module.exports.Component = registerComponent('scale', {
   }
 });
 
-},{"../core/component":114}],82:[function(_dereq_,module,exports){
+},{"../core/component":116}],84:[function(_dereq_,module,exports){
 /* global THREE */
 var register = _dereq_('../../core/component').registerComponent;
 var COMPONENTS = _dereq_('../../core/component').components;
@@ -60155,14 +60361,14 @@ module.exports.Component = register('background', {
   }
 });
 
-},{"../../core/component":114}],83:[function(_dereq_,module,exports){
+},{"../../core/component":116}],85:[function(_dereq_,module,exports){
 var register = _dereq_('../../core/component').registerComponent;
 
 module.exports.Component = register('debug', {
   schema: {default: true}
 });
 
-},{"../../core/component":114}],84:[function(_dereq_,module,exports){
+},{"../../core/component":116}],86:[function(_dereq_,module,exports){
 /* global DeviceOrientationEvent, location  */
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var utils = _dereq_('../../utils/');
@@ -60189,7 +60395,7 @@ module.exports.Component = registerComponent('device-orientation-permission-ui',
     deviceMotionMessage: {
       default: 'This immersive website requires access to your device motion sensors.'
     },
-    mobileDestkopMessage: {
+    mobileDesktopMessage: {
       default: 'Set your browser to request the mobile version of the site and reload the page to enjoy immersive mode.'
     },
     httpsMessage: {
@@ -60253,7 +60459,7 @@ module.exports.Component = registerComponent('device-orientation-permission-ui',
     var self = this;
     var safariIpadAlertEl = createAlertDialog(
       self.data.cancelButtonText,
-      self.data.mobileDestkopMessage,
+      self.data.mobileDesktopMessage,
       function () { self.el.removeChild(safariIpadAlertEl); });
     this.el.appendChild(safariIpadAlertEl);
   },
@@ -60381,7 +60587,7 @@ function createDialog (text, buttonsContainerEl) {
   return modalContainer;
 }
 
-},{"../../constants/":106,"../../core/component":114,"../../utils/":188}],85:[function(_dereq_,module,exports){
+},{"../../constants/":108,"../../core/component":116,"../../utils/":190}],87:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 
 /**
@@ -60406,7 +60612,7 @@ module.exports.Component = registerComponent('embedded', {
 
 });
 
-},{"../../core/component":114}],86:[function(_dereq_,module,exports){
+},{"../../core/component":116}],88:[function(_dereq_,module,exports){
 var register = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
 var debug = _dereq_('../../utils/debug');
@@ -60479,7 +60685,7 @@ function getFog (data) {
   return fog;
 }
 
-},{"../../core/component":114,"../../lib/three":162,"../../utils/debug":184}],87:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../lib/three":164,"../../utils/debug":186}],89:[function(_dereq_,module,exports){
 (function (process){(function (){
 /* global AFRAME */
 var AFRAME_INJECTED = _dereq_('../../constants').AFRAME_INJECTED;
@@ -60599,7 +60805,7 @@ module.exports.Component = registerComponent('inspector', {
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"../../../package":51,"../../constants":106,"../../core/component":114,"../../utils/":188,"_process":5}],88:[function(_dereq_,module,exports){
+},{"../../../package":51,"../../constants":108,"../../core/component":116,"../../utils/":190,"_process":5}],90:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var shouldCaptureKeyEvent = _dereq_('../../utils/').shouldCaptureKeyEvent;
 
@@ -60638,7 +60844,7 @@ module.exports.Component = registerComponent('keyboard-shortcuts', {
   }
 });
 
-},{"../../core/component":114,"../../utils/":188}],89:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../utils/":190}],91:[function(_dereq_,module,exports){
 var debug = _dereq_('../../utils/debug');
 var registerComponent = _dereq_('../../core/component').registerComponent;
 
@@ -60756,7 +60962,7 @@ module.exports.Component = registerComponent('pool', {
   }
 });
 
-},{"../../core/component":114,"../../utils/debug":184}],90:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../utils/debug":186}],92:[function(_dereq_,module,exports){
 /* global ImageData, URL */
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
@@ -61029,7 +61235,7 @@ module.exports.Component = registerComponent('screenshot', {
   }
 });
 
-},{"../../core/component":114,"../../lib/three":162}],91:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../lib/three":164}],93:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var RStats = _dereq_('../../../vendor/rStats');
 var utils = _dereq_('../../utils');
@@ -61109,7 +61315,7 @@ function createStats (scene) {
   });
 }
 
-},{"../../../vendor/rStats":200,"../../../vendor/rStats.extras":199,"../../core/component":114,"../../lib/rStatsAframe":161,"../../utils":188}],92:[function(_dereq_,module,exports){
+},{"../../../vendor/rStats":202,"../../../vendor/rStats.extras":201,"../../core/component":116,"../../lib/rStatsAframe":163,"../../utils":190}],94:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var constants = _dereq_('../../constants/');
 var utils = _dereq_('../../utils/');
@@ -61377,7 +61583,7 @@ function applyStickyHoverFix (buttonEl) {
   });
 }
 
-},{"../../constants/":106,"../../core/component":114,"../../utils/":188}],93:[function(_dereq_,module,exports){
+},{"../../constants/":108,"../../core/component":116,"../../utils/":190}],95:[function(_dereq_,module,exports){
 var component = _dereq_('../core/component');
 var THREE = _dereq_('../lib/three');
 var bind = _dereq_('../utils/bind');
@@ -61431,7 +61637,7 @@ module.exports.Component = registerComponent('shadow', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/bind":182}],94:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/bind":184}],96:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var debug = _dereq_('../utils/debug');
 var THREE = _dereq_('../lib/three');
@@ -61682,7 +61888,7 @@ module.exports.Component = registerComponent('sound', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/debug":184}],95:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/debug":186}],97:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -62221,7 +62427,7 @@ module.exports.Component = registerComponent('teleport-controls', {
   }
 });
 
-},{"../core/component":114}],96:[function(_dereq_,module,exports){
+},{"../core/component":116}],98:[function(_dereq_,module,exports){
 var createTextGeometry = _dereq_('three-bmfont-text');
 var loadBMFont = _dereq_('load-bmfont');
 
@@ -62706,7 +62912,7 @@ function PromiseCache () {
   };
 }
 
-},{"../core/component":114,"../core/shader":124,"../lib/three":162,"../utils/":188,"load-bmfont":23,"three-bmfont-text":40}],97:[function(_dereq_,module,exports){
+},{"../core/component":116,"../core/shader":126,"../lib/three":164,"../utils/":190,"load-bmfont":23,"three-bmfont-text":40}],99:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var controllerUtils = _dereq_('../utils/tracked-controls');
 var DEFAULT_CAMERA_HEIGHT = _dereq_('../constants').DEFAULT_CAMERA_HEIGHT;
@@ -63043,7 +63249,7 @@ module.exports.Component = registerComponent('tracked-controls-webvr', {
   }
 });
 
-},{"../constants":106,"../core/component":114,"../lib/three":162,"../utils/tracked-controls":197}],98:[function(_dereq_,module,exports){
+},{"../constants":108,"../core/component":116,"../lib/three":164,"../utils/tracked-controls":199}],100:[function(_dereq_,module,exports){
 var controllerUtils = _dereq_('../utils/tracked-controls');
 var registerComponent = _dereq_('../core/component').registerComponent;
 
@@ -63267,7 +63473,7 @@ module.exports.Component = registerComponent('tracked-controls-webxr', {
   }
 });
 
-},{"../core/component":114,"../utils/tracked-controls":197}],99:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/tracked-controls":199}],101:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 /**
@@ -63312,7 +63518,7 @@ module.exports.Component = registerComponent('tracked-controls', {
   }
 });
 
-},{"../core/component":114}],100:[function(_dereq_,module,exports){
+},{"../core/component":116}],102:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 var THREE = _dereq_('../lib/three');
@@ -63371,11 +63577,11 @@ module.exports.Component = registerComponent('valve-index-controls', {
   },
 
   mapping: {
-    axes: {trackpad: [0, 1]},
-    buttons: [
-      'trigger', 'grip', 'joystick', 'abutton', 'abutton',
-      'system', 'finger1', 'finger2', 'finger3',
-      'finger4', 'finger5']
+    axes: {
+      trackpad: [0, 1],
+      thumbstick: [2, 3]
+    },
+    buttons: ['trigger', 'grip', 'trackpad', 'thumbstick', 'abutton']
   },
 
   init: function () {
@@ -63561,7 +63767,7 @@ module.exports.Component = registerComponent('valve-index-controls', {
   }
 });
 
-},{"../core/component":114,"../lib/three":162,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],101:[function(_dereq_,module,exports){
+},{"../core/component":116,"../lib/three":164,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],103:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 
 /**
@@ -63575,7 +63781,7 @@ module.exports.Component = registerComponent('visible', {
   }
 });
 
-},{"../core/component":114}],102:[function(_dereq_,module,exports){
+},{"../core/component":116}],104:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -63836,7 +64042,7 @@ module.exports.Component = registerComponent('vive-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],103:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],105:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
 
@@ -64018,7 +64224,7 @@ module.exports.Component = registerComponent('vive-focus-controls', {
   }
 });
 
-},{"../core/component":114,"../utils/bind":182,"../utils/tracked-controls":197}],104:[function(_dereq_,module,exports){
+},{"../core/component":116,"../utils/bind":184,"../utils/tracked-controls":199}],106:[function(_dereq_,module,exports){
 var KEYCODE_TO_CODE = _dereq_('../constants').keyboardevent.KEYCODE_TO_CODE;
 var registerComponent = _dereq_('../core/component').registerComponent;
 var THREE = _dereq_('../lib/three');
@@ -64230,7 +64436,7 @@ function isEmptyObject (keys) {
   return true;
 }
 
-},{"../constants":106,"../core/component":114,"../lib/three":162,"../utils/":188}],105:[function(_dereq_,module,exports){
+},{"../constants":108,"../core/component":116,"../lib/three":164,"../utils/":190}],107:[function(_dereq_,module,exports){
 /* global THREE */
 var registerComponent = _dereq_('../core/component').registerComponent;
 var bind = _dereq_('../utils/bind');
@@ -64716,7 +64922,7 @@ module.exports.Component = registerComponent('windows-motion-controls', {
   }
 });
 
-},{"../constants":106,"../core/component":114,"../utils/":188,"../utils/bind":182,"../utils/tracked-controls":197}],106:[function(_dereq_,module,exports){
+},{"../constants":108,"../core/component":116,"../utils/":190,"../utils/bind":184,"../utils/tracked-controls":199}],108:[function(_dereq_,module,exports){
 module.exports = {
   AFRAME_INJECTED: 'aframe-injected',
   DEFAULT_CAMERA_HEIGHT: 1.6,
@@ -64724,7 +64930,7 @@ module.exports = {
   keyboardevent: _dereq_('./keyboardevent')
 };
 
-},{"./keyboardevent":107}],107:[function(_dereq_,module,exports){
+},{"./keyboardevent":109}],109:[function(_dereq_,module,exports){
 module.exports = {
   // Tiny KeyboardEvent.code polyfill.
   KEYCODE_TO_CODE: {
@@ -64739,7 +64945,7 @@ module.exports = {
   }
 };
 
-},{}],108:[function(_dereq_,module,exports){
+},{}],110:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var bind = _dereq_('../utils/bind');
 var debug = _dereq_('../utils/debug');
@@ -65019,7 +65225,7 @@ function getFileNameFromURL (url) {
 }
 module.exports.getFileNameFromURL = getFileNameFromURL;
 
-},{"../lib/three":162,"../utils/bind":182,"../utils/debug":184,"./a-node":112,"./a-register-element":113}],109:[function(_dereq_,module,exports){
+},{"../lib/three":164,"../utils/bind":184,"../utils/debug":186,"./a-node":114,"./a-register-element":115}],111:[function(_dereq_,module,exports){
 var debug = _dereq_('../utils/debug');
 var registerElement = _dereq_('./a-register-element').registerElement;
 
@@ -65069,7 +65275,7 @@ module.exports = registerElement('a-cubemap', {
   })
 });
 
-},{"../utils/debug":184,"./a-register-element":113}],110:[function(_dereq_,module,exports){
+},{"../utils/debug":186,"./a-register-element":115}],112:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var COMPONENTS = _dereq_('./component').components;
 var registerElement = _dereq_('./a-register-element').registerElement;
@@ -66003,7 +66209,7 @@ function getRotation (entityEl) {
 AEntity = registerElement('a-entity', {prototype: proto});
 module.exports = AEntity;
 
-},{"../lib/three":162,"../utils/":188,"./a-node":112,"./a-register-element":113,"./component":114}],111:[function(_dereq_,module,exports){
+},{"../lib/three":164,"../utils/":190,"./a-node":114,"./a-register-element":115,"./component":116}],113:[function(_dereq_,module,exports){
 var ANode = _dereq_('./a-node');
 var registerElement = _dereq_('./a-register-element').registerElement;
 var components = _dereq_('./component').components;
@@ -66119,7 +66325,7 @@ module.exports = registerElement('a-mixin', {
   })
 });
 
-},{"../utils":188,"./a-node":112,"./a-register-element":113,"./component":114}],112:[function(_dereq_,module,exports){
+},{"../utils":190,"./a-node":114,"./a-register-element":115,"./component":116}],114:[function(_dereq_,module,exports){
 /* global CustomEvent */
 var registerElement = _dereq_('./a-register-element').registerElement;
 var isNode = _dereq_('./a-register-element').isNode;
@@ -66390,7 +66596,7 @@ module.exports = registerElement('a-node', {
   })
 });
 
-},{"../utils/":188,"./a-register-element":113}],113:[function(_dereq_,module,exports){
+},{"../utils/":190,"./a-register-element":115}],115:[function(_dereq_,module,exports){
 /*
   ------------------------------------------------------------
   ------------- WARNING WARNING WARNING WARNING --------------
@@ -66577,7 +66783,7 @@ function copyProperties (source, destination) {
 ANode = _dereq_('./a-node');
 AEntity = _dereq_('./a-entity');
 
-},{"./a-entity":110,"./a-node":112,"document-register-element":12}],114:[function(_dereq_,module,exports){
+},{"./a-entity":112,"./a-node":114,"document-register-element":12}],116:[function(_dereq_,module,exports){
 /* global Node */
 var schema = _dereq_('./schema');
 var scenes = _dereq_('./scene/scenes');
@@ -67382,7 +67588,7 @@ function isObjectOrArray (value) {
          !(value instanceof window.HTMLElement);
 }
 
-},{"../utils/":188,"./scene/scenes":121,"./schema":123,"./system":125}],115:[function(_dereq_,module,exports){
+},{"../utils/":190,"./scene/scenes":123,"./schema":125,"./system":127}],117:[function(_dereq_,module,exports){
 var schema = _dereq_('./schema');
 
 var processSchema = schema.process;
@@ -67456,7 +67662,7 @@ module.exports.registerGeometry = function (name, definition) {
   return NewGeometry;
 };
 
-},{"../lib/three":162,"./schema":123}],116:[function(_dereq_,module,exports){
+},{"../lib/three":164,"./schema":125}],118:[function(_dereq_,module,exports){
 var coordinates = _dereq_('../utils/coordinates');
 var debug = _dereq_('debug');
 
@@ -67681,7 +67887,7 @@ function isValidDefaultCoordinate (possibleCoordinates, dimensions) {
 }
 module.exports.isValidDefaultCoordinate = isValidDefaultCoordinate;
 
-},{"../utils/coordinates":183,"debug":9}],117:[function(_dereq_,module,exports){
+},{"../utils/coordinates":185,"debug":9}],119:[function(_dereq_,module,exports){
 /* global Promise, screen, CustomEvent */
 var initMetaTags = _dereq_('./metaTags').inject;
 var initWakelock = _dereq_('./wakelock');
@@ -67775,6 +67981,7 @@ module.exports.AScene = registerElement('a-scene', {
         // Renderer initialization
         setupCanvas(this);
         this.setupRenderer();
+        loadingScreen.setup(this, getCanvasSize);
 
         this.resize();
         if (!embedded) { this.addFullScreenStyles(); }
@@ -67993,7 +68200,6 @@ module.exports.AScene = registerElement('a-scene', {
                   vrManager.layersEnabled = xrInit.requiredFeatures.indexOf('layers') !== -1;
                   vrManager.setSession(xrSession);
                   xrSession.addEventListener('end', self.exitVRBound);
-                  if (useAR) { self.addState('ar-mode'); }
                   enterVRSuccess(resolve);
                 },
                 function requestFail (error) {
@@ -68041,7 +68247,11 @@ module.exports.AScene = registerElement('a-scene', {
             window.dispatchEvent(event);
           }
 
-          self.addState('vr-mode');
+          if (useAR) {
+            self.addState('ar-mode');
+          } else {
+            self.addState('vr-mode');
+          }
           self.emit('enter-vr', {target: self});
           // Lock to landscape orientation on mobile.
           if (!isWebXRAvailable && self.isMobile && screen.orientation && screen.orientation.lock) {
@@ -68063,6 +68273,7 @@ module.exports.AScene = registerElement('a-scene', {
         }
 
         function enterVRFailure (err) {
+          self.removeState('vr-mode');
           if (err && err.message) {
             throw new Error('Failed to enter VR mode (`requestPresent`): ' + err.message);
           } else {
@@ -68085,7 +68296,7 @@ module.exports.AScene = registerElement('a-scene', {
         var vrManager = this.renderer.xr;
 
         // Don't exit VR if not in VR.
-        if (!this.is('vr-mode')) { return Promise.resolve('Not in VR.'); }
+        if (!this.is('vr-mode') && !this.is('ar-mode')) { return Promise.resolve('Not in immersive mode.'); }
 
         // Handle exiting VR if not yet already and in a headset or polyfill.
         if (this.checkHeadsetConnected() || this.isMobile) {
@@ -68341,7 +68552,6 @@ module.exports.AScene = registerElement('a-scene', {
         this.addEventListener('camera-set-active', function () {
           renderer.xr.setPoseTarget(self.camera.el.object3D);
         });
-        loadingScreen.setup(this, getCanvasSize);
       },
       writable: window.debug
     },
@@ -68495,6 +68705,7 @@ module.exports.AScene = registerElement('a-scene', {
  * @param {boolean} isVR - If in VR
  */
 function getCanvasSize (canvasEl, embedded, maxSize, isVR) {
+  if (!canvasEl.parentElement) { return {height: 0, width: 0}; }
   if (embedded) {
     return {
       height: canvasEl.parentElement.offsetHeight,
@@ -68605,7 +68816,7 @@ function setupCanvas (sceneEl) {
 }
 module.exports.setupCanvas = setupCanvas;  // For testing.
 
-},{"../../lib/three":162,"../../utils/":188,"../../utils/ios-orientationchange-blank-bug":189,"../a-entity":110,"../a-node":112,"../a-register-element":113,"../system":125,"./loadingScreen":118,"./metaTags":119,"./postMessage":120,"./scenes":121,"./wakelock":122}],118:[function(_dereq_,module,exports){
+},{"../../lib/three":164,"../../utils/":190,"../../utils/ios-orientationchange-blank-bug":191,"../a-entity":112,"../a-node":114,"../a-register-element":115,"../system":127,"./loadingScreen":120,"./metaTags":121,"./postMessage":122,"./scenes":123,"./wakelock":124}],120:[function(_dereq_,module,exports){
 /* global THREE */
 var utils = _dereq_('../../utils/');
 var styleParser = utils.styleParser;
@@ -68699,7 +68910,7 @@ function setupTitle () {
   sceneEl.appendChild(titleEl);
 }
 
-},{"../../utils/":188}],119:[function(_dereq_,module,exports){
+},{"../../utils/":190}],121:[function(_dereq_,module,exports){
 var constants = _dereq_('../../constants/');
 var extend = _dereq_('../../utils').extend;
 
@@ -68780,7 +68991,7 @@ function createTag (tagObj) {
   return extend(meta, tagObj.attributes);
 }
 
-},{"../../constants/":106,"../../utils":188}],120:[function(_dereq_,module,exports){
+},{"../../constants/":108,"../../utils":190}],122:[function(_dereq_,module,exports){
 var bind = _dereq_('../../utils/bind');
 var isIframed = _dereq_('../../utils/').isIframed;
 
@@ -68813,13 +69024,13 @@ function postMessageAPIHandler (event) {
   }
 }
 
-},{"../../utils/":188,"../../utils/bind":182}],121:[function(_dereq_,module,exports){
+},{"../../utils/":190,"../../utils/bind":184}],123:[function(_dereq_,module,exports){
 /*
   Scene index for keeping track of created scenes.
 */
 module.exports = [];
 
-},{}],122:[function(_dereq_,module,exports){
+},{}],124:[function(_dereq_,module,exports){
 var Wakelock = _dereq_('../../../vendor/wakelock/wakelock');
 
 module.exports = function initWakelock (scene) {
@@ -68830,7 +69041,7 @@ module.exports = function initWakelock (scene) {
   scene.addEventListener('exit-vr', function () { wakelock.release(); });
 };
 
-},{"../../../vendor/wakelock/wakelock":203}],123:[function(_dereq_,module,exports){
+},{"../../../vendor/wakelock/wakelock":205}],125:[function(_dereq_,module,exports){
 var utils = _dereq_('../utils/');
 var PropertyTypes = _dereq_('./propertyTypes');
 
@@ -69034,7 +69245,7 @@ function stringifyProperty (value, propDefinition) {
 }
 module.exports.stringifyProperty = stringifyProperty;
 
-},{"../utils/":188,"./propertyTypes":116}],124:[function(_dereq_,module,exports){
+},{"../utils/":190,"./propertyTypes":118}],126:[function(_dereq_,module,exports){
 var schema = _dereq_('./schema');
 
 var processSchema = schema.process;
@@ -69223,7 +69434,7 @@ module.exports.registerShader = function (name, definition) {
   return NewShader;
 };
 
-},{"../lib/three":162,"../utils":188,"./schema":123}],125:[function(_dereq_,module,exports){
+},{"../lib/three":164,"../utils":190,"./schema":125}],127:[function(_dereq_,module,exports){
 var components = _dereq_('./component');
 var schema = _dereq_('./schema');
 var utils = _dereq_('../utils/');
@@ -69381,10 +69592,10 @@ module.exports.registerSystem = function (name, definition) {
   for (i = 0; i < scenes.length; i++) { scenes[i].initSystem(name); }
 };
 
-},{"../utils/":188,"./component":114,"./schema":123}],126:[function(_dereq_,module,exports){
+},{"../utils/":190,"./component":116,"./schema":125}],128:[function(_dereq_,module,exports){
 _dereq_('./pivot');
 
-},{"./pivot":127}],127:[function(_dereq_,module,exports){
+},{"./pivot":129}],129:[function(_dereq_,module,exports){
 var registerComponent = _dereq_('../../core/component').registerComponent;
 var THREE = _dereq_('../../lib/three');
 
@@ -69433,7 +69644,7 @@ registerComponent('pivot', {
   }
 });
 
-},{"../../core/component":114,"../../lib/three":162}],128:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../lib/three":164}],130:[function(_dereq_,module,exports){
 /**
  * Common mesh defaults, mappings, and transforms.
  */
@@ -69460,7 +69671,7 @@ module.exports = function getMeshMixin () {
   };
 };
 
-},{"../../core/component":114,"../../core/shader":124,"../../utils/":188}],129:[function(_dereq_,module,exports){
+},{"../../core/component":116,"../../core/shader":126,"../../utils/":190}],131:[function(_dereq_,module,exports){
 _dereq_('./primitives/a-camera');
 _dereq_('./primitives/a-cursor');
 _dereq_('./primitives/a-curvedimage');
@@ -69476,7 +69687,7 @@ _dereq_('./primitives/a-video');
 _dereq_('./primitives/a-videosphere');
 _dereq_('./primitives/meshPrimitives');
 
-},{"./primitives/a-camera":131,"./primitives/a-cursor":132,"./primitives/a-curvedimage":133,"./primitives/a-gltf-model":134,"./primitives/a-image":135,"./primitives/a-light":136,"./primitives/a-link":137,"./primitives/a-obj-model":138,"./primitives/a-sky":139,"./primitives/a-sound":140,"./primitives/a-text":141,"./primitives/a-video":142,"./primitives/a-videosphere":143,"./primitives/meshPrimitives":144}],130:[function(_dereq_,module,exports){
+},{"./primitives/a-camera":133,"./primitives/a-cursor":134,"./primitives/a-curvedimage":135,"./primitives/a-gltf-model":136,"./primitives/a-image":137,"./primitives/a-light":138,"./primitives/a-link":139,"./primitives/a-obj-model":140,"./primitives/a-sky":141,"./primitives/a-sound":142,"./primitives/a-text":143,"./primitives/a-video":144,"./primitives/a-videosphere":145,"./primitives/meshPrimitives":146}],132:[function(_dereq_,module,exports){
 var AEntity = _dereq_('../../core/a-entity');
 var components = _dereq_('../../core/component').components;
 var registerElement = _dereq_('../../core/a-register-element').registerElement;
@@ -69675,7 +69886,7 @@ function definePrimitive (tagName, defaultComponents, mappings) {
 }
 module.exports.definePrimitive = definePrimitive;
 
-},{"../../core/a-entity":110,"../../core/a-register-element":113,"../../core/component":114,"../../utils/":188}],131:[function(_dereq_,module,exports){
+},{"../../core/a-entity":112,"../../core/a-register-element":115,"../../core/component":116,"../../utils/":190}],133:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-camera', {
@@ -69699,7 +69910,7 @@ registerPrimitive('a-camera', {
   }
 });
 
-},{"../primitives":130}],132:[function(_dereq_,module,exports){
+},{"../primitives":132}],134:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69734,7 +69945,7 @@ registerPrimitive('a-cursor', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],133:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],135:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69771,7 +69982,7 @@ registerPrimitive('a-curvedimage', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],134:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],136:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-gltf-model', {
@@ -69780,7 +69991,7 @@ registerPrimitive('a-gltf-model', {
   }
 });
 
-},{"../primitives":130}],135:[function(_dereq_,module,exports){
+},{"../primitives":132}],137:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69804,7 +70015,7 @@ registerPrimitive('a-image', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],136:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],138:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-light', {
@@ -69825,7 +70036,7 @@ registerPrimitive('a-light', {
   }
 });
 
-},{"../primitives":130}],137:[function(_dereq_,module,exports){
+},{"../primitives":132}],139:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-link', {
@@ -69842,7 +70053,7 @@ registerPrimitive('a-link', {
   }
 });
 
-},{"../primitives":130}],138:[function(_dereq_,module,exports){
+},{"../primitives":132}],140:[function(_dereq_,module,exports){
 var meshMixin = _dereq_('../getMeshMixin')();
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69858,7 +70069,7 @@ registerPrimitive('a-obj-model', utils.extendDeep({}, meshMixin, {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],139:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],141:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69884,7 +70095,7 @@ registerPrimitive('a-sky', utils.extendDeep({}, getMeshMixin(), {
   mappings: utils.extendDeep({}, meshPrimitives['a-sphere'].prototype.mappings)
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130,"./meshPrimitives":144}],140:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132,"./meshPrimitives":146}],142:[function(_dereq_,module,exports){
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 
 registerPrimitive('a-sound', {
@@ -69901,12 +70112,12 @@ registerPrimitive('a-sound', {
   }
 });
 
-},{"../primitives":130}],141:[function(_dereq_,module,exports){
+},{"../primitives":132}],143:[function(_dereq_,module,exports){
 // <a-text> using `definePrimitive` helper.
 var definePrimitive = _dereq_('../primitives').definePrimitive;
 definePrimitive('a-text', {text: {anchor: 'align', width: 5}});
 
-},{"../primitives":130}],142:[function(_dereq_,module,exports){
+},{"../primitives":132}],144:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69930,7 +70141,7 @@ registerPrimitive('a-video', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],143:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],145:[function(_dereq_,module,exports){
 var getMeshMixin = _dereq_('../getMeshMixin');
 var registerPrimitive = _dereq_('../primitives').registerPrimitive;
 var utils = _dereq_('../../../utils/');
@@ -69959,7 +70170,7 @@ registerPrimitive('a-videosphere', utils.extendDeep({}, getMeshMixin(), {
   }
 }));
 
-},{"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],144:[function(_dereq_,module,exports){
+},{"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],146:[function(_dereq_,module,exports){
 /**
  * Automated mesh primitive registration.
  */
@@ -69999,7 +70210,7 @@ function unCamelCase (str) {
   return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
 }
 
-},{"../../../core/geometry":115,"../../../utils/":188,"../getMeshMixin":128,"../primitives":130}],145:[function(_dereq_,module,exports){
+},{"../../../core/geometry":117,"../../../utils/":190,"../getMeshMixin":130,"../primitives":132}],147:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70020,7 +70231,7 @@ registerGeometry('box', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],146:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],148:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70040,7 +70251,7 @@ registerGeometry('circle', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],147:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],149:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70066,7 +70277,7 @@ registerGeometry('cone', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],148:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],150:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70090,7 +70301,7 @@ registerGeometry('cylinder', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],149:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],151:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70105,7 +70316,7 @@ registerGeometry('dodecahedron', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],150:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],152:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70120,7 +70331,7 @@ registerGeometry('icosahedron', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],151:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],153:[function(_dereq_,module,exports){
 _dereq_('./box.js');
 _dereq_('./circle.js');
 _dereq_('./cone.js');
@@ -70136,7 +70347,7 @@ _dereq_('./torus.js');
 _dereq_('./torusKnot.js');
 _dereq_('./triangle.js');
 
-},{"./box.js":145,"./circle.js":146,"./cone.js":147,"./cylinder.js":148,"./dodecahedron.js":149,"./icosahedron.js":150,"./octahedron.js":152,"./plane.js":153,"./ring.js":154,"./sphere.js":155,"./tetrahedron.js":156,"./torus.js":157,"./torusKnot.js":158,"./triangle.js":159}],152:[function(_dereq_,module,exports){
+},{"./box.js":147,"./circle.js":148,"./cone.js":149,"./cylinder.js":150,"./dodecahedron.js":151,"./icosahedron.js":152,"./octahedron.js":154,"./plane.js":155,"./ring.js":156,"./sphere.js":157,"./tetrahedron.js":158,"./torus.js":159,"./torusKnot.js":160,"./triangle.js":161}],154:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70151,7 +70362,7 @@ registerGeometry('octahedron', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],153:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],155:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70168,7 +70379,7 @@ registerGeometry('plane', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],154:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],156:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70191,7 +70402,7 @@ registerGeometry('ring', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],155:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],157:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70215,7 +70426,7 @@ registerGeometry('sphere', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],156:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],158:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70230,7 +70441,7 @@ registerGeometry('tetrahedron', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],157:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],159:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70252,7 +70463,7 @@ registerGeometry('torus', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],158:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],160:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70273,7 +70484,7 @@ registerGeometry('torusKnot', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],159:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],161:[function(_dereq_,module,exports){
 var registerGeometry = _dereq_('../core/geometry').registerGeometry;
 var THREE = _dereq_('../lib/three');
 
@@ -70328,7 +70539,7 @@ registerGeometry('triangle', {
   }
 });
 
-},{"../core/geometry":115,"../lib/three":162}],160:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../lib/three":164}],162:[function(_dereq_,module,exports){
 // Polyfill `Promise`.
 window.Promise = window.Promise || _dereq_('promise-polyfill');
 
@@ -70421,7 +70632,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 1.0.4 (Date 2020-11-15, Commit #7fa2254f)');
+console.log('A-Frame Version: 1.1.0 (Date 2020-12-07, Commit #849302a7)');
 console.log('THREE Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
@@ -70454,7 +70665,7 @@ module.exports = window.AFRAME = {
   version: pkg.version
 };
 
-},{"../package":51,"../vendor/starts-with-polyfill":201,"./components/index":64,"./core/a-assets":108,"./core/a-cubemap":109,"./core/a-entity":110,"./core/a-mixin":111,"./core/a-node":112,"./core/a-register-element":113,"./core/component":114,"./core/geometry":115,"./core/scene/a-scene":117,"./core/scene/scenes":121,"./core/schema":123,"./core/shader":124,"./core/system":125,"./extras/components/":126,"./extras/primitives/":129,"./extras/primitives/getMeshMixin":128,"./extras/primitives/primitives":130,"./geometries/index":151,"./lib/three":162,"./shaders/index":164,"./style/aframe.css":169,"./style/rStats.css":170,"./systems/index":174,"./utils/":188,"./utils/isIOSOlderThan10":191,"custom-event-polyfill":8,"present":31,"promise-polyfill":32,"super-animejs":34,"webvr-polyfill":46}],161:[function(_dereq_,module,exports){
+},{"../package":51,"../vendor/starts-with-polyfill":203,"./components/index":65,"./core/a-assets":110,"./core/a-cubemap":111,"./core/a-entity":112,"./core/a-mixin":113,"./core/a-node":114,"./core/a-register-element":115,"./core/component":116,"./core/geometry":117,"./core/scene/a-scene":119,"./core/scene/scenes":123,"./core/schema":125,"./core/shader":126,"./core/system":127,"./extras/components/":128,"./extras/primitives/":131,"./extras/primitives/getMeshMixin":130,"./extras/primitives/primitives":132,"./geometries/index":153,"./lib/three":164,"./shaders/index":166,"./style/aframe.css":171,"./style/rStats.css":172,"./systems/index":176,"./utils/":190,"./utils/isIOSOlderThan10":193,"custom-event-polyfill":8,"present":31,"promise-polyfill":32,"super-animejs":34,"webvr-polyfill":46}],163:[function(_dereq_,module,exports){
 window.aframeStats = function (scene) {
   var _rS = null;
   var _scene = scene;
@@ -70511,7 +70722,7 @@ if (typeof module === 'object') {
   };
 }
 
-},{}],162:[function(_dereq_,module,exports){
+},{}],164:[function(_dereq_,module,exports){
 (function (global){(function (){
 var THREE = global.THREE = _dereq_('super-three');
 
@@ -70549,7 +70760,7 @@ module.exports = THREE;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"../../vendor/DeviceOrientationControls":198,"super-three":35,"super-three/examples/js/loaders/DRACOLoader":36,"super-three/examples/js/loaders/GLTFLoader":37,"super-three/examples/js/loaders/MTLLoader":38,"super-three/examples/js/loaders/OBJLoader":39}],163:[function(_dereq_,module,exports){
+},{"../../vendor/DeviceOrientationControls":200,"super-three":35,"super-three/examples/js/loaders/DRACOLoader":36,"super-three/examples/js/loaders/GLTFLoader":37,"super-three/examples/js/loaders/MTLLoader":38,"super-three/examples/js/loaders/OBJLoader":39}],165:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -70619,14 +70830,14 @@ function getMaterialData (data, materialData) {
   return materialData;
 }
 
-},{"../core/shader":124,"../lib/three":162,"../utils/":188}],164:[function(_dereq_,module,exports){
+},{"../core/shader":126,"../lib/three":164,"../utils/":190}],166:[function(_dereq_,module,exports){
 _dereq_('./flat');
 _dereq_('./standard');
 _dereq_('./sdf');
 _dereq_('./msdf');
 _dereq_('./ios10hls');
 
-},{"./flat":163,"./ios10hls":165,"./msdf":166,"./sdf":167,"./standard":168}],165:[function(_dereq_,module,exports){
+},{"./flat":165,"./ios10hls":167,"./msdf":168,"./sdf":169,"./standard":170}],167:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 /**
@@ -70661,7 +70872,7 @@ module.exports.Shader = registerShader('ios10hls', {
 });
 
 
-},{"../core/shader":124}],166:[function(_dereq_,module,exports){
+},{"../core/shader":126}],168:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 var isWebGL2AVailable = !!document.createElement('canvas').getContext('webgl2');
@@ -70802,7 +71013,7 @@ module.exports.Shader = registerShader('msdf', {
   fragmentShader: FRAGMENT_SHADER
 });
 
-},{"../core/shader":124}],167:[function(_dereq_,module,exports){
+},{"../core/shader":126}],169:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 
 /**
@@ -70915,7 +71126,7 @@ module.exports.Shader = registerShader('sdf', {
   ].join('\n')
 });
 
-},{"../core/shader":124}],168:[function(_dereq_,module,exports){
+},{"../core/shader":126}],170:[function(_dereq_,module,exports){
 var registerShader = _dereq_('../core/shader').registerShader;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -71107,11 +71318,11 @@ function getMaterialData (data, materialData) {
   return materialData;
 }
 
-},{"../core/shader":124,"../lib/three":162,"../utils/":188}],169:[function(_dereq_,module,exports){
+},{"../core/shader":126,"../lib/three":164,"../utils/":190}],171:[function(_dereq_,module,exports){
 var css = "html.a-fullscreen{bottom:0;left:0;position:fixed;right:0;top:0}html.a-fullscreen body{height:100%;margin:0;overflow:hidden;padding:0;width:100%}html.a-fullscreen .a-canvas{width:100%!important;height:100%!important;top:0!important;left:0!important;right:0!important;bottom:0!important;position:fixed!important}html:not(.a-fullscreen) .a-enter-ar,html:not(.a-fullscreen) .a-enter-vr{right:5px;bottom:5px}:-webkit-full-screen{background-color:transparent}.a-hidden{display:none!important}.a-canvas{height:100%;left:0;position:absolute;top:0;width:100%}.a-canvas.a-grab-cursor:hover{cursor:grab;cursor:-moz-grab;cursor:-webkit-grab}canvas.a-canvas.a-mouse-cursor-hover:hover{cursor:pointer}.a-inspector-loader{background-color:#ed3160;position:fixed;left:3px;top:3px;padding:6px 10px;color:#fff;text-decoration:none;font-size:12px;font-family:Roboto,sans-serif;text-align:center;z-index:99999;width:204px}@keyframes dots-1{from{opacity:0}25%{opacity:1}}@keyframes dots-2{from{opacity:0}50%{opacity:1}}@keyframes dots-3{from{opacity:0}75%{opacity:1}}@-webkit-keyframes dots-1{from{opacity:0}25%{opacity:1}}@-webkit-keyframes dots-2{from{opacity:0}50%{opacity:1}}@-webkit-keyframes dots-3{from{opacity:0}75%{opacity:1}}.a-inspector-loader .dots span{animation:dots-1 2s infinite steps(1);-webkit-animation:dots-1 2s infinite steps(1)}.a-inspector-loader .dots span:first-child+span{animation-name:dots-2;-webkit-animation-name:dots-2}.a-inspector-loader .dots span:first-child+span+span{animation-name:dots-3;-webkit-animation-name:dots-3}a-scene{display:block;position:relative;height:100%;width:100%}a-assets,a-scene audio,a-scene img,a-scene video{display:none}.a-enter-vr-modal,.a-orientation-modal{font-family:Consolas,Andale Mono,Courier New,monospace}.a-enter-vr-modal a{border-bottom:1px solid #fff;padding:2px 0;text-decoration:none;transition:.1s color ease-in}.a-enter-vr-modal a:hover{background-color:#fff;color:#111;padding:2px 4px;position:relative;left:-4px}.a-enter-ar,.a-enter-vr{font-family:sans-serif,monospace;font-size:13px;width:100%;font-weight:200;line-height:16px;position:absolute;right:20px;bottom:20px}.a-enter-ar{right:80px}.a-enter-vr-button,.a-enter-vr-modal,.a-enter-vr-modal a{color:#fff;user-select:none;outline:0}.a-enter-vr-button{background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='108' height='62' viewBox='0 0 108 62'%3E%3Ctitle%3Eaframe-vrmode-noborder-reduced-tracking%3C/title%3E%3Cpath d='M68.81,21.56H64.23v8.27h4.58a4.13,4.13,0,0,0,3.1-1.09,4.2,4.2,0,0,0,1-3,4.24,4.24,0,0,0-1-3A4.05,4.05,0,0,0,68.81,21.56Z' fill='%23fff'/%3E%3Cpath d='M96,0H12A12,12,0,0,0,0,12V50A12,12,0,0,0,12,62H96a12,12,0,0,0,12-12V12A12,12,0,0,0,96,0ZM41.9,46H34L24,16h8l6,21.84,6-21.84H52Zm39.29,0H73.44L68.15,35.39H64.23V46H57V16H68.81q5.32,0,8.34,2.37a8,8,0,0,1,3,6.69,9.68,9.68,0,0,1-1.27,5.18,8.9,8.9,0,0,1-4,3.34l6.26,12.11Z' fill='%23fff'/%3E%3C/svg%3E\") 50% 50% no-repeat rgba(0,0,0,.35)}.a-enter-ar-button{background:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='108' height='62' viewBox='0 0 108 62'%3E%3Ctitle%3Eaframe-armode-noborder-reduced-tracking%3C/title%3E%3Cpath d='M96,0H12A12,12,0,0,0,0,12V50A12,12,0,0,0,12,62H96a12,12,0,0,0,12-12V12A12,12,0,0,0,96,0Zm8,50a8,8,0,0,1-8,8H12a8,8,0,0,1-8-8V12a8,8,0,0,1,8-8H96a8,8,0,0,1,8,8Z' fill='%23fff'/%3E%3Cpath d='M43.35,39.82H32.51L30.45,46H23.88L35,16h5.73L52,46H45.43Zm-9.17-5h7.5L37.91,23.58Z' fill='%23fff'/%3E%3Cpath d='M68.11,35H63.18V46H57V16H68.15q5.31,0,8.2,2.37a8.18,8.18,0,0,1,2.88,6.7,9.22,9.22,0,0,1-1.33,5.12,9.09,9.09,0,0,1-4,3.26l6.49,12.26V46H73.73Zm-4.93-5h5a5.09,5.09,0,0,0,3.6-1.18,4.21,4.21,0,0,0,1.28-3.27,4.56,4.56,0,0,0-1.2-3.34A5,5,0,0,0,68.15,21h-5Z' fill='%23fff'/%3E%3C/svg%3E\") 50% 50% no-repeat rgba(0,0,0,.2)}.a-enter-ar-button,.a-enter-vr-button{background-size:90% 90%;border:0;bottom:0;cursor:pointer;min-width:58px;min-height:34px;padding-right:0;padding-top:0;position:absolute;right:0;transition:background-color .05s ease;-webkit-transition:background-color .05s ease;z-index:9999;border-radius:8px;touch-action:manipulation}.a-enter-ar-button{background-size:100% 90%;margin-right:10px;border-radius:7px}.a-enter-ar-button:active,.a-enter-ar-button:hover,.a-enter-vr-button:active,.a-enter-vr-button:hover{background-color:#ef2d5e}.a-enter-vr-button.resethover{background-color:rgba(0,0,0,.35)}[data-a-enter-vr-no-webvr] .a-enter-vr-button{border-color:#666;opacity:.65}[data-a-enter-vr-no-webvr] .a-enter-vr-button:active,[data-a-enter-vr-no-webvr] .a-enter-vr-button:hover{background-color:rgba(0,0,0,.35);cursor:not-allowed}.a-enter-vr-modal{background-color:#666;border-radius:0;display:none;min-height:32px;margin-right:70px;padding:9px;width:280px;right:2%;position:absolute}.a-enter-vr-modal:after{border-bottom:10px solid transparent;border-left:10px solid #666;border-top:10px solid transparent;display:inline-block;content:'';position:absolute;right:-5px;top:5px;width:0;height:0}.a-enter-vr-modal a,.a-enter-vr-modal p{display:inline}.a-enter-vr-modal p{margin:0}.a-enter-vr-modal p:after{content:' '}[data-a-enter-vr-no-headset].a-enter-vr:hover .a-enter-vr-modal,[data-a-enter-vr-no-webvr].a-enter-vr:hover .a-enter-vr-modal{display:block}.a-orientation-modal{background:url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20version%3D%221.1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%2090%2090%22%20enable-background%3D%22new%200%200%2090%2090%22%20xml%3Aspace%3D%22preserve%22%3E%3Cpolygon%20points%3D%220%2C0%200%2C0%200%2C0%20%22%3E%3C/polygon%3E%3Cg%3E%3Cpath%20d%3D%22M71.545%2C48.145h-31.98V20.743c0-2.627-2.138-4.765-4.765-4.765H18.456c-2.628%2C0-4.767%2C2.138-4.767%2C4.765v42.789%20%20%20c0%2C2.628%2C2.138%2C4.766%2C4.767%2C4.766h5.535v0.959c0%2C2.628%2C2.138%2C4.765%2C4.766%2C4.765h42.788c2.628%2C0%2C4.766-2.137%2C4.766-4.765V52.914%20%20%20C76.311%2C50.284%2C74.173%2C48.145%2C71.545%2C48.145z%20M18.455%2C16.935h16.344c2.1%2C0%2C3.808%2C1.708%2C3.808%2C3.808v27.401H37.25V22.636%20%20%20c0-0.264-0.215-0.478-0.479-0.478H16.482c-0.264%2C0-0.479%2C0.214-0.479%2C0.478v36.585c0%2C0.264%2C0.215%2C0.478%2C0.479%2C0.478h7.507v7.644%20%20%20h-5.534c-2.101%2C0-3.81-1.709-3.81-3.81V20.743C14.645%2C18.643%2C16.354%2C16.935%2C18.455%2C16.935z%20M16.96%2C23.116h19.331v25.031h-7.535%20%20%20c-2.628%2C0-4.766%2C2.139-4.766%2C4.768v5.828h-7.03V23.116z%20M71.545%2C73.064H28.757c-2.101%2C0-3.81-1.708-3.81-3.808V52.914%20%20%20c0-2.102%2C1.709-3.812%2C3.81-3.812h42.788c2.1%2C0%2C3.809%2C1.71%2C3.809%2C3.812v16.343C75.354%2C71.356%2C73.645%2C73.064%2C71.545%2C73.064z%22%3E%3C/path%3E%3Cpath%20d%3D%22M28.919%2C58.424c-1.466%2C0-2.659%2C1.193-2.659%2C2.66c0%2C1.466%2C1.193%2C2.658%2C2.659%2C2.658c1.468%2C0%2C2.662-1.192%2C2.662-2.658%20%20%20C31.581%2C59.617%2C30.387%2C58.424%2C28.919%2C58.424z%20M28.919%2C62.786c-0.939%2C0-1.703-0.764-1.703-1.702c0-0.939%2C0.764-1.704%2C1.703-1.704%20%20%20c0.94%2C0%2C1.705%2C0.765%2C1.705%2C1.704C30.623%2C62.022%2C29.858%2C62.786%2C28.919%2C62.786z%22%3E%3C/path%3E%3Cpath%20d%3D%22M69.654%2C50.461H33.069c-0.264%2C0-0.479%2C0.215-0.479%2C0.479v20.288c0%2C0.264%2C0.215%2C0.478%2C0.479%2C0.478h36.585%20%20%20c0.263%2C0%2C0.477-0.214%2C0.477-0.478V50.939C70.131%2C50.676%2C69.917%2C50.461%2C69.654%2C50.461z%20M69.174%2C51.417V70.75H33.548V51.417H69.174z%22%3E%3C/path%3E%3Cpath%20d%3D%22M45.201%2C30.296c6.651%2C0%2C12.233%2C5.351%2C12.551%2C11.977l-3.033-2.638c-0.193-0.165-0.507-0.142-0.675%2C0.048%20%20%20c-0.174%2C0.198-0.153%2C0.501%2C0.045%2C0.676l3.883%2C3.375c0.09%2C0.075%2C0.198%2C0.115%2C0.312%2C0.115c0.141%2C0%2C0.273-0.061%2C0.362-0.166%20%20%20l3.371-3.877c0.173-0.2%2C0.151-0.502-0.047-0.675c-0.194-0.166-0.508-0.144-0.676%2C0.048l-2.592%2C2.979%20%20%20c-0.18-3.417-1.629-6.605-4.099-9.001c-2.538-2.461-5.877-3.817-9.404-3.817c-0.264%2C0-0.479%2C0.215-0.479%2C0.479%20%20%20C44.72%2C30.083%2C44.936%2C30.296%2C45.201%2C30.296z%22%3E%3C/path%3E%3C/g%3E%3C/svg%3E) center/50% 50% no-repeat rgba(244,244,244,1);bottom:0;font-size:14px;font-weight:600;left:0;line-height:20px;right:0;position:fixed;top:0;z-index:9999999}.a-orientation-modal:after{color:#666;content:\"Insert phone into Cardboard holder.\";display:block;position:absolute;text-align:center;top:70%;transform:translateY(-70%);width:100%}.a-orientation-modal button{background:url(data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20xmlns%3Axlink%3D%22http%3A//www.w3.org/1999/xlink%22%20version%3D%221.1%22%20x%3D%220px%22%20y%3D%220px%22%20viewBox%3D%220%200%20100%20100%22%20enable-background%3D%22new%200%200%20100%20100%22%20xml%3Aspace%3D%22preserve%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M55.209%2C50l17.803-17.803c1.416-1.416%2C1.416-3.713%2C0-5.129c-1.416-1.417-3.713-1.417-5.129%2C0L50.08%2C44.872%20%20L32.278%2C27.069c-1.416-1.417-3.714-1.417-5.129%2C0c-1.417%2C1.416-1.417%2C3.713%2C0%2C5.129L44.951%2C50L27.149%2C67.803%20%20c-1.417%2C1.416-1.417%2C3.713%2C0%2C5.129c0.708%2C0.708%2C1.636%2C1.062%2C2.564%2C1.062c0.928%2C0%2C1.856-0.354%2C2.564-1.062L50.08%2C55.13l17.803%2C17.802%20%20c0.708%2C0.708%2C1.637%2C1.062%2C2.564%2C1.062s1.856-0.354%2C2.564-1.062c1.416-1.416%2C1.416-3.713%2C0-5.129L55.209%2C50z%22%3E%3C/path%3E%3C/svg%3E) no-repeat;border:none;height:50px;text-indent:-9999px;width:50px}.a-loader-title{background-color:rgba(0,0,0,.6);font-family:sans-serif,monospace;text-align:center;font-size:20px;height:50px;font-weight:300;line-height:50px;position:absolute;right:0;left:0;top:0;color:#fff}.a-modal{background:0 0/50% 50% rgba(0,0,0,.6);bottom:0;font-size:14px;font-weight:600;left:0;line-height:20px;right:0;position:fixed;top:0;z-index:9999999}.a-dialog{position:relative;left:50%;top:50%;transform:translate(-50%,-50%);z-index:199995;width:300px;height:200px;background-size:contain;background-color:#fff;font-family:sans-serif,monospace;font-size:20px;border-radius:3px;padding:6px}.a-dialog-text-container{width:100%;height:70%;align-self:flex-start;display:flex;justify-content:center;align-content:center;flex-direction:column}.a-dialog-text{display:inline-block;font-weight:400;font-size:14pt;margin:8px}.a-dialog-buttons-container{display:inline-flex;align-self:flex-end;width:100%;height:30%}.a-dialog-button{cursor:pointer;align-self:center;opacity:.9;height:80%;width:50%;font-size:12pt;margin:4px;border-radius:2px;text-align:center;border:none;display:inline-block;-webkit-transition:all .25s ease-in-out;transition:all .25s ease-in-out;box-shadow:0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.2);user-select:none}.a-dialog-permission-button:hover{box-shadow:0 7px 14px rgba(0,0,0,.2),0 2px 2px rgba(0,0,0,.2)}.a-dialog-allow-button{background-color:#00ceff}.a-dialog-deny-button{background-color:#ff005b}.a-dialog-ok-button{background-color:#00ceff;width:100%}"; (_dereq_("browserify-css").createStyle(css, { "href": "src/style/aframe.css"})); module.exports = css;
-},{"browserify-css":4}],170:[function(_dereq_,module,exports){
+},{"browserify-css":4}],172:[function(_dereq_,module,exports){
 var css = ".rs-base{background-color:#333;color:#fafafa;border-radius:0;font:10px monospace;left:5px;line-height:1em;opacity:.85;overflow:hidden;padding:10px;position:fixed;top:5px;width:300px;z-index:10000}.rs-base div.hidden{display:none}.rs-base h1{color:#fff;cursor:pointer;font-size:1.4em;font-weight:300;margin:0 0 5px;padding:0}.rs-group{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-flex-direction:column-reverse;flex-direction:column-reverse;margin-bottom:5px}.rs-group:last-child{margin-bottom:0}.rs-counter-base{align-items:center;display:-webkit-box;display:-webkit-flex;display:flex;height:10px;-webkit-justify-content:space-between;justify-content:space-between;margin:2px 0}.rs-counter-base.alarm{color:#b70000;text-shadow:0 0 0 #b70000,0 0 1px #fff,0 0 1px #fff,0 0 2px #fff,0 0 2px #fff,0 0 3px #fff,0 0 3px #fff,0 0 4px #fff,0 0 4px #fff}.rs-counter-id{font-weight:300;-webkit-box-ordinal-group:0;-webkit-order:0;order:0;width:54px}.rs-counter-value{font-weight:300;-webkit-box-ordinal-group:1;-webkit-order:1;order:1;text-align:right;width:35px}.rs-canvas{-webkit-box-ordinal-group:2;-webkit-order:2;order:2}@media (min-width:480px){.rs-base{left:20px;top:20px}}"; (_dereq_("browserify-css").createStyle(css, { "href": "src/style/rStats.css"})); module.exports = css;
-},{"browserify-css":4}],171:[function(_dereq_,module,exports){
+},{"browserify-css":4}],173:[function(_dereq_,module,exports){
 var constants = _dereq_('../constants/');
 var registerSystem = _dereq_('../core/system').registerSystem;
 
@@ -71384,7 +71595,7 @@ function removeDefaultCamera (sceneEl) {
   sceneEl.removeChild(defaultCamera);
 }
 
-},{"../constants/":106,"../core/system":125}],172:[function(_dereq_,module,exports){
+},{"../constants/":108,"../core/system":127}],174:[function(_dereq_,module,exports){
 var geometries = _dereq_('../core/geometry').geometries;
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
@@ -71524,7 +71735,7 @@ function toBufferGeometry (geometry, doBuffer) {
   return bufferGeometry;
 }
 
-},{"../core/geometry":115,"../core/system":125,"../lib/three":162}],173:[function(_dereq_,module,exports){
+},{"../core/geometry":117,"../core/system":127,"../lib/three":164}],175:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 
@@ -71560,7 +71771,7 @@ module.exports.System = registerSystem('gltf-model', {
   }
 });
 
-},{"../core/system":125,"../lib/three":162}],174:[function(_dereq_,module,exports){
+},{"../core/system":127,"../lib/three":164}],176:[function(_dereq_,module,exports){
 _dereq_('./camera');
 _dereq_('./geometry');
 _dereq_('./gltf-model');
@@ -71572,7 +71783,7 @@ _dereq_('./tracked-controls-webvr');
 _dereq_('./tracked-controls-webxr');
 _dereq_('./webxr');
 
-},{"./camera":171,"./geometry":172,"./gltf-model":173,"./light":175,"./material":176,"./renderer":177,"./shadow":178,"./tracked-controls-webvr":179,"./tracked-controls-webxr":180,"./webxr":181}],175:[function(_dereq_,module,exports){
+},{"./camera":173,"./geometry":174,"./gltf-model":175,"./light":177,"./material":178,"./renderer":179,"./shadow":180,"./tracked-controls-webvr":181,"./tracked-controls-webxr":182,"./webxr":183}],177:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var bind = _dereq_('../utils/bind');
 var constants = _dereq_('../constants/');
@@ -71658,7 +71869,7 @@ module.exports.System = registerSystem('light', {
   }
 });
 
-},{"../constants/":106,"../core/system":125,"../utils/bind":182}],176:[function(_dereq_,module,exports){
+},{"../constants/":108,"../core/system":127,"../utils/bind":184}],178:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 var utils = _dereq_('../utils/');
@@ -72063,7 +72274,7 @@ function fixVideoAttributes (videoEl) {
   return videoEl;
 }
 
-},{"../core/system":125,"../lib/three":162,"../utils/":188,"../utils/material":192}],177:[function(_dereq_,module,exports){
+},{"../core/system":127,"../lib/three":164,"../utils/":190,"../utils/material":194}],179:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var utils = _dereq_('../utils/');
 var THREE = _dereq_('../lib/three');
@@ -72125,7 +72336,7 @@ module.exports.System = registerSystem('renderer', {
   }
 });
 
-},{"../core/system":125,"../lib/three":162,"../utils/":188}],178:[function(_dereq_,module,exports){
+},{"../core/system":127,"../lib/three":164,"../utils/":190}],180:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var THREE = _dereq_('../lib/three');
 
@@ -72180,7 +72391,7 @@ module.exports.System = registerSystem('shadow', {
   }
 });
 
-},{"../core/system":125,"../lib/three":162}],179:[function(_dereq_,module,exports){
+},{"../core/system":127,"../lib/three":164}],181:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var utils = _dereq_('../utils');
 var isWebXRAvailable = utils.device.isWebXRAvailable;
@@ -72248,7 +72459,7 @@ module.exports.System = registerSystem('tracked-controls-webvr', {
   }
 });
 
-},{"../core/system":125,"../utils":188}],180:[function(_dereq_,module,exports){
+},{"../core/system":127,"../utils":190}],182:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 var utils = _dereq_('../utils');
 
@@ -72309,6 +72520,7 @@ module.exports.System = registerSystem('tracked-controls-webxr', {
       return;
     }
 
+    if (!xrSession.inputSources) { return; }
     this.controllers = xrSession.inputSources;
     if (this.oldControllersLength === this.controllers.length) {
       var equal = true;
@@ -72332,7 +72544,7 @@ module.exports.System = registerSystem('tracked-controls-webxr', {
   }
 });
 
-},{"../core/system":125,"../utils":188}],181:[function(_dereq_,module,exports){
+},{"../core/system":127,"../utils":190}],183:[function(_dereq_,module,exports){
 var registerSystem = _dereq_('../core/system').registerSystem;
 
 var utils = _dereq_('../utils/');
@@ -72385,7 +72597,7 @@ module.exports.System = registerSystem('webxr', {
   }
 });
 
-},{"../core/system":125,"../utils/":188}],182:[function(_dereq_,module,exports){
+},{"../core/system":127,"../utils/":190}],184:[function(_dereq_,module,exports){
 /**
  * Faster version of Function.prototype.bind
  * @param {Function} fn - Function to wrap.
@@ -72402,7 +72614,7 @@ module.exports = function bind (fn, ctx/* , arg1, arg2 */) {
   })(Array.prototype.slice.call(arguments, 2));
 };
 
-},{}],183:[function(_dereq_,module,exports){
+},{}],185:[function(_dereq_,module,exports){
 /* global THREE */
 var debug = _dereq_('./debug');
 var extend = _dereq_('object-assign');
@@ -72514,7 +72726,7 @@ module.exports.toVector3 = function (vec3) {
   return new THREE.Vector3(vec3.x, vec3.y, vec3.z);
 };
 
-},{"./debug":184,"object-assign":25}],184:[function(_dereq_,module,exports){
+},{"./debug":186,"object-assign":25}],186:[function(_dereq_,module,exports){
 (function (process){(function (){
 var debugLib = _dereq_('debug');
 var extend = _dereq_('object-assign');
@@ -72611,7 +72823,7 @@ module.exports = debug;
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"_process":5,"debug":9,"object-assign":25}],185:[function(_dereq_,module,exports){
+},{"_process":5,"debug":9,"object-assign":25}],187:[function(_dereq_,module,exports){
 (function (process){(function (){
 var error = _dereq_('debug')('device:error');
 
@@ -72804,7 +73016,7 @@ module.exports.isNodeEnvironment = !module.exports.isBrowserEnvironment;
 
 }).call(this)}).call(this,_dereq_('_process'))
 
-},{"_process":5,"debug":9}],186:[function(_dereq_,module,exports){
+},{"_process":5,"debug":9}],188:[function(_dereq_,module,exports){
 /**
  * Split a delimited component property string (e.g., `material.color`) to an object
  * containing `component` name and `property` name. If there is no delimiter, just return the
@@ -72866,7 +73078,7 @@ module.exports.setComponentProperty = function (el, name, value, delimiter) {
   el.setAttribute(name, value);
 };
 
-},{}],187:[function(_dereq_,module,exports){
+},{}],189:[function(_dereq_,module,exports){
 module.exports = function forceCanvasResizeSafariMobile (canvasEl) {
   var width = canvasEl.style.width;
   var height = canvasEl.style.height;
@@ -72882,7 +73094,7 @@ module.exports = function forceCanvasResizeSafariMobile (canvasEl) {
   }, 200);
 };
 
-},{}],188:[function(_dereq_,module,exports){
+},{}],190:[function(_dereq_,module,exports){
 /* global location */
 
 /* Centralized place to reference utilities since utils is exposed to the user. */
@@ -73212,7 +73424,7 @@ module.exports.findAllScenes = function (el) {
 // Must be at bottom to avoid circular dependency.
 module.exports.srcLoader = _dereq_('./src-loader');
 
-},{"./bind":182,"./coordinates":183,"./debug":184,"./device":185,"./entity":186,"./forceCanvasResizeSafariMobile":187,"./is-ie11":190,"./material":192,"./object-pool":193,"./split":194,"./src-loader":195,"./styleParser":196,"./tracked-controls":197,"deep-assign":11,"object-assign":25}],189:[function(_dereq_,module,exports){
+},{"./bind":184,"./coordinates":185,"./debug":186,"./device":187,"./entity":188,"./forceCanvasResizeSafariMobile":189,"./is-ie11":192,"./material":194,"./object-pool":195,"./split":196,"./src-loader":197,"./styleParser":198,"./tracked-controls":199,"deep-assign":11,"object-assign":25}],191:[function(_dereq_,module,exports){
 // Safari regression introduced in iOS 12 and remains in iOS 13.
 // https://stackoverflow.com/questions/62717621/white-space-at-page-bottom-after-device-rotation-in-ios-safari
 window.addEventListener('orientationchange', function () {
@@ -73227,7 +73439,7 @@ window.addEventListener('orientationchange', function () {
   }, 500);
 });
 
-},{}],190:[function(_dereq_,module,exports){
+},{}],192:[function(_dereq_,module,exports){
 // https://stackoverflow.com/a/17907562
 function getInternetExplorerVersion () {
   var version = -1;
@@ -73245,7 +73457,7 @@ function getInternetExplorerVersion () {
 
 module.exports = getInternetExplorerVersion() === 11;
 
-},{}],191:[function(_dereq_,module,exports){
+},{}],193:[function(_dereq_,module,exports){
 /**
  * Check if device is iOS and older than version 10.
  */
@@ -73253,7 +73465,7 @@ module.exports = function isIOSOlderThan10 (userAgent) {
   return /(iphone|ipod|ipad).*os.(7_|8_|9_)/i.test(userAgent);
 };
 
-},{}],192:[function(_dereq_,module,exports){
+},{}],194:[function(_dereq_,module,exports){
 var THREE = _dereq_('../lib/three');
 
 var HLS_MIMETYPES = ['application/x-mpegurl', 'application/vnd.apple.mpegurl'];
@@ -73424,7 +73636,7 @@ module.exports.isHLS = function (src, type) {
   return false;
 };
 
-},{"../lib/three":162}],193:[function(_dereq_,module,exports){
+},{"../lib/three":164}],195:[function(_dereq_,module,exports){
 /*
   Adapted deePool by Kyle Simpson.
   MIT License: http://getify.mit-license.org
@@ -73515,7 +73727,7 @@ function removeUnusedKeys (obj, schema) {
 }
 module.exports.removeUnusedKeys = removeUnusedKeys;
 
-},{}],194:[function(_dereq_,module,exports){
+},{}],196:[function(_dereq_,module,exports){
 /**
  * String split with cached result.
  */
@@ -73532,7 +73744,7 @@ module.exports.split = (function () {
   };
 })();
 
-},{}],195:[function(_dereq_,module,exports){
+},{}],197:[function(_dereq_,module,exports){
 /* global Image, XMLHttpRequest */
 var debug = _dereq_('./debug');
 
@@ -73691,7 +73903,7 @@ module.exports = {
   validateCubemapSrc: validateCubemapSrc
 };
 
-},{"./debug":184}],196:[function(_dereq_,module,exports){
+},{"./debug":186}],198:[function(_dereq_,module,exports){
 /**
  * Utils for parsing style-like strings (e.g., "primitive: box; width: 5; height: 4.5").
  * Some code adapted from `style-attr` (https://github.com/joshwnj/style-attr)
@@ -73844,7 +74056,7 @@ function styleStringify (obj) {
 
 function upperCase (str) { return str[1].toUpperCase(); }
 
-},{}],197:[function(_dereq_,module,exports){
+},{}],199:[function(_dereq_,module,exports){
 var DEFAULT_HANDEDNESS = _dereq_('../constants').DEFAULT_HANDEDNESS;
 var AXIS_LABELS = ['x', 'y', 'z', 'w'];
 var NUM_HANDS = 2;  // Number of hands in a pair. Should always be 2.
@@ -74086,7 +74298,7 @@ module.exports.onButtonEvent = function (id, evtName, component, hand) {
   }
 };
 
-},{"../constants":106}],198:[function(_dereq_,module,exports){
+},{"../constants":108}],200:[function(_dereq_,module,exports){
 /**
  * @author richt / http://richt.me
  * @author WestLangley / http://github.com/WestLangley
@@ -74199,7 +74411,7 @@ THREE.DeviceOrientationControls = function ( object ) {
 
 };
 
-},{}],199:[function(_dereq_,module,exports){
+},{}],201:[function(_dereq_,module,exports){
 window.glStats = function () {
 
     var _rS = null;
@@ -74460,7 +74672,7 @@ if (typeof module === 'object') {
   };
 }
 
-},{}],200:[function(_dereq_,module,exports){
+},{}],202:[function(_dereq_,module,exports){
 // performance.now() polyfill from https://gist.github.com/paulirish/5438650
 'use strict';
 
@@ -74915,7 +75127,7 @@ if (typeof module === 'object') {
   module.exports = window.rStats;
 }
 
-},{}],201:[function(_dereq_,module,exports){
+},{}],203:[function(_dereq_,module,exports){
 // https://stackoverflow.com/a/36213464
 if (!String.prototype.startsWith) {
     String.prototype.startsWith = function(searchString, position){
@@ -74924,7 +75136,7 @@ if (!String.prototype.startsWith) {
   };
 }
 
-},{}],202:[function(_dereq_,module,exports){
+},{}],204:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -74986,7 +75198,7 @@ Util.isLandscapeMode = function() {
 
 module.exports = Util;
 
-},{}],203:[function(_dereq_,module,exports){
+},{}],205:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 Google Inc. All Rights Reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75062,6 +75274,6 @@ function getWakeLock() {
 
 module.exports = getWakeLock();
 
-},{"./util.js":202}]},{},[160])(160)
+},{"./util.js":204}]},{},[162])(162)
 });
 //# sourceMappingURL=aframe-master.js.map
