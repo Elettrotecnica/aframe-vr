@@ -40,7 +40,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       return;
     }
 
-    if (!this.data.wsURI) {
+    if (!this.data.URI) {
       this.URI = this._defaultURI();
     } else {
       this.URI = this.data.URI;
