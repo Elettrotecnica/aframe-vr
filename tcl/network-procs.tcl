@@ -77,7 +77,7 @@ namespace eval ws::aframevr {
 
         set exclude [list $channel]
         #set exclude [list]
-        ::ws::multicast -exclude $exclude $chat [::ws::build_msg $msg]
+        ::ws::multicast -exclude $exclude $chat [ns_connchan wsencode -opcode text $msg]
     }
 }
 
