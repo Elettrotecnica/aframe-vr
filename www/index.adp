@@ -8,7 +8,7 @@
     <script src="js/networked-aframe.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/6.4.0/adapter.min.js" ></script>
     <script src="js/janus.js" ></script>
-    <script src="js/aframe-janus-videoroom.js"></script>
+    <script src="js/aframe-janus-videoroom-multistream.js"></script>
   </head>
   <body>
     <a-scene oacs-networked-scene>
