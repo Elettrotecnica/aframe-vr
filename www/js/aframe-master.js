@@ -13201,9 +13201,9 @@ module.exports.Component = registerComponent('absolute-rotation-listener', {
         el = el.parentElement;
       }
 
-      newValue.x = THREE.Math.radToDeg(newValue.x);
-      newValue.y = THREE.Math.radToDeg(newValue.y);
-      newValue.z = THREE.Math.radToDeg(newValue.z);
+      newValue.x = THREE.MathUtils.radToDeg(newValue.x);
+      newValue.y = THREE.MathUtils.radToDeg(newValue.y);
+      newValue.z = THREE.MathUtils.radToDeg(newValue.z);
       return newValue;
     };
   }()
@@ -34729,7 +34729,7 @@ __webpack_require__(/*! ./extras/components/ */ "./src/extras/components/index.j
 
 __webpack_require__(/*! ./extras/primitives/ */ "./src/extras/primitives/index.js");
 
-console.log('A-Frame Version: 1.3.0 (Date 2022-10-10, Commit #90febb62)');
+console.log('A-Frame Version: 1.3.0 (Date 2022-10-10, Commit #900a95a0)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 module.exports = window.AFRAME = {
