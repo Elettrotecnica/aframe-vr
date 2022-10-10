@@ -21407,7 +21407,7 @@ module.exports.Component = registerComponent('readyplayerme-avatar', {
     // https://github.com/mrdoob/three.js/blob/dev/src/animation/PropertyBinding.js#L211
 
     el.object3D.uuid = node.uuid;
-    node.uuid = THREE.Math.generateUUID();
+    node.uuid = THREE.MathUtils.generateUUID();
     return el;
   },
   update: function () {
@@ -34729,7 +34729,7 @@ __webpack_require__(/*! ./extras/components/ */ "./src/extras/components/index.j
 
 __webpack_require__(/*! ./extras/primitives/ */ "./src/extras/primitives/index.js");
 
-console.log('A-Frame Version: 1.3.0 (Date 2022-10-10, Commit #900a95a0)');
+console.log('A-Frame Version: 1.3.0 (Date 2022-10-10, Commit #5f5c147a)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 module.exports = window.AFRAME = {
