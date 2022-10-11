@@ -6,7 +6,7 @@
     <meta name="description" content="Hello, WebVR! • A-Frame">
     <script src="js/aframe-master.min.js"></script>
     <script src="js/networked-aframe.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/6.4.0/adapter.min.js" ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js"></script>
     <script src="js/janus.js" ></script>
     <script src="js/aframe-janus-videoroom-multistream.js"></script>
   </head>
@@ -125,7 +125,7 @@
         <!-- camera -->
         <a-camera id="client-@user_id;literal@"
                   oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@"
-                  janus-videoroom-entity="room: 1234;">
+                  janus-videoroom-entity="stringIds: true; room: 1234;">
         </a-camera>
         <!-- hand controls -->
         <a-entity id="client-@user_id;literal@-left-hand"

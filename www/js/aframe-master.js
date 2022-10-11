@@ -19620,10 +19620,7 @@ var THREE = __webpack_require__(/*! ../lib/three */ "./src/lib/three.js");
  * upstream sound component in other regards).
  *
  * The MediaStream can be specified via javascript using the
- * setMediaStream method, or via the component attribute's src conf
- * using a selector for a HTMLMediaElement from which the MediaStream
- * will be extracted (when the browser supports the captureStream
- * API).
+ * setMediaStream method.
  *
  * Much of this code is actually a port of
  * https://github.com/networked-aframe/networked-aframe/blob/master/src/components/networked-audio-source.js
@@ -19633,12 +19630,15 @@ var THREE = __webpack_require__(/*! ../lib/three */ "./src/lib/three.js");
 
 module.exports.Component = registerComponent('mediastream-sound', {
   schema: {
+    streamName: {
+      default: 'audio'
+    },
     positional: {
       default: true
     },
     distanceModel: {
-      default: 'inverse',
-      oneOf: ['linear', 'inverse', 'exponential']
+      default: "inverse",
+      oneOf: ["linear", "inverse", "exponential"]
     },
     maxDistance: {
       default: 10000
@@ -19648,120 +19648,70 @@ module.exports.Component = registerComponent('mediastream-sound', {
     },
     rolloffFactor: {
       default: 1
-    },
-    src: {
-      type: 'selector'
-    },
-    autoplay: {
-      type: 'boolean',
-      default: true
     }
   },
   init: function () {
-    this.listener = null;
     this.stream = null;
-    this.src = null;
+    this.sound = null;
+    this.audioEl = null;
+    this._setupSound = this._setupSound.bind(this);
   },
 
-  /**
-   * The stream can be set/changed by replacing the src conf with a
-   * new one
-   */
-  update: function (oldData) {
-    this._captureStream();
-
-    this._setPannerProperties();
-  },
-
-  /**
-   * One can also set the stream directly on the object via javascript
-   */
-  setMediaStream: function (newStream) {
+  update(oldData) {
     if (!this.sound) {
-      this._setupSound();
+      return;
     }
 
-    if (newStream !== this.stream) {
-      if (this.stream) {
-        this.sound.disconnect();
-      }
+    if (oldData.positional !== this.data.positional) {
+      this.destroySound();
 
-      if (newStream) {
-        // Chrome seems to require a MediaStream be attached to an
-        // AudioElement before AudioNodes work correctly We don't want
-        // to do this in other browsers, particularly in Safari, which
-        // actually plays the audio despite setting the volume to 0.
-        // Might go away when
-        // https://bugs.chromium.org/p/chromium/issues/detail?id=933677
-        // is solved.
-        if (/chrome/i.test(navigator.userAgent)) {
-          this.audioEl = document.createElement('audio');
-          this.audioEl.setAttribute('autoplay', 'autoplay');
-          this.audioEl.setAttribute('playsinline', 'playsinline');
-          this.audioEl.srcObject = newStream;
-          this.audioEl.muted = true;
-        }
-
-        const soundSource = this.sound.context.createMediaStreamSource(newStream);
-        this.sound.setNodeSource(soundSource);
-        this.el.emit('sound-source-set', {
-          soundSource
-        });
-      }
-
-      this.stream = newStream;
+      this._setupSound(this.stream);
+    } else if (this.data.positional) {
+      this._setPannerProperties();
     }
   },
-  remove: function () {
-    if (!this.sound) return;
-    this.el.removeObject3D(this.attrName);
 
-    if (this.stream) {
-      this.sound.disconnect();
-    }
+  setMediaStream(stream) {
+    this.destroySound();
+
+    this._setupSound(stream);
   },
 
   _setPannerProperties() {
-    if (this.sound && this.data.positional) {
-      this.sound.setDistanceModel(this.data.distanceModel);
-      this.sound.setMaxDistance(this.data.maxDistance);
-      this.sound.setRefDistance(this.data.refDistance);
-      this.sound.setRolloffFactor(this.data.rolloffFactor);
-    }
+    this.sound.setDistanceModel(this.data.distanceModel);
+    this.sound.setMaxDistance(this.data.maxDistance);
+    this.sound.setRefDistance(this.data.refDistance);
+    this.sound.setRolloffFactor(this.data.rolloffFactor);
   },
 
-  _captureStream() {
-    // We need the browser to support captureStream. In case your
-    // browser doesn't (Safari, apparently), one can fallback to
-    // setting the stream directly.
-    if (this.data.src && this.data.src instanceof window.HTMLMediaElement && this.data.src.captureStream) {
-      this.src = this.data.src;
-      this.src.muted = true;
-
-      if (this.data.autoplay) {
-        this.src.autoplay = true;
-        this.src.setAttribute('playsinline', 'playsinline');
-      }
-
-      var self = this;
-
-      if (this.src.paused) {
-        this.src.addEventListener('play', function () {
-          self.setMediaStream(self.src.captureStream());
-        });
-      } else {
-        self.setMediaStream(self.src.captureStream());
-      }
-    }
+  remove() {
+    this.destroySound();
   },
 
-  _setupSound() {
-    var el = this.el;
-    var sceneEl = el.sceneEl;
-
+  destroySound() {
     if (this.sound) {
-      el.removeObject3D(this.attrName);
+      this.el.emit('sound-source-removed', {
+        soundSource: this.soundSource
+      });
+      this.sound.disconnect();
+      this.el.removeObject3D(this.attrName);
+      this.sound = null;
     }
+
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.srcObject = null;
+      this.audioEl.load();
+      this.audioEl = null;
+    }
+  },
+
+  _setupSound(newStream) {
+    if (!newStream) return;
+    const isRemoved = !this.el.parentNode;
+    if (isRemoved) return;
+    const el = this.el;
+    const sceneEl = el.sceneEl;
 
     if (!sceneEl.audioListener) {
       sceneEl.audioListener = new THREE.AudioListener();
@@ -19771,11 +19721,30 @@ module.exports.Component = registerComponent('mediastream-sound', {
       });
     }
 
-    this.listener = sceneEl.audioListener;
-    this.sound = this.data.positional ? new THREE.PositionalAudio(this.listener) : new THREE.Audio(this.listener);
+    this.sound = this.data.positional ? new THREE.PositionalAudio(sceneEl.audioListener) : new THREE.Audio(sceneEl.audioListener);
     el.setObject3D(this.attrName, this.sound);
 
-    this._setPannerProperties();
+    if (this.data.positional) {
+      this._setPannerProperties();
+    } // Chrome seems to require a MediaStream be attached to an AudioElement before AudioNodes work correctly
+    // We don't want to do this in other browsers, particularly in Safari, which actually plays the audio despite
+    // setting the volume to 0.
+
+
+    if (/chrome/i.test(navigator.userAgent)) {
+      this.audioEl = new Audio();
+      this.audioEl.setAttribute("autoplay", "autoplay");
+      this.audioEl.setAttribute("playsinline", "playsinline");
+      this.audioEl.srcObject = newStream;
+      this.audioEl.volume = 0; // we don't actually want to hear audio from this element
+    }
+
+    this.soundSource = this.sound.context.createMediaStreamSource(newStream);
+    this.sound.setNodeSource(this.soundSource);
+    this.el.emit('sound-source-set', {
+      soundSource: this.soundSource
+    });
+    this.stream = newStream;
   }
 
 });
@@ -34729,7 +34698,7 @@ __webpack_require__(/*! ./extras/components/ */ "./src/extras/components/index.j
 
 __webpack_require__(/*! ./extras/primitives/ */ "./src/extras/primitives/index.js");
 
-console.log('A-Frame Version: 1.3.0 (Date 2022-10-10, Commit #5f5c147a)');
+console.log('A-Frame Version: 1.3.0 (Date 2022-10-11, Commit #0840078d)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 module.exports = window.AFRAME = {
