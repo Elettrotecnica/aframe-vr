@@ -125,7 +125,7 @@
         <!-- camera -->
         <a-camera id="client-@user_id;literal@"
                   oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@"
-                  janus-videoroom-entity="stringIds: true; room: 1234;">
+                  janus-videoroom-entity="room: 1234;">
         </a-camera>
         <!-- hand controls -->
         <a-entity id="client-@user_id;literal@-left-hand"

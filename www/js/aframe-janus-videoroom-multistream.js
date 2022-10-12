@@ -67,7 +67,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       this.id = null;
       this.display = id;
       // If ids are numbers, then we have to cast the room id as well
-      this.room = parseInt(this.room, 10);
+      this.room = window.parseInt(this.room, 10);
     }
 
     this.janus = null;
@@ -433,19 +433,19 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           self.slots[mid] = feed.slot;
           self.mids[feed.slot] = mid;
         }
+        if (feed) {
+          // Retrieve the element attached to this feed
+          var e = document.getElementById(self.stringIds ? feed.id : feed.display);
+        }
         window.Janus.debug(' >> mid ' + mid + ' is in slot ' + slot);
         if (!on) {
-          // Track removed, get rid of the stream and the rendering
-          if (track.kind === 'video' && feed) {
-            feed.remoteVideos--;
-            var e = document.getElementById(sub.feed_id);
-            if (e) {
+          if (e && e.object3D) {
+            // Track is removed from an existing element. Detach audio
+            // or video from it.
+            if (track.kind === 'video') {
+              feed.remoteVideos--;
               e.removeAttribute('material');
-            }
-          }
-          if (track.kind === 'audio' && feed) {
-            var e = document.getElementById(sub.feed_id);
-            if (e) {
+            } else if (track.kind === 'audio') {
               e.removeAttribute('mediastream-sound');
             }
           }
@@ -466,28 +466,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
         window.Janus.log('We have a track!', sub, track);
 
-        var e = document.getElementById(sub.feed_id);
-        window.Janus.log(e);
-        var stream = new MediaStream([track]);
-
-        // Check that element exists and is an aframe element
         if (e && e.object3D) {
-          // Create two separate mediastreams for video and audio.
-          const videoTracks = stream.getVideoTracks();
-          var videoStream;
-          if (videoTracks && videoTracks.length > 0) {
-            videoStream = new MediaStream(videoTracks);
-          }
-
-          const audioTracks = stream.getAudioTracks();
-          var audioStream;
-          if (audioTracks && audioTracks.length > 0) {
-            audioStream = new MediaStream(audioTracks);
-          }
-
-          // Attach video to the element. Will become its material's
-          // texture.
-          if (videoStream) {
+          var stream = new MediaStream([track]);
+          if (track.kind === 'video') {
+            // Track is a video: we require a video element that will
+            // become the material of our object.
             var videoId = e.id + '-video';
             var v = document.getElementById(videoId);
             if (!v) {
@@ -496,17 +479,16 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               v.id = videoId;
               document.body.appendChild(v);
             }
-            v.srcObject = videoStream;
+            v.srcObject = stream;
             e.setAttribute('material', 'src', '#' + v.id);
-          }
-
-          // Attach audio to the element.
-          // TODO: right now we assume audio to be positional.
-          if (audioStream) {
+          } else if (track.kind === 'audio') {
+            // Track is audio: we attach it to the element.
+            // TODO: right now we assume audio to be positional.
             e.setAttribute('mediastream-sound', '');
             e.components['mediastream-sound'].setMediaStream(stream);
           }
         }
+
       },
       oncleanup: function () {
         window.Janus.log(' ::: Got a cleanup notification (remote feed) :::');
