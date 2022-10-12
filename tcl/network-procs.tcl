@@ -31,7 +31,7 @@ namespace eval ws::aframevr {
             set json [::json::write object {*}[dict map {k v} $data {
                 set v [::json::write string $v]
             }]]
-            ::ws::send $channel [::ws::build_msg $json]
+            ::ws::send $channel [ns_connchan wsencode -opcode text $json]
         }
     }
 
