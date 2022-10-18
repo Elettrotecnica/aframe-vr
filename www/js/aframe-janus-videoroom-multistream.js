@@ -447,6 +447,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               e.removeAttribute('material');
             } else if (track.kind === 'audio') {
               e.removeAttribute('mediastream-sound');
+              e.removeAttribute('mediastream-listener');
             }
           }
           delete self.remoteTracks[mid];
@@ -486,6 +487,10 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             // TODO: right now we assume audio to be positional.
             e.setAttribute('mediastream-sound', '');
             e.components['mediastream-sound'].setMediaStream(stream);
+            // We also attach the listener component to track sound on
+            // this entity and be able to react to sound.
+            e.setAttribute('mediastream-listener', '');
+            e.components['mediastream-listener'].setMediaStream(stream);
           }
         }
 
@@ -700,7 +705,14 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   onlocaltrack: function (track, on) {
                     window.Janus.debug(' ::: Got a local track event :::');
                     window.Janus.debug('Local track ' + (on ? 'added' : 'removed') + ':', track);
-                    // We do nothing with local tracks, as we are only supposed to send audio
+                    // When our local track is audio (in theory,
+                    // always), we attach an audio listener to our
+                    // element so that we can notify other entities
+                    // about our own noise.
+                    if (track.kind === 'audio') {
+                      self.el.setAttribute('mediastream-listener', '');
+                      self.el.components['mediastream-listener'].setMediaStream(new MediaStream([track]));
+                    }
                   },
                   onremotetrack: function (track, mid, on) {
                     // The publisher stream is sendonly, we don't expect anything here
