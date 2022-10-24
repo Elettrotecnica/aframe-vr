@@ -1,4 +1,5 @@
 <master>
+  <property name="doc(title)">Main Menu</property>
 
   <style>
   .flex-container {
