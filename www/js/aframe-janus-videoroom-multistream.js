@@ -79,8 +79,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     this.feeds = {};
     this.feedStreams = {};
     this.subStreams = {};
-    this.slots = {};
-    this.mids = {};
     this.subscriptions = {};
     this.remoteTracks = {};
     this.bitrateTimer = [];
@@ -117,20 +115,97 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     }
   },
 
+  // Adds a track to the scene
+  _addTrack: function (feed, track) {
+    if (!feed) {
+      return;
+    }
+    if (!this.remoteTracks[feed.id]) {
+      this.remoteTracks[feed.id] = [];
+    } else if (this.remoteTracks[feed.id].includes(track)) {
+      return;
+    }
+    this.remoteTracks[feed.id].push(track);
+
+    let id = this.stringIds ? feed.id : feed.display;
+    let e = document.getElementById(id);
+    if (!e || ! e.object3D) {
+      return;
+    }
+
+    let stream = new MediaStream([track]);
+    if (track.kind === 'video') {
+      // Track is a video: we require a video element that will
+      // become the material of our object.
+      let v = e.querySelector('video');
+      if (!v) {
+        v = document.createElement('video');
+        v.autoplay = true;
+        // We create an element with a unique id so that aframe won't
+        // try to reuse old video elements from the cache.
+        v.id = track.id + (new Date()).getTime();
+        e.appendChild(v);
+      }
+      v.srcObject = stream;
+      e.setAttribute('material', 'src', '#' + v.id);
+    } else if (track.kind === 'audio') {
+      // Track is audio: we attach it to the element.
+      // TODO: right now we assume audio to be positional.
+      e.setAttribute('mediastream-sound', '');
+      e.components['mediastream-sound'].setMediaStream(stream);
+      // We also attach the listener component to track sound on
+      // this entity and be able to react to sound.
+      e.setAttribute('mediastream-listener', '');
+      e.components['mediastream-listener'].setMediaStream(stream);
+    }
+
+  },
+
+  // Deletes a track from the scene
+  _removeTrack: function (feed, track) {
+    if (!feed) {
+      return;
+    }
+
+    let id = this.stringIds ? feed.id : feed.display;
+    let e = document.getElementById(id);
+
+    if (!e || ! e.object3D) {
+      return;
+    }
+
+    if (track.kind === 'video') {
+      e.setAttribute('material', 'src', null);
+      let v = e.querySelector('video');
+      if (v) {
+        v.parentElement.removeChild(v);
+      }
+    } else {
+      e.removeAttribute('mediastream-sound');
+      e.removeAttribute('mediastream-listener');
+    }
+  },
+
   _unsubscribeFrom: function (id) {
     // Unsubscribe from this publisher
     var feed = this.feedStreams[id];
     if (!feed) {
       return;
     }
+
     window.Janus.debug('Feed ' + id + ' (' + feed.display + ') has left the room, detaching');
-    if (this.bitrateTimer[feed.slot]) {
-      clearInterval(this.bitrateTimer[feed.slot]);
+
+    for (track of this.remoteTracks[feed.id]) {
+      console.log('removing track', track, feed);
+      this._removeTrack(feed, track);
     }
-    this.bitrateTimer[feed.slot] = null;
-    delete this.simulcastStarted[feed.slot];
-    delete this.feeds[feed.slot];
-    this.feeds.slot = 0;
+
+    if (this.bitrateTimer[id]) {
+      clearInterval(this.bitrateTimer[id]);
+    }
+    this.bitrateTimer[id] = null;
+    delete this.simulcastStarted[id];
+    delete this.feeds[id];
     delete this.feedStreams[id];
     // Send an unsubscribe request
     var unsubscribe = {
@@ -141,6 +216,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       this.remoteFeed.send({ message: unsubscribe });
     }
     delete this.subscriptions[id];
+    delete this.remoteTracks[id];
   },
 
   _publishOwnFeed: function () {
@@ -215,21 +291,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             window.Janus.log('Already subscribed to stream, skipping:', stream);
             continue;
           }
-          // Find an empty slot in the UI for each new source
-          if (!this.feedStreams[stream.id].slot) {
-            var slot;
-            var i = 1;
-            while (true) {
-              if (!this.feeds[i]) {
-                slot = i;
-                this.feeds[slot] = stream.id;
-                this.feedStreams[stream.id].slot = slot;
-                this.feedStreams[stream.id].remoteVideos = 0;
-                break;
-              }
-              i++;
-            }
-          }
           subscription.push({
             feed: stream.id,// This is mandatory
             mid: stream.mid// This is optional (all streams, if missing)
@@ -286,21 +347,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               window.Janus.log('Already subscribed to stream, skipping:', stream);
               continue;
             }
-            // Find an empty slot in the UI for each new source
-            if (!self.feedStreams[stream.id].slot) {
-              var slot;
-              var i = 1;
-              while (true) {
-                if (!self.feeds[i]) {
-                  slot = i;
-                  self.feeds[slot] = stream.id;
-                  self.feedStreams[stream.id].slot = slot;
-                  self.feedStreams[stream.id].remoteVideos = 0;
-                  break;
-                }
-                i++;
-              }
-            }
             subscription.push({
               feed: stream.id,// This is mandatory
               mid: stream.mid// This is optional (all streams, if missing)
@@ -355,9 +401,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               // Check which this feed this refers to
               var sub = self.subStreams[mid];
               var feed = self.feedStreams[sub.feed_id];
-              var slot = self.slots[mid];
-              if (!self.simulcastStarted[slot]) {
-                self.simulcastStarted[slot] = true;
+              if (!self.simulcastStarted[sub.feed_id]) {
+                self.simulcastStarted[sub.feed_id] = true;
               }
 
               // Check the substream
@@ -387,11 +432,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           for (var i in msg['streams']) {
             var mid = msg['streams'][i]['mid'];
             self.subStreams[mid] = msg['streams'][i];
-            var feed = self.feedStreams[msg['streams'][i]['feed_id']];
-            if (feed && feed.slot) {
-              self.slots[mid] = feed.slot;
-              self.mids[feed.slot] = mid;
-            }
           }
         }
         if (jsep) {
@@ -427,38 +467,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         var sub = self.subStreams[mid];
         var feed = self.feedStreams[sub.feed_id];
         window.Janus.debug(' >> This track is coming from feed ' + sub.feed_id + ':', feed);
-        var slot = self.slots[mid];
-        if (feed && !slot) {
-          slot = feed.slot;
-          self.slots[mid] = feed.slot;
-          self.mids[feed.slot] = mid;
-        }
-        if (feed) {
-          // Retrieve the element attached to this feed
-          var e = document.getElementById(self.stringIds ? feed.id : feed.display);
-        }
-        window.Janus.debug(' >> mid ' + mid + ' is in slot ' + slot);
         if (!on) {
-          if (e && e.object3D) {
-            // Track is removed from an existing element. Detach audio
-            // or video from it.
-            if (track.kind === 'video') {
-              feed.remoteVideos--;
-              e.removeAttribute('material');
-            } else if (track.kind === 'audio') {
-              e.removeAttribute('mediastream-sound');
-              e.removeAttribute('mediastream-listener');
-            }
-          }
-          delete self.remoteTracks[mid];
-          delete self.slots[mid];
-          delete self.mids[slot];
+          self._removeTrack(feed, track);
           return;
-        }
-        // If we're here, a new track was added
-        if (feed.spinner) {
-          feed.spinner.stop();
-          feed.spinner = null;
         }
 
         if (sub.feed_id == self.id) {
@@ -467,32 +478,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
         window.Janus.log('We have a track!', sub, track);
 
-        if (e && e.object3D) {
-          var stream = new MediaStream([track]);
-          if (track.kind === 'video') {
-            // Track is a video: we require a video element that will
-            // become the material of our object.
-            var videoId = e.id + '-video';
-            var v = document.getElementById(videoId);
-            if (!v) {
-              v = document.createElement('video');
-              v.autoplay = true;
-              v.id = videoId;
-              document.body.appendChild(v);
-            }
-            v.srcObject = stream;
-            e.setAttribute('material', 'src', '#' + v.id);
-          } else if (track.kind === 'audio') {
-            // Track is audio: we attach it to the element.
-            // TODO: right now we assume audio to be positional.
-            e.setAttribute('mediastream-sound', '');
-            e.components['mediastream-sound'].setMediaStream(stream);
-            // We also attach the listener component to track sound on
-            // this entity and be able to react to sound.
-            e.setAttribute('mediastream-listener', '');
-            e.components['mediastream-listener'].setMediaStream(stream);
-          }
-        }
+        self._addTrack(feed, track);
 
       },
       oncleanup: function () {
@@ -503,7 +489,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           }
           self.bitrateTimer[i] = null;
           self.feedStreams[i].simulcastStarted = false;
-          self.feedStreams[i].remoteVideos = 0;
         }
         self.remoteTracks = {};
       }
@@ -544,6 +529,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     var register = {
                       request: 'join',
                       room: self.room,
+                      pin: self.pin,
                       ptype: 'publisher',
                       display: self.display
                     };
