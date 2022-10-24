@@ -18,3 +18,5 @@ set environment [parameter::get -parameter environment -default default]
 set room_url environments/${environment}
 
 set stream_url streaming/
+
+set avatar_url avatar/

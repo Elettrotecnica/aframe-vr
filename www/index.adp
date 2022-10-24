@@ -25,11 +25,12 @@
   }
   </style>
   <div id="menu" class="flex-container">
-    <if @admin_p;literal@ true>
-      <div class="flex-12">
-        <a class="btn btn-default" href="@settings_url@">Settings</a>
-      </div>
-    </if>
+    <div class="flex-12">
+      <if @admin_p;literal@ true>
+        <a class="btn btn-default" href="@settings_url@">Room Settings</a>
+      </if>
+      <a class="btn btn-default" href="@avatar_url@">Manage Avatar</a>
+    </div>
     <div class="flex-12">
       <a class="btn btn-default" href="@room_url@">Enter VR</a>
       <if @write_p;literal@ true>
