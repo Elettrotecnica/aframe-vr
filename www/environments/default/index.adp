@@ -40,6 +40,21 @@
       <a-box src="#boxTexture" position="-11 2 -5" rotation="0 45 45" scale="2 2 2"
          animation="property: object3D.position.y; to: 5; dir: alternate; dur: 2000; loop: true; clockSynced: true"></a-box>
 
+      <a-video
+         id="screen1"
+         width="12.80"
+         height="7.20"
+         position="-22 5 -15"
+        >
+      </a-video>
+      <a-video
+         id="screen2"
+         width="12.80"
+         height="7.20"
+         position="-35 5 -15"
+        >
+      </a-video>
+
       <a-entity scale="0.005 0.005 0.005" position="-0 0 -35" id="building-1" gltf-model="#building-rectangular-sloped"></a-entity>
       <a-entity scale="0.005 0.005 0.005" position="-20 0 -35" id="building-2" gltf-model="#building-square-steeple-top"></a-entity>
       <a-entity scale="0.005 0.005 0.005" position="-40 0 -35" id="building-3" gltf-model="#building-stretched-octagonal-tier"></a-entity>

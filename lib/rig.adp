@@ -3,7 +3,7 @@
   <!-- camera -->
   <a-camera id="client-@user_id;literal@"
             oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@"
-            janus-videoroom-entity="room: @janus_room@; URI: @janus_url@">
+            janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@">
   </a-camera>
   <!-- hand controls -->
   <a-entity id="client-@user_id;literal@-left-hand"
