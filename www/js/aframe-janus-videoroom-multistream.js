@@ -467,18 +467,15 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         var sub = self.subStreams[mid];
         var feed = self.feedStreams[sub.feed_id];
         window.Janus.debug(' >> This track is coming from feed ' + sub.feed_id + ':', feed);
-        if (!on) {
-          self._removeTrack(feed, track);
-          return;
+        if (on) {
+          if (sub.feed_id == self.id) {
+            window.Janus.log('This is us, skipping...');
+          }
+
+          window.Janus.log('We have a track!', sub, track);
+
+          self._addTrack(feed, track);
         }
-
-        if (sub.feed_id == self.id) {
-          window.Janus.log('This is us, skipping...');
-        }
-
-        window.Janus.log('We have a track!', sub, track);
-
-        self._addTrack(feed, track);
 
       },
       oncleanup: function () {
