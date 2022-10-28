@@ -55,6 +55,18 @@
             No <input type="radio" name="audio_only_p" value="f" checked>
           </div>
           <div>
+            <div>Limit vertical resolution...</div>
+	    <select id="video-height-cap">
+              <option value="0">No limit</option>
+              <option value="360">Cap to 360px</option>
+              <option value="480">Cap to 480px</option>
+              <option value="540">Cap to 540px</option>
+              <option value="720">Cap to 720px</option>
+              <option value="768">Cap to 768px</option>
+              <option value="1080">Cap to 1080px</option>
+	    </select>
+          </div>
+          <div>
             <div>Limit bitrate to...</div>
 	    <select id="video-bitrate-cap">
               <option value="0">No limit</option>
@@ -79,6 +91,18 @@
                         >@available_surfaces.title@ @available_surfaces.audio_video@</option>
               </multiple>
             </select>
+          </div>
+          <div>
+            <div>Limit vertical resolution...</div>
+	    <select id="screen-height-cap">
+              <option value="0">No limit</option>
+              <option value="360">Cap to 360px</option>
+              <option value="480">Cap to 480px</option>
+              <option value="540">Cap to 540px</option>
+              <option value="720">Cap to 720px</option>
+              <option value="768">Cap to 768px</option>
+              <option value="1080">Cap to 1080px</option>
+	    </select>
           </div>
           <div>Limit bitrate to...</div>
           <div>
@@ -188,6 +212,8 @@
       let muteButton = document.querySelector('#mute');
       let videoBitrateConf = document.querySelector('#video-bitrate-cap');
       let screenBitrateConf = document.querySelector('#screen-bitrate-cap');
+      let videoHeightConf = document.querySelector('#video-height-cap');
+      let screenHeightConf = document.querySelector('#screen-height-cap');
       let mediaBitrateConf = document.querySelector('#media-bitrate-cap');
       let confs = [];
 
@@ -230,6 +256,7 @@
             id: videoConf.value,
             useAudio: withAudio,
             bitrate: videoBitrateConf.value,
+            maxHeight: videoHeightConf.value,
             bitrateConf: videoBitrateConf
           });
         }
@@ -249,6 +276,7 @@
             id: screenConf.value,
             useAudio: withAudio,
             bitrate: screenBitrateConf.value,
+            maxHeight: screenHeightConf.value,
             bitrateConf: screenBitrateConf
           });
         }

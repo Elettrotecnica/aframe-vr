@@ -50,6 +50,7 @@ class JanusConnector {
     }
 
     this.stream = data.stream;
+    this.maxHeight = data.maxHeight;
   }
 
   disconnect () {
@@ -140,7 +141,22 @@ class JanusConnector {
         tracks.push({ type: 'audio', capture: true, recv: false });
       }
       if (this.videoType) {
-        tracks.push({ type: this.videoType, capture: true, recv: false, simulcast: this.doSimulcast });
+        let capture;
+        if (this.maxHeight) {
+          capture = {
+            video: {
+              height: { max: this.maxHeight }
+            }
+          };
+        } else {
+          capture = true;
+        }
+        tracks.push({
+          type: this.videoType,
+          capture: capture,
+          recv: false,
+          simulcast: this.doSimulcast
+        });
       }
     }
     if (tracks.length === 0) {
