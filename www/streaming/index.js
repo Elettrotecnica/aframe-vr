@@ -28,7 +28,6 @@ class JanusConnector {
     this.janus = null;
     this.pluginHandle = null;
     this.privateId = null;
-    this.stream = null;
 
     this.remoteFeed = null;
     this.feeds = {};
@@ -48,6 +47,11 @@ class JanusConnector {
 
     if (data.bitrate) {
       this.bitrate = parseInt(data.bitrate);
+    }
+
+    this.stream = data.stream;
+    if (this.stream) {
+      this.videoType = 'video';
     }
   }
 
@@ -128,11 +132,17 @@ class JanusConnector {
     // Publish our stream
 
     let tracks = [];
-    if (this.useAudio) {
-      tracks.push({ type: 'audio', capture: true, recv: false });
-    }
-    if (this.videoType) {
-      tracks.push({ type: this.videoType, capture: true, recv: false, simulcast: this.doSimulcast });
+    if (this.stream) {
+      for (let track of this.stream.getTracks()) {
+        tracks.push({ type: track.kind, capture: track, recv: false, simulcast: this.doSimulcast });
+      }
+    } else {
+      if (this.useAudio) {
+        tracks.push({ type: 'audio', capture: true, recv: false });
+      }
+      if (this.videoType) {
+        tracks.push({ type: this.videoType, capture: true, recv: false, simulcast: this.doSimulcast });
+      }
     }
     if (tracks.length === 0) {
       return;
