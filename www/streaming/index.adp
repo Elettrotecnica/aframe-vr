@@ -28,64 +28,75 @@
   <div class="flex-container">
     <div class="flex-6">
       <div class="flex-12">
-        <button class="btn btn-default" id="start">Start</button>
+        <button class="btn btn-success" id="start">Start</button>
         <button class="btn btn-default" id="stop" disabled>Stop</button>
+        <button class="btn btn-default" id="mute" disabled>Mute</button>
       </div>
       <div id="details" class="flex-12">
         This page will allow you to stream camera, desktop or both on one of the available surfaces in the VR space.
       </div>
       <div id="settings" class="flex-12">
-        <div class="flex-12">
-          Stream Audio?
+        <div class="flex-4">
+          <h3>Audio</h3>
           Yes <input type="radio" name="audio_p" value="t" checked>
           No <input type="radio" name="audio_p" value="f">
         </div>
-        <div class="flex-12">
-          Stream the camera on this surface...
-          <select class="surfaces" data-type="video">
-            <multiple name="available_surfaces">
-              <option value="@available_surfaces.name@"
-                      data-audio="@available_surfaces.audio@"
-                      data-video="@available_surfaces.video@"
-                      >@available_surfaces.title@ @available_surfaces.audio_video@</option>
-            </multiple>
-          </select>
-          <!-- Limit bitrate to... -->
-	  <!-- <select id="camera_bitrate_cap"> -->
-          <!--   <option value="0">No limit</option> -->
-          <!--   <option value="128">Cap to 128kbit</option> -->
-          <!--   <option value="256">Cap to 256kbit</option> -->
-          <!--   <option value="512">Cap to 512kbit</option> -->
-          <!--   <option value="1024">Cap to 1mbit</option> -->
-          <!--   <option value="1500">Cap to 1.5mbit</option> -->
-          <!--   <option value="2000">Cap to 2mbit</option> -->
-	  <!-- </select> -->
+        <div class="flex-4">
+          <h3>Camera</h3>
+          <div>Select a surface...</div>
+          <div>
+            <select class="surfaces" data-type="video">
+              <multiple name="available_surfaces">
+                <option value="@available_surfaces.name@"
+                        data-audio="@available_surfaces.audio@"
+                        data-video="@available_surfaces.video@"
+                        >@available_surfaces.title@ @available_surfaces.audio_video@</option>
+              </multiple>
+            </select>
+          </div>
           <div>
             Stream Audio only?
             Yes <input type="radio" name="audio_only_p" value="t">
             No <input type="radio" name="audio_only_p" value="f" checked>
           </div>
+          <div>
+            <div>Limit bitrate to...</div>
+	    <select id="video-bitrate-cap">
+              <option value="0">No limit</option>
+              <option value="128">Cap to 128kbit</option>
+              <option value="256">Cap to 256kbit</option>
+              <option value="512">Cap to 512kbit</option>
+              <option value="1024">Cap to 1mbit</option>
+              <option value="1500">Cap to 1.5mbit</option>
+              <option value="2000">Cap to 2mbit</option>
+	    </select>
+          </div>
         </div>
-        <div class="flex-12">
-          Stream the desktop on this surface...
-          <select class="surfaces" data-type="screen">
-            <multiple name="available_surfaces">
-              <option value="@available_surfaces.name@"
-                      data-audio="@available_surfaces.audio@"
-                      data-video="@available_surfaces.video@"
-                      >@available_surfaces.title@ @available_surfaces.audio_video@</option>
-            </multiple>
-          </select>
-          <!-- Limit bitrate to... -->
-	  <!-- <select id="desktop_bitrate_cap"> -->
-          <!--   <option value="0">No limit</option> -->
-          <!--   <option value="128">Cap to 128kbit</option> -->
-          <!--   <option value="256">Cap to 256kbit</option> -->
-          <!--   <option value="512">Cap to 512kbit</option> -->
-          <!--   <option value="1024">Cap to 1mbit</option> -->
-          <!--   <option value="1500">Cap to 1.5mbit</option> -->
-          <!--   <option value="2000">Cap to 2mbit</option> -->
-	  <!-- </select> -->
+        <div class="flex-4">
+          <h3>Screen</h3>
+          <div>Select a surface...</div>
+          <div>
+            <select class="surfaces" data-type="screen">
+              <multiple name="available_surfaces">
+                <option value="@available_surfaces.name@"
+                        data-audio="@available_surfaces.audio@"
+                        data-video="@available_surfaces.video@"
+                        >@available_surfaces.title@ @available_surfaces.audio_video@</option>
+              </multiple>
+            </select>
+          </div>
+          <div>Limit bitrate to...</div>
+          <div>
+	    <select id="screen-bitrate-cap">
+              <option value="0">No limit</option>
+              <option value="128">Cap to 128kbit</option>
+              <option value="256">Cap to 256kbit</option>
+              <option value="512">Cap to 512kbit</option>
+              <option value="1024">Cap to 1mbit</option>
+              <option value="1500">Cap to 1.5mbit</option>
+              <option value="2000">Cap to 2mbit</option>
+	    </select>
+          </div>
         </div>
       </div>
       <div id="previews" class="flex-12">
@@ -113,6 +124,9 @@
       let screenConf = document.querySelector('.surfaces[data-type="screen"]');
       let startButton = document.querySelector('#start');
       let stopButton = document.querySelector('#stop');
+      let muteButton = document.querySelector('#mute');
+      let videoBitrateConf = document.querySelector('#video-bitrate-cap');
+      let screenBitrateConf = document.querySelector('#screen-bitrate-cap');
       let confs = [];
 
       let connector = new JanusConnector({
@@ -163,7 +177,9 @@
             pin: "@janus_room_pin@",
             videoType: withVideo ? 'video' : null,
             id: videoConf.value,
-            useAudio: withAudio
+            useAudio: withAudio,
+            bitrate: videoBitrateConf.value,
+            bitrateConf: videoBitrateConf
           });
         }
         if (screenConf.value !== '') {
@@ -180,18 +196,27 @@
             pin: "@janus_room_pin@",
             videoType: withVideo ? 'screen' : null,
             id: screenConf.value,
-            useAudio: withAudio
+            useAudio: withAudio,
+            bitrate: screenBitrateConf.value,
+            bitrateConf: screenBitrateConf
           });
         }
 
-        for (let i = 0; i < confs.length; i++) {
-          let connector = new JanusConnector(confs[i]);
+        for (conf of confs) {
+          let connector = new JanusConnector(conf);
           connector.connect();
           connectors.push(connector);
+          conf.bitrateConf.addEventListener('change', function(e) {
+            connector.setBitrate(this.value);
+          });
         }
 
         startButton.setAttribute('disabled', '');
+        startButton.classList.remove('btn-success');
+        stopButton.classList.add('btn-danger');
         stopButton.removeAttribute('disabled');
+        muteButton.classList.add('btn-warning');
+        muteButton.removeAttribute('disabled');
       });
 
       stopButton.addEventListener('click', function () {
@@ -202,6 +227,14 @@
         connectors = [];
         stopButton.setAttribute('disabled', '');
         startButton.removeAttribute('disabled');
+      });
+
+      muteButton.addEventListener('click', function () {
+        for (connector of connectors) {
+          connector.toggleMute();
+        }
+        muteButton.classList.toggle('btn-warning');
+        muteButton.classList.toggle('btn-primary');
       });
     });
   </script>

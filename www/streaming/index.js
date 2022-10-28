@@ -45,20 +45,41 @@ class JanusConnector {
     this.useAudio = data.useAudio;
     this.doSimulcast = data.doSimulcast ? true : false;
     this.subscribe = data.subscribe ? true : false;
+
+    if (data.bitrate) {
+      this.bitrate = parseInt(data.bitrate);
+    }
   }
 
   disconnect () {
     this.janus.destroy();
   }
 
-  toggleMute (mute) {
+  setBitrate(bitrate) {
+    if (bitrate === undefined) {
+      bitrate = this.bitrate;
+    } else {
+      this.bitrate = bitrate;
+    }
+
+    // We are not ready or do not plan to control the bitrate
+    if (!this.pluginHandle || bitrate === undefined) {
+      return;
+    }
+    if (bitrate === 0) {
+      window.Janus.log('Not limiting bandwidth via REMB');
+    } else {
+      window.Janus.log('Capping bandwidth to ' + bitrate + ' via REMB');
+    }
+    this.pluginHandle.send({ message: { request: 'configure', bitrate: bitrate }});
+  }
+
+  toggleMute () {
     if (this.pluginHandle) {
-      var muted = this.pluginHandle.isAudioMuted();
-      if (mute && !muted) {
+      if (!this.pluginHandle.isAudioMuted()) {
         window.Janus.log('Muting local stream...');
         this.pluginHandle.muteAudio();
-      }
-      if (!mute && muted) {
+      } else {
         window.Janus.log('Unmuting local stream...');
         this.pluginHandle.unmuteAudio();
       }
@@ -466,14 +487,7 @@ class JanusConnector {
                 },
                 webrtcState: function (on) {
                   window.Janus.log('Janus says our WebRTC PeerConnection is ' + (on ? 'up' : 'down') + ' now');
-                  // We might cap the bitrate here
-                  // var bitrate = self.bitrate;
-                  // if (bitrate === 0) {
-                  //   window.Janus.log('Not limiting bandwidth via REMB');
-                  // } else {
-                  //   window.Janus.log('Capping bandwidth to ' + bitrate + ' via REMB');
-                  // }
-                  // self.pluginHandle.send({ message: { request: 'configure', bitrate: bitrate }});
+                  self.setBitrate();
                 },
                 slowLink: function (uplink, lost, mid) {
                   window.Janus.warn('Janus reports problems ' + (uplink ? 'sending' : 'receiving') +
