@@ -50,9 +50,6 @@ class JanusConnector {
     }
 
     this.stream = data.stream;
-    if (this.stream) {
-      this.videoType = 'video';
-    }
   }
 
   disconnect () {
@@ -134,7 +131,9 @@ class JanusConnector {
     let tracks = [];
     if (this.stream) {
       for (let track of this.stream.getTracks()) {
-        tracks.push({ type: track.kind, capture: track, recv: false, simulcast: this.doSimulcast });
+        if ((track.kind === 'audio' && this.useAudio) || (track.kind === 'video' && this.videoType)) {
+          tracks.push({ type: track.kind, capture: track, recv: false, simulcast: this.doSimulcast });
+        }
       }
     } else {
       if (this.useAudio) {

@@ -254,16 +254,25 @@
         }
 
         if (mediaConf.value !== '') {
+          let selectedOption = mediaConf.querySelector('option[value="' + mediaConf.value + '"]');
+          let withVideo = selectedOption.getAttribute('data-video') === 'true';
+          let withAudio = selectedOption.getAttribute('data-audio') === 'true';
+          if (!withVideo && !withAudio) {
+            alert('Invalid setup: screen won\'t send any audio or video.');
+            return;
+          }
           confs.push({
             URI: "@janus_url@",
             room: @janus_room@,
             pin: "@janus_room_pin@",
             id: mediaConf.value,
-            useAudio: true,
+            useAudio: withAudio,
+            videoType: withVideo ? 'video' : null,
             stream: mediaVideo.captureStream(),
             bitrate: mediaBitrateConf.value,
             bitrateConf: mediaBitrateConf
           });
+          console.error(confs[confs.length -1]);
         }
 
         for (conf of confs) {
