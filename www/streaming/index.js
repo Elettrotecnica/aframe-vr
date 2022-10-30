@@ -301,7 +301,8 @@ class JanusConnector {
           ptype: 'subscriber',
           streams: subscription,
           use_msid: false,
-          private_id: self.privateId
+          private_id: self.privateId,
+          pin: self.pin
         };
         self.remoteFeed.send({ message: subscribe });
       },
