@@ -13,26 +13,12 @@ permission::require_permission \
     -privilege write
 
 set environment [parameter::get -parameter environment -default default]
-set environment_manifest_file [acs_package_root_dir [ad_conn package_key]]/www/environments/${environment}/manifest.json
 
-if {[ad_file exists $environment_manifest_file]} {
-    if {[namespace which ::json::json2dict] eq ""} {
-        package require json
-    }
-
-    set rfd [open $environment_manifest_file r]
-    set json [read $rfd]
-    close $rfd
-
-    try {
-        set manifest [::json::json2dict $json]
-        set surfaces [dict get $manifest surfaces]
-    } on error {errmsg} {
-        ad_log error "Invalid JSON manifest\n\n$json\n\n$errmsg"
-        set surfaces [list]
-    }
-} else {
-    set surfaces [list]
+set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
+if {[llength $surfaces] == 0} {
+    # No surfaces, kick user out
+    ad_returnredirect [ad_conn package_url]
+    ad_script_abort
 }
 
 ::template::multirow create available_surfaces name title audio video audio_video

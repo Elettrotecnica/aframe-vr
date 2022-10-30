@@ -17,6 +17,10 @@ set settings_url /shared/parameters?package_id=[ad_conn package_id]&return_url=[
 set environment [parameter::get -parameter environment -default default]
 set room_url environments/${environment}
 
-set stream_url streaming/
+set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
+if {[llength $surfaces] != 0} {
+    set stream_url streaming/
+}
+
 
 set avatar_url avatar/
