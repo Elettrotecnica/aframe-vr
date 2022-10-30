@@ -19,7 +19,6 @@ ad_proc -private aframe_vr::room::require {
     if {![nsv_array exists aframe-vr-janus-rooms] ||
         ![nsv_get aframe-vr-janus-rooms $package_id janus_room]} {
         set janus_room [parameter::get -package_id $package_id -parameter janus_room -default $package_id]
-        set janus_room_pin [parameter::get -package_id $package_id -parameter janus_room_pin -default [expr {rand() * 10000}]]
 
         set session_url [::janus::create_session -package_id $package_id]
         set plugin_url [::janus::plugin::attach \
@@ -28,9 +27,8 @@ ad_proc -private aframe_vr::room::require {
         set room_exists_p [::janus::videoroom::exists_p \
                                -plugin_url $plugin_url \
                                -room $janus_room]
-        ns_log warning "room_exists_p = $room_exists_p"
         if {!$room_exists_p} {
-            ns_log warning "creating room $janus_room with pin $janus_room_pin on plugin url $plugin_url"
+            set janus_room_pin [expr {rand() * 10000}]
             set janus_room [::janus::videoroom::create \
                                 -plugin_url $plugin_url \
                                 -room $janus_room \
