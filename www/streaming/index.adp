@@ -50,9 +50,10 @@
             </select>
           </div>
           <div>
-            Stream Audio only?
-            Yes <input type="radio" name="audio_only_p" value="t">
-            No <input type="radio" name="audio_only_p" value="f" checked>
+            Select camera stream:
+            All <input type="radio" name="camera-stream" value="all" checked>
+            Video only <input type="radio" name="camera-stream" value="video">
+            Audio only <input type="radio" name="camera-stream" value="audio">
           </div>
           <div>
             <div>Limit vertical resolution...</div>
@@ -91,6 +92,12 @@
                         >@available_surfaces.title@ @available_surfaces.audio_video@</option>
               </multiple>
             </select>
+          </div>
+          <div>
+            Select screen stream:
+            All <input type="radio" name="screen-stream" value="all" checked>
+            Video only <input type="radio" name="screen-stream" value="video">
+            Audio only <input type="radio" name="screen-stream" value="audio">
           </div>
           <div>
             <div>Limit vertical resolution...</div>
@@ -231,23 +238,25 @@
           return;
         }
 
-        let audioOnly = false;
-        for (let e of document.querySelectorAll('input[name="audio_only_p"]')) {
-          if (e.checked) {
-            audioOnly = e.value === 't';
-            break;
-          }
-        }
+        let microphoneTaken = false;
 
         let confs = [];
         if (videoConf.value !== '') {
           let selectedOption = videoConf.querySelector('option[value="' + videoConf.value + '"]');
-          let withVideo = !audioOnly && selectedOption.getAttribute('data-video') === 'true';
-          let withAudio = selectedOption.getAttribute('data-audio') === 'true';
+          let selectedStream;
+          for (const s of document.querySelectorAll('input[name="camera-stream"]')) {
+            if (s.checked) {
+              selectedStream = s.value;
+              break;
+            }
+          }
+          let withVideo = ['video', 'all'].includes(selectedStream) && selectedOption.getAttribute('data-video') === 'true';
+          let withAudio = ['audio', 'all'].includes(selectedStream) && selectedOption.getAttribute('data-audio') === 'true';
           if (!withVideo && !withAudio) {
             alert('Invalid setup: camera won\'t send any audio or video.');
             return;
           }
+          microphoneTaken = withAudio;
           confs.push({
             URI: "@janus_url@",
             room: @janus_room@,
@@ -262,8 +271,15 @@
         }
         if (screenConf.value !== '') {
           let selectedOption = screenConf.querySelector('option[value="' + screenConf.value + '"]');
-          let withVideo = !audioOnly && selectedOption.getAttribute('data-video') === 'true';
-          let withAudio = confs.length === 0 && selectedOption.getAttribute('data-audio') === 'true';
+          let selectedStream;
+          for (const s of document.querySelectorAll('input[name="screen-stream"]')) {
+            if (s.checked) {
+              selectedStream = s.value;
+              break;
+            }
+          }
+          let withVideo = ['video', 'all'].includes(selectedStream) && selectedOption.getAttribute('data-video') === 'true';
+          let withAudio = !microphoneTaken && ['audio', 'all'].includes(selectedStream) && selectedOption.getAttribute('data-audio') === 'true';
           if (!withVideo && !withAudio) {
             alert('Invalid setup: screen won\'t send any audio or video.');
             return;
