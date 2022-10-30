@@ -10,21 +10,21 @@
     <inherit-templates-p>f</inherit-templates-p>
     <auto-mount>aframe-vr</auto-mount>
 
-    <version name="0.4d" url="http://openacs.org/repository/download/apm/aframe-vr-0.4d.apm">
+    <version name="0.5d" url="http://openacs.org/repository/download/apm/aframe-vr-0.5d.apm">
         <owner url="mailto:apisano@wu.ac.at">Antonio Pisano</owner>
         <summary>VR networked environments based on A-Frame</summary>
         <release-date>2022-10-24</release-date>
         <description format="text/html">VR networked environments based on A-Frame</description>
         <maturity>0</maturity>
 
-        <provides url="aframe-vr" version="0.4d"/>
+        <provides url="aframe-vr" version="0.5d"/>
 
         <callbacks>
         </callbacks>
         <parameters>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="environment"  default="default" description="The environment that this package instance will use." section_name="Environment Settings"/>
-            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="janus_room"  default="1234" description="The room id where the audio/video chat will take place." section_name="Janus Settings"/>
-            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_room_pin"  description="The PIN required to access the Janus room." section_name="Janus Settings"/>
+            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="janus_room"  default="" description="The room id where the audio/video chat will take place. Will default to the instance package id when not specified. Unless you plan to use a custom Janus configuration for your room, there is no need to specify this parameter." section_name="Janus Settings"/>
+            <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_room_pin"  description="The PIN required to access the Janus room. When not specified, a random one will be generated and stored as the value for this parameter. Unless you plan to use a custom Janus configuration for your room, there is no need to specify this parameter." section_name="Janus Settings"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_url"  description="URL of the Janus instance that will be used for the audio and video chat." section_name="Janus Settings"/>
         </parameters>
 

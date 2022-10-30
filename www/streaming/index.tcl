@@ -48,8 +48,10 @@ if {$janus_url eq ""} {
     }
 }
 
-set janus_room [parameter::get -parameter janus_room -default 1234]
-set janus_room_pin [parameter::get -parameter janus_room_pin -default ""]
+aframe_vr::room::require
+
+set janus_room [parameter::get -parameter janus_room]
+set janus_room_pin [parameter::get -parameter janus_room_pin]
 
 template::head::add_javascript \
     -src https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js
