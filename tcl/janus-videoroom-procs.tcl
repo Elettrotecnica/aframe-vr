@@ -64,21 +64,28 @@ nsf::proc janus::request {
 
 nsf::proc janus::create_session {
     -janus_url
+    -package_id
 } {
     #
     # Creates a Janus session handle
     #
     # @param janus_url the optional Janus backend URL, will be
     #        retrieved from the package parameter if missing.
+    # @param package_id the package id to use to retrieve the
+    #        janus_url, when this was not provided
+    #        explicitly. Defaults to package from the connection.
     #
     # @return the janus session backend URL
     #
 
     if {![info exists janus_url]} {
-        set janus_url [parameter::get_global_value \
-                     -package_key aframe-vr \
-                     -parameter janus_url \
-                     -default ""]
+        if {![info exists package_id]} {
+            set package_id [ad_conn package_id]
+        }
+        set janus_url [parameter::get \
+                           -package_id $package_id \
+                           -parameter janus_url \
+                           -default ""]
         if {$janus_url eq ""} {
             regexp {(^.*):\d+$} [ad_url] match janus_url
             append janus_url :8088/janus
