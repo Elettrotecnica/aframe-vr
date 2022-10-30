@@ -85,7 +85,7 @@ nsf::proc janus::create_session {
         }
     }
 
-    set request_dict [list \
+    set request_dict [::list \
                           janus \"create\"]
 
     set message [::janus::request \
@@ -118,7 +118,7 @@ nsf::proc janus::plugin::attach {
         set session_url [::janus::create_session]
     }
 
-    set request_dict [list \
+    set request_dict [::list \
                           janus \"attach\" \
                           plugin [::json::write string $plugin]]
 
@@ -145,7 +145,7 @@ nsf::proc janus::plugin::request {
     # @return the JSON response from the backend
     #
 
-    set request_dict [list \
+    set request_dict [::list \
                           janus \"message\" \
                           body [::json::write object {*}$body_dict]]
 
@@ -272,7 +272,7 @@ nsf::proc janus::videoroom::create {
         set plugin_url [::janus::videoroom::attach]
     }
 
-    set body_dict [list \
+    set body_dict [::list \
                      request \"create\" \
                      description [::json::write string $description] \
                      permanent [expr {$permanent ? true : false}] \
@@ -385,7 +385,7 @@ nsf::proc janus::videoroom::edit {
         set plugin_url [::janus::videoroom::attach]
     }
 
-    set body_dict [list \
+    set body_dict [::list \
                        request \"edit\" \
                        room [expr {[regexp {^\d+$} $room] ?
                                    $room : [::json::write string $room]}] \
@@ -449,7 +449,7 @@ nsf::proc janus::videoroom::exists_p {
         set plugin_url [::janus::videoroom::attach]
     }
 
-    set body_dict [list \
+    set body_dict [::list \
                        request \"exists\" \
                        room [expr {[regexp {^\d+$} $room] ?
                                    $room : [::json::write string $room]}]]
@@ -482,7 +482,7 @@ nsf::proc janus::videoroom::destroy {
         set plugin_url [::janus::videoroom::attach]
     }
 
-    set body_dict [list \
+    set body_dict [::list \
                      request \"destroy\" \
                      room [expr {[regexp {^\d+$} $room] ?
                                  $room : [::json::write string $room]}] \
