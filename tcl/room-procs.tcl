@@ -45,7 +45,7 @@ ad_proc -private aframe_vr::room::require {
                 #
                 # No Janus backend URL found. Skip this room.
                 #
-                continue
+                return
             }
 
             set plugin_url [::janus::plugin::attach \
