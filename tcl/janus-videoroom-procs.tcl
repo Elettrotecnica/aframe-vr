@@ -87,8 +87,8 @@ nsf::proc janus::create_session {
                            -parameter janus_url \
                            -default ""]
         if {$janus_url eq ""} {
-            regexp {(^.*):\d+$} [ad_url] match janus_url
-            append janus_url :8088/janus
+            ad_log warning "No Janus backend URL found for package '$package_id'."
+            return
         }
     }
 

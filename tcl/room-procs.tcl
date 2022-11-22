@@ -41,6 +41,13 @@ ad_proc -private aframe_vr::room::require {
             set janus_room [parameter::get -package_id $package_id -parameter janus_room -default $package_id]
 
             set session_url [::janus::create_session -package_id $package_id]
+            if {$session_url eq ""} {
+                #
+                # No Janus backend URL found. Skip this room.
+                #
+                continue
+            }
+
             set plugin_url [::janus::plugin::attach \
                                 -session_url $session_url \
                                 -plugin janus.plugin.videoroom]
