@@ -52,6 +52,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     this.pin = this.data.pin;
 
     this.debug = this.data.debug;
+    // this.debug = 'all';
+
     // By default, Janus videoroom plugin wants integer ids, but one
     // can set the 'string_ids' property to true in the plugin conf to
     // use strings. In such setup, one must also set 'stringIds'
@@ -258,6 +260,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
   },
 
   _subscribeTo: function (sources) {
+    const self = this;
     // Check if we're still creating the subscription handle
     if (this.creatingSubscription) {
       // Still working on the handle, send this request later when it's ready
@@ -312,7 +315,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       // Nothing else we need to do
       return;
     }
-    var self = this;
     // If we got here, we're creating a new handle for the subscriptions (we only need one)
     this.creatingSubscription = true;
     this.janus.attach({
@@ -361,6 +363,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         var subscribe = {
           request: 'join',
           room: self.room,
+          pin: self.pin,
           ptype: 'subscriber',
           streams: subscription,
           use_msid: false,
