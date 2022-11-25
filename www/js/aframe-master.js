@@ -11,696 +11,6 @@
 return /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/@ungap/custom-elements/index.js":
-/*!******************************************************!*\
-  !*** ./node_modules/@ungap/custom-elements/index.js ***!
-  \******************************************************/
-/***/ (() => {
-
-/*! (c) Andrea Giammarchi @webreflection ISC */
-(function () {
-  'use strict';
-
-  var attributesObserver = function (whenDefined, MutationObserver) {
-    var attributeChanged = function attributeChanged(records) {
-      for (var i = 0, length = records.length; i < length; i++) {
-        dispatch(records[i]);
-      }
-    };
-
-    var dispatch = function dispatch(_ref) {
-      var target = _ref.target,
-          attributeName = _ref.attributeName,
-          oldValue = _ref.oldValue;
-      target.attributeChangedCallback(attributeName, oldValue, target.getAttribute(attributeName));
-    };
-
-    return function (target, is) {
-      var attributeFilter = target.constructor.observedAttributes;
-
-      if (attributeFilter) {
-        whenDefined(is).then(function () {
-          new MutationObserver(attributeChanged).observe(target, {
-            attributes: true,
-            attributeOldValue: true,
-            attributeFilter: attributeFilter
-          });
-
-          for (var i = 0, length = attributeFilter.length; i < length; i++) {
-            if (target.hasAttribute(attributeFilter[i])) dispatch({
-              target: target,
-              attributeName: attributeFilter[i],
-              oldValue: null
-            });
-          }
-        });
-      }
-
-      return target;
-    };
-  };
-
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-  }
-
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
-
-  function _createForOfIteratorHelper(o, allowArrayLike) {
-    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
-
-    if (!it) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-
-        var F = function () {};
-
-        return {
-          s: F,
-          n: function () {
-            if (i >= o.length) return {
-              done: true
-            };
-            return {
-              done: false,
-              value: o[i++]
-            };
-          },
-          e: function (e) {
-            throw e;
-          },
-          f: F
-        };
-      }
-
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-
-    var normalCompletion = true,
-        didErr = false,
-        err;
-    return {
-      s: function () {
-        it = it.call(o);
-      },
-      n: function () {
-        var step = it.next();
-        normalCompletion = step.done;
-        return step;
-      },
-      e: function (e) {
-        didErr = true;
-        err = e;
-      },
-      f: function () {
-        try {
-          if (!normalCompletion && it.return != null) it.return();
-        } finally {
-          if (didErr) throw err;
-        }
-      }
-    };
-  }
-  /*! (c) Andrea Giammarchi - ISC */
-
-
-  var TRUE = true,
-      FALSE = false,
-      QSA$1 = 'querySelectorAll';
-  /**
-   * Start observing a generic document or root element.
-   * @param {(node:Element, connected:boolean) => void} callback triggered per each dis/connected element
-   * @param {Document|Element} [root=document] by default, the global document to observe
-   * @param {Function} [MO=MutationObserver] by default, the global MutationObserver
-   * @param {string[]} [query=['*']] the selectors to use within nodes
-   * @returns {MutationObserver}
-   */
-
-  var notify = function notify(callback) {
-    var root = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document;
-    var MO = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : MutationObserver;
-    var query = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : ['*'];
-
-    var loop = function loop(nodes, selectors, added, removed, connected, pass) {
-      var _iterator = _createForOfIteratorHelper(nodes),
-          _step;
-
-      try {
-        for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var node = _step.value;
-
-          if (pass || QSA$1 in node) {
-            if (connected) {
-              if (!added.has(node)) {
-                added.add(node);
-                removed["delete"](node);
-                callback(node, connected);
-              }
-            } else if (!removed.has(node)) {
-              removed.add(node);
-              added["delete"](node);
-              callback(node, connected);
-            }
-
-            if (!pass) loop(node[QSA$1](selectors), selectors, added, removed, connected, TRUE);
-          }
-        }
-      } catch (err) {
-        _iterator.e(err);
-      } finally {
-        _iterator.f();
-      }
-    };
-
-    var mo = new MO(function (records) {
-      if (query.length) {
-        var selectors = query.join(',');
-        var added = new Set(),
-            removed = new Set();
-
-        var _iterator2 = _createForOfIteratorHelper(records),
-            _step2;
-
-        try {
-          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
-            var _step2$value = _step2.value,
-                addedNodes = _step2$value.addedNodes,
-                removedNodes = _step2$value.removedNodes;
-            loop(removedNodes, selectors, added, removed, FALSE, FALSE);
-            loop(addedNodes, selectors, added, removed, TRUE, FALSE);
-          }
-        } catch (err) {
-          _iterator2.e(err);
-        } finally {
-          _iterator2.f();
-        }
-      }
-    });
-    var observe = mo.observe;
-    (mo.observe = function (node) {
-      return observe.call(mo, node, {
-        subtree: TRUE,
-        childList: TRUE
-      });
-    })(root);
-    return mo;
-  };
-
-  var QSA = 'querySelectorAll';
-  var _self$1 = self,
-      document$2 = _self$1.document,
-      Element$1 = _self$1.Element,
-      MutationObserver$2 = _self$1.MutationObserver,
-      Set$2 = _self$1.Set,
-      WeakMap$1 = _self$1.WeakMap;
-
-  var elements = function elements(element) {
-    return QSA in element;
-  };
-
-  var filter = [].filter;
-
-  var qsaObserver = function (options) {
-    var live = new WeakMap$1();
-
-    var drop = function drop(elements) {
-      for (var i = 0, length = elements.length; i < length; i++) {
-        live["delete"](elements[i]);
-      }
-    };
-
-    var flush = function flush() {
-      var records = observer.takeRecords();
-
-      for (var i = 0, length = records.length; i < length; i++) {
-        parse(filter.call(records[i].removedNodes, elements), false);
-        parse(filter.call(records[i].addedNodes, elements), true);
-      }
-    };
-
-    var matches = function matches(element) {
-      return element.matches || element.webkitMatchesSelector || element.msMatchesSelector;
-    };
-
-    var notifier = function notifier(element, connected) {
-      var selectors;
-
-      if (connected) {
-        for (var q, m = matches(element), i = 0, length = query.length; i < length; i++) {
-          if (m.call(element, q = query[i])) {
-            if (!live.has(element)) live.set(element, new Set$2());
-            selectors = live.get(element);
-
-            if (!selectors.has(q)) {
-              selectors.add(q);
-              options.handle(element, connected, q);
-            }
-          }
-        }
-      } else if (live.has(element)) {
-        selectors = live.get(element);
-        live["delete"](element);
-        selectors.forEach(function (q) {
-          options.handle(element, connected, q);
-        });
-      }
-    };
-
-    var parse = function parse(elements) {
-      var connected = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-
-      for (var i = 0, length = elements.length; i < length; i++) {
-        notifier(elements[i], connected);
-      }
-    };
-
-    var query = options.query;
-    var root = options.root || document$2;
-    var observer = notify(notifier, root, MutationObserver$2, query);
-    var attachShadow = Element$1.prototype.attachShadow;
-    if (attachShadow) Element$1.prototype.attachShadow = function (init) {
-      var shadowRoot = attachShadow.call(this, init);
-      observer.observe(shadowRoot);
-      return shadowRoot;
-    };
-    if (query.length) parse(root[QSA](query));
-    return {
-      drop: drop,
-      flush: flush,
-      observer: observer,
-      parse: parse
-    };
-  };
-
-  var _self = self,
-      document$1 = _self.document,
-      Map = _self.Map,
-      MutationObserver$1 = _self.MutationObserver,
-      Object$1 = _self.Object,
-      Set$1 = _self.Set,
-      WeakMap = _self.WeakMap,
-      Element = _self.Element,
-      HTMLElement = _self.HTMLElement,
-      Node = _self.Node,
-      Error = _self.Error,
-      TypeError$1 = _self.TypeError,
-      Reflect = _self.Reflect;
-  var defineProperty = Object$1.defineProperty,
-      keys = Object$1.keys,
-      getOwnPropertyNames = Object$1.getOwnPropertyNames,
-      setPrototypeOf = Object$1.setPrototypeOf;
-  var legacy = !self.customElements;
-
-  var expando = function expando(element) {
-    var key = keys(element);
-    var value = [];
-    var length = key.length;
-
-    for (var i = 0; i < length; i++) {
-      value[i] = element[key[i]];
-      delete element[key[i]];
-    }
-
-    return function () {
-      for (var _i = 0; _i < length; _i++) {
-        element[key[_i]] = value[_i];
-      }
-    };
-  };
-
-  if (legacy) {
-    var HTMLBuiltIn = function HTMLBuiltIn() {
-      var constructor = this.constructor;
-      if (!classes.has(constructor)) throw new TypeError$1('Illegal constructor');
-      var is = classes.get(constructor);
-      if (override) return augment(override, is);
-      var element = createElement.call(document$1, is);
-      return augment(setPrototypeOf(element, constructor.prototype), is);
-    };
-
-    var createElement = document$1.createElement;
-    var classes = new Map();
-    var defined = new Map();
-    var prototypes = new Map();
-    var registry = new Map();
-    var query = [];
-
-    var handle = function handle(element, connected, selector) {
-      var proto = prototypes.get(selector);
-
-      if (connected && !proto.isPrototypeOf(element)) {
-        var redefine = expando(element);
-        override = setPrototypeOf(element, proto);
-
-        try {
-          new proto.constructor();
-        } finally {
-          override = null;
-          redefine();
-        }
-      }
-
-      var method = "".concat(connected ? '' : 'dis', "connectedCallback");
-      if (method in proto) element[method]();
-    };
-
-    var _qsaObserver = qsaObserver({
-      query: query,
-      handle: handle
-    }),
-        parse = _qsaObserver.parse;
-
-    var override = null;
-
-    var whenDefined = function whenDefined(name) {
-      if (!defined.has(name)) {
-        var _,
-            $ = new Promise(function ($) {
-          _ = $;
-        });
-
-        defined.set(name, {
-          $: $,
-          _: _
-        });
-      }
-
-      return defined.get(name).$;
-    };
-
-    var augment = attributesObserver(whenDefined, MutationObserver$1);
-    defineProperty(self, 'customElements', {
-      configurable: true,
-      value: {
-        define: function define(is, Class) {
-          if (registry.has(is)) throw new Error("the name \"".concat(is, "\" has already been used with this registry"));
-          classes.set(Class, is);
-          prototypes.set(is, Class.prototype);
-          registry.set(is, Class);
-          query.push(is);
-          whenDefined(is).then(function () {
-            parse(document$1.querySelectorAll(is));
-          });
-
-          defined.get(is)._(Class);
-        },
-        get: function get(is) {
-          return registry.get(is);
-        },
-        whenDefined: whenDefined
-      }
-    });
-    defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
-      value: HTMLBuiltIn
-    });
-    defineProperty(self, 'HTMLElement', {
-      configurable: true,
-      value: HTMLBuiltIn
-    });
-    defineProperty(document$1, 'createElement', {
-      configurable: true,
-      value: function value(name, options) {
-        var is = options && options.is;
-        var Class = is ? registry.get(is) : registry.get(name);
-        return Class ? new Class() : createElement.call(document$1, name);
-      }
-    }); // in case ShadowDOM is used through a polyfill, to avoid issues
-    // with builtin extends within shadow roots
-
-    if (!('isConnected' in Node.prototype)) defineProperty(Node.prototype, 'isConnected', {
-      configurable: true,
-      get: function get() {
-        return !(this.ownerDocument.compareDocumentPosition(this) & this.DOCUMENT_POSITION_DISCONNECTED);
-      }
-    });
-  } else {
-    legacy = !self.customElements.get('extends-li');
-
-    if (legacy) {
-      try {
-        var LI = function LI() {
-          return self.Reflect.construct(HTMLLIElement, [], LI);
-        };
-
-        LI.prototype = HTMLLIElement.prototype;
-        var is = 'extends-li';
-        self.customElements.define('extends-li', LI, {
-          'extends': 'li'
-        });
-        legacy = document$1.createElement('li', {
-          is: is
-        }).outerHTML.indexOf(is) < 0;
-        var _self$customElements = self.customElements,
-            get = _self$customElements.get,
-            _whenDefined = _self$customElements.whenDefined;
-        defineProperty(self.customElements, 'whenDefined', {
-          configurable: true,
-          value: function value(is) {
-            var _this = this;
-
-            return _whenDefined.call(this, is).then(function (Class) {
-              return Class || get.call(_this, is);
-            });
-          }
-        });
-      } catch (o_O) {}
-    }
-  }
-
-  if (legacy) {
-    var parseShadow = function parseShadow(element) {
-      var root = shadowRoots.get(element);
-
-      _parse(root.querySelectorAll(this), element.isConnected);
-    };
-
-    var customElements = self.customElements;
-    var _createElement = document$1.createElement;
-    var define = customElements.define,
-        _get = customElements.get,
-        upgrade = customElements.upgrade;
-
-    var _ref = Reflect || {
-      construct: function construct(HTMLElement) {
-        return HTMLElement.call(this);
-      }
-    },
-        construct = _ref.construct;
-
-    var shadowRoots = new WeakMap();
-    var shadows = new Set$1();
-
-    var _classes = new Map();
-
-    var _defined = new Map();
-
-    var _prototypes = new Map();
-
-    var _registry = new Map();
-
-    var shadowed = [];
-    var _query = [];
-
-    var getCE = function getCE(is) {
-      return _registry.get(is) || _get.call(customElements, is);
-    };
-
-    var _handle = function _handle(element, connected, selector) {
-      var proto = _prototypes.get(selector);
-
-      if (connected && !proto.isPrototypeOf(element)) {
-        var redefine = expando(element);
-        _override = setPrototypeOf(element, proto);
-
-        try {
-          new proto.constructor();
-        } finally {
-          _override = null;
-          redefine();
-        }
-      }
-
-      var method = "".concat(connected ? '' : 'dis', "connectedCallback");
-      if (method in proto) element[method]();
-    };
-
-    var _qsaObserver2 = qsaObserver({
-      query: _query,
-      handle: _handle
-    }),
-        _parse = _qsaObserver2.parse;
-
-    var _qsaObserver3 = qsaObserver({
-      query: shadowed,
-      handle: function handle(element, connected) {
-        if (shadowRoots.has(element)) {
-          if (connected) shadows.add(element);else shadows["delete"](element);
-          if (_query.length) parseShadow.call(_query, element);
-        }
-      }
-    }),
-        parseShadowed = _qsaObserver3.parse; // qsaObserver also patches attachShadow
-    // be sure this runs *after* that
-
-
-    var attachShadow = Element.prototype.attachShadow;
-    if (attachShadow) Element.prototype.attachShadow = function (init) {
-      var root = attachShadow.call(this, init);
-      shadowRoots.set(this, root);
-      return root;
-    };
-
-    var _whenDefined2 = function _whenDefined2(name) {
-      if (!_defined.has(name)) {
-        var _,
-            $ = new Promise(function ($) {
-          _ = $;
-        });
-
-        _defined.set(name, {
-          $: $,
-          _: _
-        });
-      }
-
-      return _defined.get(name).$;
-    };
-
-    var _augment = attributesObserver(_whenDefined2, MutationObserver$1);
-
-    var _override = null;
-    getOwnPropertyNames(self).filter(function (k) {
-      return /^HTML.*Element$/.test(k);
-    }).forEach(function (k) {
-      var HTMLElement = self[k];
-
-      function HTMLBuiltIn() {
-        var constructor = this.constructor;
-        if (!_classes.has(constructor)) throw new TypeError$1('Illegal constructor');
-
-        var _classes$get = _classes.get(constructor),
-            is = _classes$get.is,
-            tag = _classes$get.tag;
-
-        if (is) {
-          if (_override) return _augment(_override, is);
-
-          var element = _createElement.call(document$1, tag);
-
-          element.setAttribute('is', is);
-          return _augment(setPrototypeOf(element, constructor.prototype), is);
-        } else return construct.call(this, HTMLElement, [], constructor);
-      }
-
-      defineProperty(HTMLBuiltIn.prototype = HTMLElement.prototype, 'constructor', {
-        value: HTMLBuiltIn
-      });
-      defineProperty(self, k, {
-        value: HTMLBuiltIn
-      });
-    });
-    defineProperty(document$1, 'createElement', {
-      configurable: true,
-      value: function value(name, options) {
-        var is = options && options.is;
-
-        if (is) {
-          var Class = _registry.get(is);
-
-          if (Class && _classes.get(Class).tag === name) return new Class();
-        }
-
-        var element = _createElement.call(document$1, name);
-
-        if (is) element.setAttribute('is', is);
-        return element;
-      }
-    });
-    defineProperty(customElements, 'get', {
-      configurable: true,
-      value: getCE
-    });
-    defineProperty(customElements, 'whenDefined', {
-      configurable: true,
-      value: _whenDefined2
-    });
-    defineProperty(customElements, 'upgrade', {
-      configurable: true,
-      value: function value(element) {
-        var is = element.getAttribute('is');
-
-        if (is) {
-          var _constructor = _registry.get(is);
-
-          if (_constructor) {
-            _augment(setPrototypeOf(element, _constructor.prototype), is); // apparently unnecessary because this is handled by qsa observer
-            // if (element.isConnected && element.connectedCallback)
-            //   element.connectedCallback();
-
-
-            return;
-          }
-        }
-
-        upgrade.call(customElements, element);
-      }
-    });
-    defineProperty(customElements, 'define', {
-      configurable: true,
-      value: function value(is, Class, options) {
-        if (getCE(is)) throw new Error("'".concat(is, "' has already been defined as a custom element"));
-        var selector;
-        var tag = options && options["extends"];
-
-        _classes.set(Class, tag ? {
-          is: is,
-          tag: tag
-        } : {
-          is: '',
-          tag: is
-        });
-
-        if (tag) {
-          selector = "".concat(tag, "[is=\"").concat(is, "\"]");
-
-          _prototypes.set(selector, Class.prototype);
-
-          _registry.set(is, Class);
-
-          _query.push(selector);
-        } else {
-          define.apply(customElements, arguments);
-          shadowed.push(selector = is);
-        }
-
-        _whenDefined2(is).then(function () {
-          if (tag) {
-            _parse(document$1.querySelectorAll(selector));
-
-            shadows.forEach(parseShadow, [selector]);
-          } else parseShadowed(document$1.querySelectorAll(selector));
-        });
-
-        _defined.get(is)._(Class);
-      }
-    });
-  }
-})();
-
-/***/ }),
-
 /***/ "./node_modules/an-array/index.js":
 /*!****************************************!*\
   !*** ./node_modules/an-array/index.js ***!
@@ -3624,6 +2934,287 @@ module.exports = function deepAssign(target) {
 
   return target;
 };
+
+/***/ }),
+
+/***/ "./node_modules/document-register-element/build/document-register-element.js":
+/*!***********************************************************************************!*\
+  !*** ./node_modules/document-register-element/build/document-register-element.js ***!
+  \***********************************************************************************/
+/***/ (() => {
+
+/*! (C) WebReflection Mit Style License */
+(function (t, n, r, i) {
+  "use strict";
+
+  function st(e, t) {
+    for (var n = 0, r = e.length; n < r; n++) gt(e[n], t);
+  }
+
+  function ot(e) {
+    for (var t = 0, n = e.length, r; t < n; t++) r = e[t], it(r, w[at(r)]);
+  }
+
+  function ut(e) {
+    return function (t) {
+      F(t) && (gt(t, e), st(t.querySelectorAll(E), e));
+    };
+  }
+
+  function at(e) {
+    var t = R.call(e, "is"),
+        n = e.nodeName.toUpperCase(),
+        r = x.call(b, t ? m + t.toUpperCase() : v + n);
+    return t && -1 < r && !ft(n, t) ? -1 : r;
+  }
+
+  function ft(e, t) {
+    return -1 < E.indexOf(e + '[is="' + t + '"]');
+  }
+
+  function lt(e) {
+    var t = e.currentTarget,
+        n = e.attrChange,
+        r = e.attrName,
+        i = e.target;
+    Y && (!i || i === t) && t.attributeChangedCallback && r !== "style" && e.prevValue !== e.newValue && t.attributeChangedCallback(r, n === e[f] ? null : e.prevValue, n === e[c] ? null : e.newValue);
+  }
+
+  function ct(e) {
+    var t = ut(e);
+    return function (e) {
+      $.push(t, e.target);
+    };
+  }
+
+  function ht(e) {
+    G && (G = !1, e.currentTarget.removeEventListener(p, ht)), st((e.target || n).querySelectorAll(E), e.detail === u ? u : o), j && vt();
+  }
+
+  function pt(e, t) {
+    var n = this;
+    U.call(n, e, t), Z.call(n, {
+      target: n
+    });
+  }
+
+  function dt(e, t) {
+    P(e, t), nt ? nt.observe(e, X) : (Q && (e.setAttribute = pt, e[s] = tt(e), e.addEventListener(d, Z)), e.addEventListener(h, lt)), e.createdCallback && Y && (e.created = !0, e.createdCallback(), e.created = !1);
+  }
+
+  function vt() {
+    for (var e, t = 0, n = I.length; t < n; t++) e = I[t], S.contains(e) || (n--, I.splice(t--, 1), gt(e, u));
+  }
+
+  function mt(e) {
+    throw new Error("A " + e + " type is already registered");
+  }
+
+  function gt(e, t) {
+    var n,
+        r = at(e);
+    -1 < r && (rt(e, w[r]), r = 0, t === o && !e[o] ? (e[u] = !1, e[o] = !0, r = 1, j && x.call(I, e) < 0 && I.push(e)) : t === u && !e[u] && (e[o] = !1, e[u] = !0, r = 1), r && (n = e[t + "Callback"]) && n.call(e));
+  }
+
+  if (i in n) return;
+
+  var s = "__" + i + (Math.random() * 1e5 >> 0),
+      o = "attached",
+      u = "detached",
+      a = "extends",
+      f = "ADDITION",
+      l = "MODIFICATION",
+      c = "REMOVAL",
+      h = "DOMAttrModified",
+      p = "DOMContentLoaded",
+      d = "DOMSubtreeModified",
+      v = "<",
+      m = "=",
+      g = /^[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$/,
+      y = ["ANNOTATION-XML", "COLOR-PROFILE", "FONT-FACE", "FONT-FACE-SRC", "FONT-FACE-URI", "FONT-FACE-FORMAT", "FONT-FACE-NAME", "MISSING-GLYPH"],
+      b = [],
+      w = [],
+      E = "",
+      S = n.documentElement,
+      x = b.indexOf || function (e) {
+    for (var t = this.length; t-- && this[t] !== e;);
+
+    return t;
+  },
+      T = r.prototype,
+      N = T.hasOwnProperty,
+      C = T.isPrototypeOf,
+      k = r.defineProperty,
+      L = r.getOwnPropertyDescriptor,
+      A = r.getOwnPropertyNames,
+      O = r.getPrototypeOf,
+      M = r.setPrototypeOf,
+      _ = !!r.__proto__,
+      D = r.create || function yt(e) {
+    return e ? (yt.prototype = e, new yt()) : this;
+  },
+      P = M || (_ ? function (e, t) {
+    return e.__proto__ = t, e;
+  } : A && L ? function () {
+    function e(e, t) {
+      for (var n, r = A(t), i = 0, s = r.length; i < s; i++) n = r[i], N.call(e, n) || k(e, n, L(t, n));
+    }
+
+    return function (t, n) {
+      do e(t, n); while ((n = O(n)) && !C.call(n, t));
+
+      return t;
+    };
+  }() : function (e, t) {
+    for (var n in t) e[n] = t[n];
+
+    return e;
+  }),
+      H = t.MutationObserver || t.WebKitMutationObserver,
+      B = (t.HTMLElement || t.Element || t.Node).prototype,
+      j = !C.call(B, S),
+      F = j ? function (e) {
+    return e.nodeType === 1;
+  } : function (e) {
+    return C.call(B, e);
+  },
+      I = j && [],
+      q = B.cloneNode,
+      R = B.getAttribute,
+      U = B.setAttribute,
+      z = B.removeAttribute,
+      W = n.createElement,
+      X = H && {
+    attributes: !0,
+    characterData: !0,
+    attributeOldValue: !0
+  },
+      V = H || function (e) {
+    Q = !1, S.removeEventListener(h, V);
+  },
+      $,
+      J = t.requestAnimationFrame || t.webkitRequestAnimationFrame || t.mozRequestAnimationFrame || t.msRequestAnimationFrame || function (e) {
+    setTimeout(e, 10);
+  },
+      K = !1,
+      Q = !0,
+      G = !0,
+      Y = !0,
+      Z,
+      et,
+      tt,
+      nt,
+      rt,
+      it;
+
+  M || _ ? (rt = function (e, t) {
+    C.call(t, e) || dt(e, t);
+  }, it = dt) : (rt = function (e, t) {
+    e[s] || (e[s] = r(!0), dt(e, t));
+  }, it = rt), j ? (Q = !1, function () {
+    var t = L(B, "addEventListener"),
+        n = t.value,
+        r = function (e) {
+      var t = new CustomEvent(h, {
+        bubbles: !0
+      });
+      t.attrName = e, t.prevValue = R.call(this, e), t.newValue = null, t[c] = t.attrChange = 2, z.call(this, e), this.dispatchEvent(t);
+    },
+        i = function (t, n) {
+      var r = this.hasAttribute(t),
+          i = r && R.call(this, t);
+      e = new CustomEvent(h, {
+        bubbles: !0
+      }), U.call(this, t, n), e.attrName = t, e.prevValue = r ? i : null, e.newValue = n, r ? e[l] = e.attrChange = 1 : e[f] = e.attrChange = 0, this.dispatchEvent(e);
+    },
+        o = function (e) {
+      var t = e.currentTarget,
+          n = t[s],
+          r = e.propertyName,
+          i;
+      n.hasOwnProperty(r) && (n = n[r], i = new CustomEvent(h, {
+        bubbles: !0
+      }), i.attrName = n.name, i.prevValue = n.value || null, i.newValue = n.value = t[r] || null, i.prevValue == null ? i[f] = i.attrChange = 0 : i[l] = i.attrChange = 1, t.dispatchEvent(i));
+    };
+
+    t.value = function (e, t, u) {
+      e === h && this.attributeChangedCallback && this.setAttribute !== i && (this[s] = {
+        className: {
+          name: "class",
+          value: this.className
+        }
+      }, this.setAttribute = i, this.removeAttribute = r, n.call(this, "propertychange", o)), n.call(this, e, t, u);
+    }, k(B, "addEventListener", t);
+  }()) : H || (S.addEventListener(h, V), S.setAttribute(s, 1), S.removeAttribute(s), Q && (Z = function (e) {
+    var t = this,
+        n,
+        r,
+        i;
+
+    if (t === e.target) {
+      n = t[s], t[s] = r = tt(t);
+
+      for (i in r) {
+        if (!(i in n)) return et(0, t, i, n[i], r[i], f);
+        if (r[i] !== n[i]) return et(1, t, i, n[i], r[i], l);
+      }
+
+      for (i in n) if (!(i in r)) return et(2, t, i, n[i], r[i], c);
+    }
+  }, et = function (e, t, n, r, i, s) {
+    var o = {
+      attrChange: e,
+      currentTarget: t,
+      attrName: n,
+      prevValue: r,
+      newValue: i
+    };
+    o[s] = e, lt(o);
+  }, tt = function (e) {
+    for (var t, n, r = {}, i = e.attributes, s = 0, o = i.length; s < o; s++) t = i[s], n = t.name, n !== "setAttribute" && (r[n] = t.value);
+
+    return r;
+  })), n[i] = function (t, r) {
+    c = t.toUpperCase(), K || (K = !0, H ? (nt = function (e, t) {
+      function n(e, t) {
+        for (var n = 0, r = e.length; n < r; t(e[n++]));
+      }
+
+      return new H(function (r) {
+        for (var i, s, o, u = 0, a = r.length; u < a; u++) i = r[u], i.type === "childList" ? (n(i.addedNodes, e), n(i.removedNodes, t)) : (s = i.target, Y && s.attributeChangedCallback && i.attributeName !== "style" && (o = R.call(s, i.attributeName), o !== i.oldValue && s.attributeChangedCallback(i.attributeName, i.oldValue, o)));
+      });
+    }(ut(o), ut(u)), nt.observe(n, {
+      childList: !0,
+      subtree: !0
+    })) : ($ = [], J(function d() {
+      while ($.length) $.shift().call(null, $.shift());
+
+      J(d);
+    }), n.addEventListener("DOMNodeInserted", ct(o)), n.addEventListener("DOMNodeRemoved", ct(u))), n.addEventListener(p, ht), n.addEventListener("readystatechange", ht), n.createElement = function (e, t) {
+      var r = W.apply(n, arguments),
+          i = "" + e,
+          s = x.call(b, (t ? m : v) + (t || i).toUpperCase()),
+          o = -1 < s;
+      return t && (r.setAttribute("is", t = t.toLowerCase()), o && (o = ft(i.toUpperCase(), t))), Y = !n.createElement.innerHTMLHelper, o && it(r, w[s]), r;
+    }, B.cloneNode = function (e) {
+      var t = q.call(this, !!e),
+          n = at(t);
+      return -1 < n && it(t, w[n]), e && ot(t.querySelectorAll(E)), t;
+    }), -2 < x.call(b, m + c) + x.call(b, v + c) && mt(t);
+    if (!g.test(c) || -1 < x.call(y, c)) throw new Error("The type " + t + " is invalid");
+
+    var i = function () {
+      return f ? n.createElement(l, c) : n.createElement(l);
+    },
+        s = r || T,
+        f = N.call(s, a),
+        l = f ? r[a].toUpperCase() : c,
+        c,
+        h;
+
+    return f && -1 < x.call(b, v + l) && mt(l), h = b.push((f ? m : v) + c) - 1, E = E.concat(E.length ? "," : "", f ? l + '[is="' + t.toLowerCase() + '"]' : l), i.prototype = w[h] = N.call(s, "prototype") ? s.prototype : D(B), st(n.querySelectorAll(E), o), i;
+  };
+})(window, document, Object, "registerElement");
 
 /***/ }),
 
@@ -20045,7 +19636,9 @@ module.exports.Component = registerComponent('mediastream-listener', {
       self.loudItems[e.detail.el] = e.detail;
     });
     this.el.sceneEl.addEventListener('mediastream-listener-silent', function (e) {
-      self.loudItems[e.detail.el]?.delete;
+      if (self.loudItems[e.detail.el]) {
+        self.loudItems[e.detail.el].delete;
+      }
     });
   },
   tick: function () {
@@ -20677,7 +20270,6 @@ var GAMEPAD_ID_WEBVR = 'Oculus Touch'; // Prefix for Gen1 and Gen2 Oculus Touch 
 var GAMEPAD_ID_PREFIX = isWebXRAvailable ? GAMEPAD_ID_WEBXR : GAMEPAD_ID_WEBVR; // First generation model URL.
 
 var TOUCH_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/oculus/oculus-touch-controller-';
-var META_CONTROLLER_MODEL_BASE_URL = 'https://cdn.aframe.io/controllers/meta/';
 var OCULUS_TOUCH_WEBVR = {
   left: {
     modelUrl: TOUCH_CONTROLLER_MODEL_BASE_URL + 'left.gltf',
@@ -20795,71 +20387,35 @@ var CONTROLLER_PROPERTIES = {
       modelUrl: TOUCH_CONTROLLER_MODEL_BASE_URL + 'v3-left.glb',
       rayOrigin: {
         origin: {
-          x: 0.0065,
-          y: -0.0186,
-          z: -0.05
+          x: 0.015,
+          y: 0.005,
+          z: 0
         },
         direction: {
-          x: 0.12394785839500175,
-          y: -0.5944043672340157,
-          z: -0.7945567170519814
+          x: 0,
+          y: 0,
+          z: -1
         }
       },
-      modelPivotOffset: new THREE.Vector3(0, 0, 0),
-      modelPivotRotation: new THREE.Euler(0, 0, 0)
+      modelPivotOffset: new THREE.Vector3(0.01, -0.01, 0.05),
+      modelPivotRotation: new THREE.Euler(Math.PI / 4, 0, 0)
     },
     right: {
       modelUrl: TOUCH_CONTROLLER_MODEL_BASE_URL + 'v3-right.glb',
       rayOrigin: {
         origin: {
-          x: -0.0065,
-          y: -0.0186,
-          z: -0.05
+          x: -0.015,
+          y: 0.005,
+          z: 0
         },
         direction: {
-          x: -0.12394785839500175,
-          y: -0.5944043672340157,
-          z: -0.7945567170519814
+          x: 0,
+          y: 0,
+          z: -1
         }
       },
-      modelPivotOffset: new THREE.Vector3(0, 0, 0),
-      modelPivotRotation: new THREE.Euler(0, 0, 0)
-    }
-  },
-  'meta-quest-touch-pro': {
-    left: {
-      modelUrl: META_CONTROLLER_MODEL_BASE_URL + 'quest-touch-pro-left.glb',
-      rayOrigin: {
-        origin: {
-          x: 0.0065,
-          y: -0.0186,
-          z: -0.05
-        },
-        direction: {
-          x: 0.12394785839500175,
-          y: -0.5944043672340157,
-          z: -0.7945567170519814
-        }
-      },
-      modelPivotOffset: new THREE.Vector3(0, 0, 0),
-      modelPivotRotation: new THREE.Euler(0, 0, 0)
-    },
-    right: {
-      modelUrl: META_CONTROLLER_MODEL_BASE_URL + 'quest-touch-pro-right.glb',
-      rayOrigin: {
-        origin: {
-          x: -0.0065,
-          y: -0.0186,
-          z: -0.05
-        },
-        direction: {
-          x: -0.12394785839500175,
-          y: -0.5944043672340157,
-          z: -0.7945567170519814
-        }
-      },
-      modelPivotOffset: new THREE.Vector3(0, 0, 0),
-      modelPivotRotation: new THREE.Euler(0, 0, 0)
+      modelPivotOffset: new THREE.Vector3(-0.01, -0.01, 0.05),
+      modelPivotRotation: new THREE.Euler(Math.PI / 4, 0, 0)
     }
   }
 };
@@ -21023,8 +20579,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
   },
   checkIfControllerPresent: function () {
     checkControllerPresentAndSetup(this, GAMEPAD_ID_PREFIX, {
-      hand: this.data.hand,
-      iterateControllerProfiles: true
+      hand: this.data.hand
     });
   },
   play: function () {
@@ -21059,15 +20614,8 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       } else {
         // WebXR
         controllerId = CONTROLLER_DEFAULT;
-        var controllersPropertiesIds = Object.keys(CONTROLLER_PROPERTIES);
-
-        for (var i = 0; i < controller.profiles.length; i++) {
-          if (controllersPropertiesIds.indexOf(controller.profiles[i]) !== -1) {
-            controllerId = controller.profiles[i];
-            break;
-          }
-        }
-
+        controllerId = controller.profiles.indexOf('oculus-touch-v2') !== -1 ? 'oculus-touch-v2' : controllerId;
+        controllerId = controller.profiles.indexOf('oculus-touch-v3') !== -1 ? 'oculus-touch-v3' : controllerId;
         this.displayModel = CONTROLLER_PROPERTIES[controllerId];
       }
     }
@@ -21085,9 +20633,7 @@ module.exports.Component = registerComponent('oculus-touch-controls', {
       id: id,
       hand: data.hand,
       orientationOffset: data.orientationOffset,
-      handTrackingEnabled: false,
-      iterateControllerProfiles: true,
-      space: 'gripSpace'
+      handTrackingEnabled: false
     });
     this.loadModel(controller);
   },
@@ -26451,7 +25997,7 @@ module.exports.Component = registerComponent('tracked-controls-webxr', {
     space: {
       type: 'string',
       oneOf: ['targetRaySpace', 'gripSpace'],
-      default: 'gripSpace'
+      default: 'targetRaySpace'
     }
   },
   init: function () {
@@ -28419,12 +27965,13 @@ module.exports = {
   \******************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements */
-var ANode = (__webpack_require__(/*! ./a-node */ "./src/core/a-node.js").ANode);
+var ANode = __webpack_require__(/*! ./a-node */ "./src/core/a-node.js");
 
 var bind = __webpack_require__(/*! ../utils/bind */ "./src/utils/bind.js");
 
 var debug = __webpack_require__(/*! ../utils/debug */ "./src/utils/debug.js");
+
+var registerElement = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").registerElement);
 
 var THREE = __webpack_require__(/*! ../lib/three */ "./src/lib/three.js");
 
@@ -28434,143 +27981,134 @@ var warn = debug('core:a-assets:warn');
  * Asset management system. Handles blocking on asset loading.
  */
 
-class AAssets extends ANode {
-  constructor() {
-    super();
-    this.isAssets = true;
-    this.fileLoader = fileLoader;
-    this.timeout = null;
-  }
-
-  connectedCallback() {
-    // Defer if DOM is not ready.
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.connectedCallback.bind(this));
-      return;
-    }
-
-    this.doConnectedCallback();
-  }
-
-  doConnectedCallback() {
-    var self = this;
-    var i;
-    var loaded = [];
-    var mediaEl;
-    var mediaEls;
-    var imgEl;
-    var imgEls;
-    var timeout;
-    super.connectedCallback();
-
-    if (!this.parentNode.isScene) {
-      throw new Error('<a-assets> must be a child of a <a-scene>.');
-    } // Wait for <img>s.
-
-
-    imgEls = this.querySelectorAll('img');
-
-    for (i = 0; i < imgEls.length; i++) {
-      imgEl = fixUpMediaElement(imgEls[i]);
-      loaded.push(new Promise(function (resolve, reject) {
-        // Set in cache because we won't be needing to call three.js loader if we have.
-        // a loaded media element.
-        THREE.Cache.add(imgEls[i].getAttribute('src'), imgEl);
-        imgEl.onload = resolve;
-        imgEl.onerror = reject;
-      }));
-    } // Wait for <audio>s and <video>s.
-
-
-    mediaEls = this.querySelectorAll('audio, video');
-
-    for (i = 0; i < mediaEls.length; i++) {
-      mediaEl = fixUpMediaElement(mediaEls[i]);
-
-      if (!mediaEl.src && !mediaEl.srcObject) {
-        warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
+module.exports = registerElement('a-assets', {
+  prototype: Object.create(ANode.prototype, {
+    createdCallback: {
+      value: function () {
+        this.isAssets = true;
+        this.fileLoader = fileLoader;
+        this.timeout = null;
       }
+    },
+    attachedCallback: {
+      value: function () {
+        var self = this;
+        var i;
+        var loaded = [];
+        var mediaEl;
+        var mediaEls;
+        var imgEl;
+        var imgEls;
+        var timeout;
 
-      loaded.push(mediaElementLoaded(mediaEl));
-    } // Trigger loaded for scene to start rendering.
+        if (!this.parentNode.isScene) {
+          throw new Error('<a-assets> must be a child of a <a-scene>.');
+        } // Wait for <img>s.
 
 
-    Promise.allSettled(loaded).then(bind(this.load, this)); // Timeout to start loading anyways.
+        imgEls = this.querySelectorAll('img');
 
-    timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
-    this.timeout = setTimeout(function () {
-      if (self.hasLoaded) {
-        return;
+        for (i = 0; i < imgEls.length; i++) {
+          imgEl = fixUpMediaElement(imgEls[i]);
+          loaded.push(new Promise(function (resolve, reject) {
+            // Set in cache because we won't be needing to call three.js loader if we have.
+            // a loaded media element.
+            THREE.Cache.add(imgEls[i].getAttribute('src'), imgEl);
+            imgEl.onload = resolve;
+            imgEl.onerror = reject;
+          }));
+        } // Wait for <audio>s and <video>s.
+
+
+        mediaEls = this.querySelectorAll('audio, video');
+
+        for (i = 0; i < mediaEls.length; i++) {
+          mediaEl = fixUpMediaElement(mediaEls[i]);
+
+          if (!mediaEl.src && !mediaEl.srcObject) {
+            warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
+          }
+
+          loaded.push(mediaElementLoaded(mediaEl));
+        } // Trigger loaded for scene to start rendering.
+
+
+        Promise.allSettled(loaded).then(bind(this.load, this)); // Timeout to start loading anyways.
+
+        timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
+        this.timeout = setTimeout(function () {
+          if (self.hasLoaded) {
+            return;
+          }
+
+          warn('Asset loading timed out in ', timeout, 'ms');
+          self.emit('timeout');
+          self.load();
+        }, timeout);
       }
-
-      warn('Asset loading timed out in ', timeout, 'ms');
-      self.emit('timeout');
-      self.load();
-    }, timeout);
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-
-    if (this.timeout) {
-      clearTimeout(this.timeout);
+    },
+    detachedCallback: {
+      value: function () {
+        if (this.timeout) {
+          clearTimeout(this.timeout);
+        }
+      }
+    },
+    load: {
+      value: function () {
+        ANode.prototype.load.call(this, null, function waitOnFilter(el) {
+          return el.isAssetItem && el.hasAttribute('src');
+        });
+      }
     }
-  }
-
-  load() {
-    super.load.call(this, null, function waitOnFilter(el) {
-      return el.isAssetItem && el.hasAttribute('src');
-    });
-  }
-
-}
-
-customElements.define('a-assets', AAssets);
+  })
+});
 /**
  * Preload using XHRLoader for any type of asset.
  */
 
-class AAssetItem extends ANode {
-  constructor() {
-    super();
-    this.data = null;
-    this.isAssetItem = true;
-  }
+registerElement('a-asset-item', {
+  prototype: Object.create(ANode.prototype, {
+    createdCallback: {
+      value: function () {
+        this.data = null;
+        this.isAssetItem = true;
+      }
+    },
+    attachedCallback: {
+      value: function () {
+        var self = this;
+        var src = this.getAttribute('src');
+        fileLoader.setResponseType(this.getAttribute('response-type') || inferResponseType(src));
+        fileLoader.load(src, function handleOnLoad(response) {
+          self.data = response;
+          /*
+            Workaround for a Chrome bug. If another XHR is sent to the same url before the
+            previous one closes, the second request never finishes.
+            setTimeout finishes the first request and lets the logic triggered by load open
+            subsequent requests.
+            setTimeout can be removed once the fix for the bug below ships:
+            https://bugs.chromium.org/p/chromium/issues/detail?id=633696&q=component%3ABlink%3ENetwork%3EXHR%20&colspec=ID%20Pri%20M%20Stars%20ReleaseBlock%20Component%20Status%20Owner%20Summary%20OS%20Modified
+          */
 
-  connectedCallback() {
-    var self = this;
-    var src = this.getAttribute('src');
-    fileLoader.setResponseType(this.getAttribute('response-type') || inferResponseType(src));
-    fileLoader.load(src, function handleOnLoad(response) {
-      self.data = response;
-      /*
-        Workaround for a Chrome bug. If another XHR is sent to the same url before the
-        previous one closes, the second request never finishes.
-        setTimeout finishes the first request and lets the logic triggered by load open
-        subsequent requests.
-        setTimeout can be removed once the fix for the bug below ships:
-        https://bugs.chromium.org/p/chromium/issues/detail?id=633696&q=component%3ABlink%3ENetwork%3EXHR%20&colspec=ID%20Pri%20M%20Stars%20ReleaseBlock%20Component%20Status%20Owner%20Summary%20OS%20Modified
-      */
-
-      setTimeout(function load() {
-        ANode.prototype.load.call(self);
-      });
-    }, function handleOnProgress(xhr) {
-      self.emit('progress', {
-        loadedBytes: xhr.loaded,
-        totalBytes: xhr.total,
-        xhr: xhr
-      });
-    }, function handleOnError(xhr) {
-      self.emit('error', {
-        xhr: xhr
-      });
-    });
-  }
-
-}
-
-customElements.define('a-asset-item', AAssetItem);
+          setTimeout(function load() {
+            ANode.prototype.load.call(self);
+          });
+        }, function handleOnProgress(xhr) {
+          self.emit('progress', {
+            loadedBytes: xhr.loaded,
+            totalBytes: xhr.total,
+            xhr: xhr
+          });
+        }, function handleOnError(xhr) {
+          self.emit('error', {
+            xhr: xhr
+          });
+        });
+      }
+    }
+  })
+});
 /**
  * Create a Promise that resolves once the media element has finished buffering.
  *
@@ -28744,10 +28282,11 @@ module.exports.getFileNameFromURL = getFileNameFromURL;
 /*!*******************************!*\
   !*** ./src/core/a-cubemap.js ***!
   \*******************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements, HTMLElement */
 var debug = __webpack_require__(/*! ../utils/debug */ "./src/utils/debug.js");
+
+var registerElement = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").registerElement);
 
 var warn = debug('core:cubemap:warn');
 /**
@@ -28755,44 +28294,46 @@ var warn = debug('core:cubemap:warn');
  * Does not listen to updates.
  */
 
-class ACubeMap extends HTMLElement {
-  /**
-   * Calculates this.srcs.
-   */
-  constructor(self) {
-    self = super(self);
-    self.srcs = self.validate();
-    return self;
-  }
-  /**
-   * Checks for exactly six elements with [src].
-   * Does not check explicitly for <img>s in case user does not want
-   * prefetching.
-   *
-   * @returns {Array|null} - six URLs if valid, else null.
-   */
+module.exports = registerElement('a-cubemap', {
+  prototype: Object.create(window.HTMLElement.prototype, {
+    /**
+     * Calculates this.srcs.
+     */
+    attachedCallback: {
+      value: function () {
+        this.srcs = this.validate();
+      },
+      writable: window.debug
+    },
+
+    /**
+     * Checks for exactly six elements with [src].
+     * Does not check explicitly for <img>s in case user does not want
+     * prefetching.
+     *
+     * @returns {Array|null} - six URLs if valid, else null.
+     */
+    validate: {
+      value: function () {
+        var elements = this.querySelectorAll('[src]');
+        var i;
+        var srcs = [];
+
+        if (elements.length === 6) {
+          for (i = 0; i < elements.length; i++) {
+            srcs.push(elements[i].getAttribute('src'));
+          }
+
+          return srcs;
+        } // Else if there are not six elements, throw a warning.
 
 
-  validate() {
-    var elements = this.querySelectorAll('[src]');
-    var i;
-    var srcs = [];
-
-    if (elements.length === 6) {
-      for (i = 0; i < elements.length; i++) {
-        srcs.push(elements[i].getAttribute('src'));
-      }
-
-      return srcs;
-    } // Else if there are not six elements, throw a warning.
-
-
-    warn('<a-cubemap> did not contain exactly six elements each with a ' + '`src` attribute.');
-  }
-
-}
-
-customElements.define('a-cubemap', ACubeMap);
+        warn('<a-cubemap> did not contain exactly six elements each with a ' + '`src` attribute.');
+      },
+      writable: window.debug
+    }
+  })
+});
 
 /***/ }),
 
@@ -28802,15 +28343,17 @@ customElements.define('a-cubemap', ACubeMap);
   \******************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements */
-var ANode = (__webpack_require__(/*! ./a-node */ "./src/core/a-node.js").ANode);
+var ANode = __webpack_require__(/*! ./a-node */ "./src/core/a-node.js");
 
 var COMPONENTS = (__webpack_require__(/*! ./component */ "./src/core/component.js").components);
+
+var registerElement = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").registerElement);
 
 var THREE = __webpack_require__(/*! ../lib/three */ "./src/lib/three.js");
 
 var utils = __webpack_require__(/*! ../utils/ */ "./src/utils/index.js");
 
+var AEntity;
 var debug = utils.debug('core:a-entity:debug');
 var warn = utils.debug('core:a-entity:warn');
 var MULTIPLE_COMPONENT_DELIMITER = '__';
@@ -28830,182 +28373,176 @@ var ONCE = {
  * @member {boolean} isPlaying - false if dynamic behavior of the entity is paused.
  */
 
-class AEntity extends ANode {
-  constructor() {
-    super();
-    this.components = {}; // To avoid double initializations and infinite loops.
+var proto = Object.create(ANode.prototype, {
+  createdCallback: {
+    value: function () {
+      this.components = {}; // To avoid double initializations and infinite loops.
 
-    this.initializingComponents = {};
-    this.componentsToUpdate = {};
-    this.isEntity = true;
-    this.isPlaying = false;
-    this.object3D = new THREE.Group();
-    this.object3D.el = this;
-    this.object3DMap = {};
-    this.parentEl = null;
-    this.rotationObj = {};
-    this.states = [];
-  }
+      this.initializingComponents = {};
+      this.componentsToUpdate = {};
+      this.isEntity = true;
+      this.isPlaying = false;
+      this.object3D = new THREE.Group();
+      this.object3D.el = this;
+      this.object3DMap = {};
+      this.parentEl = null;
+      this.rotationObj = {};
+      this.states = [];
+    }
+  },
+
   /**
    * Handle changes coming from the browser DOM inspector.
    */
+  attributeChangedCallback: {
+    value: function (attr, oldVal, newVal) {
+      var component = this.components[attr]; // If the empty string is passed by the component initialization
+      // logic we ignore the component update.
+
+      if (component && component.justInitialized && newVal === '') {
+        delete component.justInitialized;
+        return;
+      } // When a component is removed after calling el.removeAttribute('material')
 
 
-  attributeChangedCallback(attr, oldVal, newVal) {
-    var component = this.components[attr];
-    super.attributeChangedCallback(); // If the empty string is passed by the component initialization
-    // logic we ignore the component update.
+      if (!component && newVal === null) {
+        return;
+      }
 
-    if (component && component.justInitialized && newVal === '') {
-      delete component.justInitialized;
-      return;
-    } // When a component is removed after calling el.removeAttribute('material')
-
-
-    if (!component && newVal === null) {
-      return;
+      this.setEntityAttribute(attr, oldVal, newVal);
     }
+  },
 
-    this.setEntityAttribute(attr, oldVal, newVal);
-  }
   /**
-  * Add to parent, load, play.
-  */
+   * Add to parent, load, play.
+   */
+  attachedCallback: {
+    value: function () {
+      var assetsEl; // Asset management system element.
+
+      var sceneEl = this.sceneEl;
+      var self = this; // Component.
+
+      this.addToParent(); // Don't .load() scene on attachedCallback.
+
+      if (this.isScene) {
+        return;
+      } // Gracefully not error when outside of <a-scene> (e.g., tests).
 
 
-  connectedCallback() {
-    // Defer if DOM is not ready.
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.connectedCallback.bind(this));
-      return;
-    }
-
-    AEntity.prototype.doConnectedCallback.call(this);
-  }
-
-  doConnectedCallback() {
-    var self = this; // Component.
-
-    var assetsEl; // Asset management system element.
-
-    var sceneEl; // ANode method.
-
-    super.connectedCallback();
-    sceneEl = this.sceneEl;
-    this.addToParent(); // Don't .load() scene on attachedCallback.
-
-    if (this.isScene) {
-      return;
-    } // Gracefully not error when outside of <a-scene> (e.g., tests).
+      if (!sceneEl) {
+        this.load();
+        return;
+      } // Wait for asset management system to finish before loading.
 
 
-    if (!sceneEl) {
+      assetsEl = sceneEl.querySelector('a-assets');
+
+      if (assetsEl && !assetsEl.hasLoaded) {
+        assetsEl.addEventListener('loaded', function () {
+          self.load();
+        });
+        return;
+      }
+
       this.load();
-      return;
-    } // Wait for asset management system to finish before loading.
-
-
-    assetsEl = sceneEl.querySelector('a-assets');
-
-    if (assetsEl && !assetsEl.hasLoaded) {
-      assetsEl.addEventListener('loaded', function () {
-        self.load();
-      });
-      return;
     }
+  },
 
-    this.load();
-  }
   /**
    * Tell parent to remove this element's object3D from its object3D.
    * Do not call on scene element because that will cause a call to document.body.remove().
    */
+  detachedCallback: {
+    value: function () {
+      var componentName;
+
+      if (!this.parentEl) {
+        return;
+      } // Remove components.
 
 
-  disconnectedCallback() {
-    var componentName;
+      for (componentName in this.components) {
+        this.removeComponent(componentName, false);
+      }
 
-    if (!this.parentEl) {
-      return;
-    } // Remove components.
+      if (this.isScene) {
+        return;
+      }
 
+      this.removeFromParent();
+      ANode.prototype.detachedCallback.call(this); // Remove cyclic reference.
 
-    for (componentName in this.components) {
-      this.removeComponent(componentName, false);
+      this.object3D.el = null;
     }
-
-    if (this.isScene) {
-      return;
+  },
+  getObject3D: {
+    value: function (type) {
+      return this.object3DMap[type];
     }
+  },
 
-    this.removeFromParent();
-    super.disconnectedCallback(); // Remove cyclic reference.
-
-    this.object3D.el = null;
-  }
-
-  getObject3D(type) {
-    return this.object3DMap[type];
-  }
   /**
    * Set a THREE.Object3D into the map.
    *
    * @param {string} type - Developer-set name of the type of object, will be unique per type.
    * @param {object} obj - A THREE.Object3D.
    */
+  setObject3D: {
+    value: function (type, obj) {
+      var oldObj;
+      var self = this;
+
+      if (!(obj instanceof THREE.Object3D)) {
+        throw new Error('`Entity.setObject3D` was called with an object that was not an instance of ' + 'THREE.Object3D.');
+      } // Remove existing object of the type.
 
 
-  setObject3D(type, obj) {
-    var oldObj;
-    var self = this;
+      oldObj = this.getObject3D(type);
 
-    if (!(obj instanceof THREE.Object3D)) {
-      throw new Error('`Entity.setObject3D` was called with an object that was not an instance of ' + 'THREE.Object3D.');
-    } // Remove existing object of the type.
+      if (oldObj) {
+        this.object3D.remove(oldObj);
+      } // Set references to A-Frame entity.
 
 
-    oldObj = this.getObject3D(type);
+      obj.el = this;
 
-    if (oldObj) {
-      this.object3D.remove(oldObj);
-    } // Set references to A-Frame entity.
+      if (obj.children.length) {
+        obj.traverse(function bindEl(child) {
+          child.el = self;
+        });
+      } // Add.
 
 
-    obj.el = this;
-
-    if (obj.children.length) {
-      obj.traverse(function bindEl(child) {
-        child.el = self;
+      this.object3D.add(obj);
+      this.object3DMap[type] = obj;
+      this.emit('object3dset', {
+        object: obj,
+        type: type
       });
-    } // Add.
+    }
+  },
 
-
-    this.object3D.add(obj);
-    this.object3DMap[type] = obj;
-    this.emit('object3dset', {
-      object: obj,
-      type: type
-    });
-  }
   /**
    * Remove object from scene and entity object3D map.
    */
+  removeObject3D: {
+    value: function (type) {
+      var obj = this.getObject3D(type);
 
+      if (!obj) {
+        warn('Tried to remove `Object3D` of type:', type, 'which was not defined.');
+        return;
+      }
 
-  removeObject3D(type) {
-    var obj = this.getObject3D(type);
-
-    if (!obj) {
-      warn('Tried to remove `Object3D` of type:', type, 'which was not defined.');
-      return;
+      this.object3D.remove(obj);
+      delete this.object3DMap[type];
+      this.emit('object3dremove', {
+        type: type
+      });
     }
+  },
 
-    this.object3D.remove(obj);
-    delete this.object3DMap[type];
-    this.emit('object3dremove', {
-      type: type
-    });
-  }
   /**
    * Gets or creates an object3D of a given type.
    *
@@ -29013,119 +28550,127 @@ class AEntity extends ANode {
    * @param {string} Constructor - Constructor to use to create the object3D if needed.
    * @returns {object}
    */
+  getOrCreateObject3D: {
+    value: function (type, Constructor) {
+      var object3D = this.getObject3D(type);
 
+      if (!object3D && Constructor) {
+        object3D = new Constructor();
+        this.setObject3D(type, object3D);
+      }
 
-  getOrCreateObject3D(type, Constructor) {
-    var object3D = this.getObject3D(type);
-
-    if (!object3D && Constructor) {
-      object3D = new Constructor();
-      this.setObject3D(type, object3D);
+      warn('`getOrCreateObject3D` has been deprecated. Use `setObject3D()` ' + 'and `object3dset` event instead.');
+      return object3D;
     }
+  },
 
-    warn('`getOrCreateObject3D` has been deprecated. Use `setObject3D()` ' + 'and `object3dset` event instead.');
-    return object3D;
-  }
   /**
    * Add child entity.
    *
    * @param {Element} el - Child entity.
    */
+  add: {
+    value: function (el) {
+      if (!el.object3D) {
+        throw new Error("Trying to add an element that doesn't have an `object3D`");
+      }
 
-
-  add(el) {
-    if (!el.object3D) {
-      throw new Error("Trying to add an element that doesn't have an `object3D`");
+      this.object3D.add(el.object3D);
+      this.emit('child-attached', {
+        el: el
+      });
     }
+  },
 
-    this.object3D.add(el.object3D);
-    this.emit('child-attached', {
-      el: el
-    });
-  }
   /**
    * Tell parentNode to add this entity to itself.
    */
+  addToParent: {
+    value: function () {
+      var parentNode = this.parentEl = this.parentNode; // `!parentNode` check primarily for unit tests.
 
-
-  addToParent() {
-    var parentNode = this.parentEl = this.parentNode; // `!parentNode` check primarily for unit tests.
-
-    if (!parentNode || !parentNode.add || this.attachedToParent) {
-      return;
-    }
-
-    parentNode.add(this);
-    this.attachedToParent = true; // To prevent multiple attachments to same parent.
-  }
-  /**
-   * Tell parentNode to remove this entity from itself.
-   */
-
-
-  removeFromParent() {
-    var parentEl = this.parentEl;
-    this.parentEl.remove(this);
-    this.attachedToParent = false;
-    this.parentEl = null;
-    parentEl.emit('child-detached', {
-      el: this
-    });
-  }
-
-  load() {
-    var self = this;
-
-    if (this.hasLoaded || !this.parentEl) {
-      return;
-    }
-
-    super.load.call(this, function entityLoadCallback() {
-      // Check if entity was detached while it was waiting to load.
-      if (!self.parentEl) {
+      if (!parentNode || !parentNode.add || this.attachedToParent) {
         return;
       }
 
-      self.updateComponents();
+      parentNode.add(this);
+      this.attachedToParent = true; // To prevent multiple attachments to same parent.
+    }
+  },
 
-      if (self.isScene || self.parentEl.isPlaying) {
-        self.play();
+  /**
+   * Tell parentNode to remove this entity from itself.
+   */
+  removeFromParent: {
+    value: function () {
+      var parentEl = this.parentEl;
+      this.parentEl.remove(this);
+      this.attachedToParent = false;
+      this.parentEl = null;
+      parentEl.emit('child-detached', {
+        el: this
+      });
+    }
+  },
+  load: {
+    value: function () {
+      var self = this;
+
+      if (this.hasLoaded || !this.parentEl) {
+        return;
       }
-    });
-  }
+
+      ANode.prototype.load.call(this, function entityLoadCallback() {
+        // Check if entity was detached while it was waiting to load.
+        if (!self.parentEl) {
+          return;
+        }
+
+        self.updateComponents();
+
+        if (self.isScene || self.parentEl.isPlaying) {
+          self.play();
+        }
+      });
+    },
+    writable: window.debug
+  },
+
   /**
    * Remove child entity.
    *
    * @param {Element} el - Child entity.
    */
-
-
-  remove(el) {
-    if (el) {
-      this.object3D.remove(el.object3D);
-    } else {
-      this.parentNode.removeChild(this);
+  remove: {
+    value: function (el) {
+      if (el) {
+        this.object3D.remove(el.object3D);
+      } else {
+        this.parentNode.removeChild(this);
+      }
     }
-  }
+  },
+
   /**
    * @returns {array} Direct children that are entities.
    */
+  getChildEntities: {
+    value: function () {
+      var children = this.children;
+      var childEntities = [];
 
+      for (var i = 0; i < children.length; i++) {
+        var child = children[i];
 
-  getChildEntities() {
-    var children = this.children;
-    var childEntities = [];
-
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
-
-      if (child instanceof AEntity) {
-        childEntities.push(child);
+        if (child instanceof AEntity) {
+          childEntities.push(child);
+        }
       }
-    }
 
-    return childEntities;
-  }
+      return childEntities;
+    }
+  },
+
   /**
    * Initialize component.
    *
@@ -29133,121 +28678,126 @@ class AEntity extends ANode {
    * @param {object} data - Component data
    * @param {boolean} isDependency - True if the component is a dependency.
    */
+  initComponent: {
+    value: function (attrName, data, isDependency) {
+      var component;
+      var componentId;
+      var componentInfo;
+      var componentName;
+      var isComponentDefined;
+      componentInfo = utils.split(attrName, MULTIPLE_COMPONENT_DELIMITER);
+      componentName = componentInfo[0];
+      componentId = componentInfo.length > 2 ? componentInfo.slice(1).join('__') : componentInfo[1]; // Not a registered component.
+
+      if (!COMPONENTS[componentName]) {
+        return;
+      } // Component is not a dependency and is undefined.
+      // If a component is a dependency, then it is okay to have no data.
 
 
-  initComponent(attrName, data, isDependency) {
-    var component;
-    var componentId;
-    var componentInfo;
-    var componentName;
-    var isComponentDefined;
-    componentInfo = utils.split(attrName, MULTIPLE_COMPONENT_DELIMITER);
-    componentName = componentInfo[0];
-    componentId = componentInfo.length > 2 ? componentInfo.slice(1).join('__') : componentInfo[1]; // Not a registered component.
+      isComponentDefined = checkComponentDefined(this, attrName) || data !== undefined;
 
-    if (!COMPONENTS[componentName]) {
-      return;
-    } // Component is not a dependency and is undefined.
-    // If a component is a dependency, then it is okay to have no data.
+      if (!isComponentDefined && !isDependency) {
+        return;
+      } // Component already initialized.
 
 
-    isComponentDefined = checkComponentDefined(this, attrName) || data !== undefined;
-
-    if (!isComponentDefined && !isDependency) {
-      return;
-    } // Component already initialized.
+      if (attrName in this.components) {
+        return;
+      } // Initialize dependencies first
 
 
-    if (attrName in this.components) {
-      return;
-    } // Initialize dependencies first
+      this.initComponentDependencies(componentName); // If component name has an id we check component type multiplic
+
+      if (componentId && !COMPONENTS[componentName].multiple) {
+        throw new Error('Trying to initialize multiple ' + 'components of type `' + componentName + '`. There can only be one component of this type per entity.');
+      }
+
+      component = new COMPONENTS[componentName].Component(this, data, componentId);
+
+      if (this.isPlaying) {
+        component.play();
+      } // Components are reflected in the DOM as attributes but the state is not shown
+      // hence we set the attribute to empty string.
+      // The flag justInitialized is for attributeChangedCallback to not overwrite
+      // the component with the empty string.
 
 
-    this.initComponentDependencies(componentName); // If component name has an id we check component type multiplic
+      if (!this.hasAttribute(attrName)) {
+        component.justInitialized = true;
+        window.HTMLElement.prototype.setAttribute.call(this, attrName, '');
+      }
 
-    if (componentId && !COMPONENTS[componentName].multiple) {
-      throw new Error('Trying to initialize multiple ' + 'components of type `' + componentName + '`. There can only be one component of this type per entity.');
-    }
+      debug('Component initialized: %s', attrName);
+    },
+    writable: window.debug
+  },
 
-    component = new COMPONENTS[componentName].Component(this, data, componentId);
-
-    if (this.isPlaying) {
-      component.play();
-    } // Components are reflected in the DOM as attributes but the state is not shown
-    // hence we set the attribute to empty string.
-    // The flag justInitialized is for attributeChangedCallback to not overwrite
-    // the component with the empty string.
-
-
-    if (!this.hasAttribute(attrName)) {
-      component.justInitialized = true;
-      window.HTMLElement.prototype.setAttribute.call(this, attrName, '');
-    }
-
-    debug('Component initialized: %s', attrName);
-  }
   /**
    * Initialize dependencies of a component.
    *
    * @param {string} name - Root component name.
    */
+  initComponentDependencies: {
+    value: function (name) {
+      var self = this;
+      var component = COMPONENTS[name];
+      var dependencies;
+      var i; // Not a component.
+
+      if (!component) {
+        return;
+      } // No dependencies.
 
 
-  initComponentDependencies(name) {
-    var self = this;
-    var component = COMPONENTS[name];
-    var dependencies;
-    var i; // Not a component.
+      dependencies = COMPONENTS[name].dependencies;
 
-    if (!component) {
-      return;
-    } // No dependencies.
+      if (!dependencies) {
+        return;
+      } // Initialize dependencies.
 
 
-    dependencies = COMPONENTS[name].dependencies;
-
-    if (!dependencies) {
-      return;
-    } // Initialize dependencies.
-
-
-    for (i = 0; i < dependencies.length; i++) {
-      // Call getAttribute to initialize the data from the DOM.
-      self.initComponent(dependencies[i], window.HTMLElement.prototype.getAttribute.call(self, dependencies[i]) || undefined, true);
+      for (i = 0; i < dependencies.length; i++) {
+        // Call getAttribute to initialize the data from the DOM.
+        self.initComponent(dependencies[i], window.HTMLElement.prototype.getAttribute.call(self, dependencies[i]) || undefined, true);
+      }
     }
-  }
+  },
+  removeComponent: {
+    value: function (name, destroy) {
+      var component;
+      component = this.components[name];
 
-  removeComponent(name, destroy) {
-    var component;
-    component = this.components[name];
-
-    if (!component) {
-      return;
-    } // Wait for component to initialize.
+      if (!component) {
+        return;
+      } // Wait for component to initialize.
 
 
-    if (!component.initialized) {
-      this.addEventListener('componentinitialized', function tryRemoveLater(evt) {
-        if (evt.detail.name !== name) {
-          return;
-        }
+      if (!component.initialized) {
+        this.addEventListener('componentinitialized', function tryRemoveLater(evt) {
+          if (evt.detail.name !== name) {
+            return;
+          }
 
-        this.removeComponent(name, destroy);
-        this.removeEventListener('componentinitialized', tryRemoveLater);
-      });
-      return;
-    }
+          this.removeComponent(name, destroy);
+          this.removeEventListener('componentinitialized', tryRemoveLater);
+        });
+        return;
+      }
 
-    component.pause();
-    component.remove(); // Keep component attached to entity in case of just full entity detach.
+      component.pause();
+      component.remove(); // Keep component attached to entity in case of just full entity detach.
 
-    if (destroy) {
-      component.destroy();
-      delete this.components[name];
-    }
+      if (destroy) {
+        component.destroy();
+        delete this.components[name];
+      }
 
-    this.emit('componentremoved', component.evtDetail, false);
-  }
+      this.emit('componentremoved', component.evtDetail, false);
+    },
+    writable: window.debug
+  },
+
   /**
    * Initialize or update all components.
    * Build data using initial components, defined attributes, mixins, and defaults.
@@ -29256,70 +28806,72 @@ class AEntity extends ANode {
    * @member {function} getExtraComponents - Can be implemented to include component data
    *   from other sources (e.g., implemented by primitives).
    */
+  updateComponents: {
+    value: function () {
+      var data;
+      var extraComponents;
+      var i;
+      var name;
+      var componentsToUpdate = this.componentsToUpdate;
+
+      if (!this.hasLoaded) {
+        return;
+      } // Gather mixin-defined components.
 
 
-  updateComponents() {
-    var data;
-    var extraComponents;
-    var i;
-    var name;
-    var componentsToUpdate = this.componentsToUpdate;
-
-    if (!this.hasLoaded) {
-      return;
-    } // Gather mixin-defined components.
+      for (i = 0; i < this.mixinEls.length; i++) {
+        for (name in this.mixinEls[i].componentCache) {
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
+        }
+      } // Gather from extra initial component data if defined (e.g., primitives).
 
 
-    for (i = 0; i < this.mixinEls.length; i++) {
-      for (name in this.mixinEls[i].componentCache) {
+      if (this.getExtraComponents) {
+        extraComponents = this.getExtraComponents();
+
+        for (name in extraComponents) {
+          if (isComponent(name)) {
+            componentsToUpdate[name] = true;
+          }
+        }
+      } // Gather entity-defined components.
+
+
+      for (i = 0; i < this.attributes.length; ++i) {
+        name = this.attributes[i].name;
+
+        if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) {
+          continue;
+        }
+
         if (isComponent(name)) {
           componentsToUpdate[name] = true;
         }
-      }
-    } // Gather from extra initial component data if defined (e.g., primitives).
+      } // object3D components first (position, rotation, scale, visible).
 
 
-    if (this.getExtraComponents) {
-      extraComponents = this.getExtraComponents();
+      for (i = 0; i < OBJECT3D_COMPONENTS.length; i++) {
+        name = OBJECT3D_COMPONENTS[i];
 
-      for (name in extraComponents) {
-        if (isComponent(name)) {
-          componentsToUpdate[name] = true;
+        if (!this.hasAttribute(name)) {
+          continue;
         }
+
+        this.updateComponent(name, this.getDOMAttribute(name));
+      } // Initialize or update rest of components.
+
+
+      for (name in componentsToUpdate) {
+        data = mergeComponentData(this.getDOMAttribute(name), extraComponents && extraComponents[name]);
+        this.updateComponent(name, data);
+        delete componentsToUpdate[name];
       }
-    } // Gather entity-defined components.
+    },
+    writable: window.debug
+  },
 
-
-    for (i = 0; i < this.attributes.length; ++i) {
-      name = this.attributes[i].name;
-
-      if (OBJECT3D_COMPONENTS.indexOf(name) !== -1) {
-        continue;
-      }
-
-      if (isComponent(name)) {
-        componentsToUpdate[name] = true;
-      }
-    } // object3D components first (position, rotation, scale, visible).
-
-
-    for (i = 0; i < OBJECT3D_COMPONENTS.length; i++) {
-      name = OBJECT3D_COMPONENTS[i];
-
-      if (!this.hasAttribute(name)) {
-        continue;
-      }
-
-      this.updateComponent(name, this.getDOMAttribute(name));
-    } // Initialize or update rest of components.
-
-
-    for (name in componentsToUpdate) {
-      data = mergeComponentData(this.getDOMAttribute(name), extraComponents && extraComponents[name]);
-      this.updateComponent(name, data);
-      delete componentsToUpdate[name];
-    }
-  }
   /**
    * Initialize, update, or remove a single component.
    *
@@ -29329,26 +28881,27 @@ class AEntity extends ANode {
    * @param {object} attrValue - Value of the DOM attribute.
    * @param {boolean} clobber - If new attrValue completely replaces previous properties.
    */
+  updateComponent: {
+    value: function (attr, attrValue, clobber) {
+      var component = this.components[attr];
+
+      if (component) {
+        // Remove component.
+        if (attrValue === null && !checkComponentDefined(this, attr)) {
+          this.removeComponent(attr, true);
+          return;
+        } // Component already initialized. Update component.
 
 
-  updateComponent(attr, attrValue, clobber) {
-    var component = this.components[attr];
-
-    if (component) {
-      // Remove component.
-      if (attrValue === null && !checkComponentDefined(this, attr)) {
-        this.removeComponent(attr, true);
+        component.updateProperties(attrValue, clobber);
         return;
-      } // Component already initialized. Update component.
+      } // Component not yet initialized. Initialize component.
 
 
-      component.updateProperties(attrValue, clobber);
-      return;
-    } // Component not yet initialized. Initialize component.
+      this.initComponent(attr, attrValue, false);
+    }
+  },
 
-
-    this.initComponent(attr, attrValue, false);
-  }
   /**
    * If `attr` is a component name, detach the component from the entity.
    *
@@ -29357,88 +28910,93 @@ class AEntity extends ANode {
    * @param {string} attr - Attribute name, which could also be a component name.
    * @param {string} propertyName - Component prop name, if resetting an individual prop.
    */
+  removeAttribute: {
+    value: function (attr, propertyName) {
+      var component = this.components[attr]; // Remove component.
+
+      if (component && propertyName === undefined) {
+        this.removeComponent(attr, true);
+      } // Reset component property value.
 
 
-  removeAttribute(attr, propertyName) {
-    var component = this.components[attr]; // Remove component.
-
-    if (component && propertyName === undefined) {
-      this.removeComponent(attr, true);
-    } // Reset component property value.
+      if (component && propertyName !== undefined) {
+        component.resetProperty(propertyName);
+        return;
+      } // Remove mixins.
 
 
-    if (component && propertyName !== undefined) {
-      component.resetProperty(propertyName);
-      return;
-    } // Remove mixins.
+      if (attr === 'mixin') {
+        this.mixinUpdate('');
+      }
 
-
-    if (attr === 'mixin') {
-      this.mixinUpdate('');
+      window.HTMLElement.prototype.removeAttribute.call(this, attr);
     }
+  },
 
-    window.HTMLElement.prototype.removeAttribute.call(this, attr);
-  }
   /**
    * Start dynamic behavior associated with entity such as dynamic components and animations.
    * Tell all children entities to also play.
    */
+  play: {
+    value: function () {
+      var entities;
+      var i;
+      var key; // Already playing.
+
+      if (this.isPlaying || !this.hasLoaded) {
+        return;
+      }
+
+      this.isPlaying = true; // Wake up all components.
+
+      for (key in this.components) {
+        this.components[key].play();
+      } // Tell all child entities to play.
 
 
-  play() {
-    var entities;
-    var i;
-    var key; // Already playing.
+      entities = this.getChildEntities();
 
-    if (this.isPlaying || !this.hasLoaded) {
-      return;
-    }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].play();
+      }
 
-    this.isPlaying = true; // Wake up all components.
+      this.emit('play');
+    },
+    writable: true
+  },
 
-    for (key in this.components) {
-      this.components[key].play();
-    } // Tell all child entities to play.
-
-
-    entities = this.getChildEntities();
-
-    for (i = 0; i < entities.length; i++) {
-      entities[i].play();
-    }
-
-    this.emit('play');
-  }
   /**
    * Pause dynamic behavior associated with entity such as dynamic components and animations.
    * Tell all children entities to also pause.
    */
+  pause: {
+    value: function () {
+      var entities;
+      var i;
+      var key;
+
+      if (!this.isPlaying) {
+        return;
+      }
+
+      this.isPlaying = false; // Sleep all components.
+
+      for (key in this.components) {
+        this.components[key].pause();
+      } // Tell all child entities to pause.
 
 
-  pause() {
-    var entities;
-    var i;
-    var key;
+      entities = this.getChildEntities();
 
-    if (!this.isPlaying) {
-      return;
-    }
+      for (i = 0; i < entities.length; i++) {
+        entities[i].pause();
+      }
 
-    this.isPlaying = false; // Sleep all components.
+      this.emit('pause');
+    },
+    writable: true
+  },
 
-    for (key in this.components) {
-      this.components[key].pause();
-    } // Tell all child entities to pause.
-
-
-    entities = this.getChildEntities();
-
-    for (i = 0; i < entities.length; i++) {
-      entities[i].pause();
-    }
-
-    this.emit('pause');
-  }
   /**
    * Deals with updates on entity-specific attributes (i.e., components and mixins).
    *
@@ -29446,87 +29004,91 @@ class AEntity extends ANode {
    * @param {string} oldVal
    * @param {string|object} newVal
    */
-
-
-  setEntityAttribute(attr, oldVal, newVal) {
-    if (COMPONENTS[attr] || this.components[attr]) {
-      this.updateComponent(attr, newVal);
-      return;
-    }
-
-    if (attr === 'mixin') {
-      // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-      if (newVal === this.computedMixinStr) {
+  setEntityAttribute: {
+    value: function (attr, oldVal, newVal) {
+      if (COMPONENTS[attr] || this.components[attr]) {
+        this.updateComponent(attr, newVal);
         return;
       }
 
-      this.mixinUpdate(newVal, oldVal);
+      if (attr === 'mixin') {
+        // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
+
+        this.mixinUpdate(newVal, oldVal);
+      }
     }
-  }
+  },
+
   /**
    * When mixins updated, trigger init or optimized-update of relevant components.
    */
+  mixinUpdate: {
+    value: function () {
+      var componentsUpdated = [];
+      return function (newMixins, oldMixins) {
+        var component;
+        var mixinEl;
+        var mixinIds;
+        var i;
+        var self = this;
+
+        if (!this.hasLoaded) {
+          this.addEventListener('loaded', function () {
+            self.mixinUpdate(newMixins, oldMixins);
+          }, ONCE);
+          return;
+        }
+
+        oldMixins = oldMixins || this.getAttribute('mixin');
+        mixinIds = this.updateMixins(newMixins, oldMixins); // Loop over current mixins.
+
+        componentsUpdated.length = 0;
+
+        for (i = 0; i < this.mixinEls.length; i++) {
+          for (component in this.mixinEls[i].componentCache) {
+            if (componentsUpdated.indexOf(component) === -1) {
+              if (this.components[component]) {
+                // Update. Just rebuild data.
+                this.components[component].handleMixinUpdate();
+              } else {
+                // Init. buildData will gather mixin values.
+                this.initComponent(component, null);
+              }
+
+              componentsUpdated.push(component);
+            }
+          }
+        } // Loop over old mixins to call for data rebuild.
 
 
-  mixinUpdate(newMixins, oldMixins) {
-    var componentsUpdated = AEntity.componentsUpdated;
-    var component;
-    var mixinEl;
-    var mixinIds;
-    var i;
-    var self = this;
+        for (i = 0; i < mixinIds.oldMixinIds.length; i++) {
+          mixinEl = document.getElementById(mixinIds.oldMixinIds[i]);
 
-    if (!this.hasLoaded) {
-      this.addEventListener('loaded', function () {
-        self.mixinUpdate(newMixins, oldMixins);
-      }, ONCE);
-      return;
-    }
-
-    oldMixins = oldMixins || this.getAttribute('mixin');
-    mixinIds = this.updateMixins(newMixins, oldMixins); // Loop over current mixins.
-
-    componentsUpdated.length = 0;
-
-    for (i = 0; i < this.mixinEls.length; i++) {
-      for (component in this.mixinEls[i].componentCache) {
-        if (componentsUpdated.indexOf(component) === -1) {
-          if (this.components[component]) {
-            // Update. Just rebuild data.
-            this.components[component].handleMixinUpdate();
-          } else {
-            // Init. buildData will gather mixin values.
-            this.initComponent(component, null);
+          if (!mixinEl) {
+            continue;
           }
 
-          componentsUpdated.push(component);
-        }
-      }
-    } // Loop over old mixins to call for data rebuild.
-
-
-    for (i = 0; i < mixinIds.oldMixinIds.length; i++) {
-      mixinEl = document.getElementById(mixinIds.oldMixinIds[i]);
-
-      if (!mixinEl) {
-        continue;
-      }
-
-      for (component in mixinEl.componentCache) {
-        if (componentsUpdated.indexOf(component) === -1) {
-          if (this.components[component]) {
-            if (this.getDOMAttribute(component)) {
-              // Update component if explicitly defined.
-              this.components[component].handleMixinUpdate();
-            } else {
-              // Remove component if not explicitly defined.
-              this.removeComponent(component, true);
+          for (component in mixinEl.componentCache) {
+            if (componentsUpdated.indexOf(component) === -1) {
+              if (this.components[component]) {
+                if (this.getDOMAttribute(component)) {
+                  // Update component if explicitly defined.
+                  this.components[component].handleMixinUpdate();
+                } else {
+                  // Remove component if not explicitly defined.
+                  this.removeComponent(component, true);
+                }
+              }
             }
           }
         }
-      }
-    }
-  }
+      };
+    }()
+  },
+
   /**
    * setAttribute can:
    *
@@ -29541,92 +29103,97 @@ class AEntity extends ANode {
    * @param {*|bool} arg2 - If arg1 is a property name, this should be a value. Otherwise,
    *   it is a boolean indicating whether to clobber previous values (defaults to false).
    */
+  setAttribute: {
+    value: function () {
+      var singlePropUpdate = {};
+      return function (attrName, arg1, arg2) {
+        var newAttrValue;
+        var clobber;
+        var componentName;
+        var delimiterIndex;
+        var isDebugMode;
+        var key;
+        delimiterIndex = attrName.indexOf(MULTIPLE_COMPONENT_DELIMITER);
+        componentName = delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName; // Not a component. Normal set attribute.
+
+        if (!COMPONENTS[componentName]) {
+          if (attrName === 'mixin') {
+            this.mixinUpdate(arg1);
+          }
+
+          ANode.prototype.setAttribute.call(this, attrName, arg1);
+          return;
+        } // Initialize component first if not yet initialized.
 
 
-  setAttribute(attrName, arg1, arg2) {
-    var singlePropUpdate = AEntity.singlePropUpdate;
-    var newAttrValue;
-    var clobber;
-    var componentName;
-    var delimiterIndex;
-    var isDebugMode;
-    var key;
-    delimiterIndex = attrName.indexOf(MULTIPLE_COMPONENT_DELIMITER);
-    componentName = delimiterIndex > 0 ? attrName.substring(0, delimiterIndex) : attrName; // Not a component. Normal set attribute.
-
-    if (!COMPONENTS[componentName]) {
-      if (attrName === 'mixin') {
-        this.mixinUpdate(arg1);
-      }
-
-      super.setAttribute.call(this, attrName, arg1);
-      return;
-    } // Initialize component first if not yet initialized.
+        if (!this.components[attrName] && this.hasAttribute(attrName)) {
+          this.updateComponent(attrName, window.HTMLElement.prototype.getAttribute.call(this, attrName));
+        } // Determine new attributes from the arguments
 
 
-    if (!this.components[attrName] && this.hasAttribute(attrName)) {
-      this.updateComponent(attrName, window.HTMLElement.prototype.getAttribute.call(this, attrName));
-    } // Determine new attributes from the arguments
+        if (typeof arg2 !== 'undefined' && typeof arg1 === 'string' && arg1.length > 0 && typeof utils.styleParser.parse(arg1) === 'string') {
+          // Update a single property of a multi-property component
+          for (key in singlePropUpdate) {
+            delete singlePropUpdate[key];
+          }
+
+          newAttrValue = singlePropUpdate;
+          newAttrValue[arg1] = arg2;
+          clobber = false;
+        } else {
+          // Update with a value, object, or CSS-style property string, with the possiblity
+          // of clobbering previous values.
+          newAttrValue = arg1;
+          clobber = arg2 === true;
+        } // Update component
 
 
-    if (typeof arg2 !== 'undefined' && typeof arg1 === 'string' && arg1.length > 0 && typeof utils.styleParser.parse(arg1) === 'string') {
-      // Update a single property of a multi-property component
-      for (key in singlePropUpdate) {
-        delete singlePropUpdate[key];
-      }
+        this.updateComponent(attrName, newAttrValue, clobber); // In debug mode, write component data up to the DOM.
 
-      newAttrValue = singlePropUpdate;
-      newAttrValue[arg1] = arg2;
-      clobber = false;
-    } else {
-      // Update with a value, object, or CSS-style property string, with the possiblity
-      // of clobbering previous values.
-      newAttrValue = arg1;
-      clobber = arg2 === true;
-    } // Update component
+        isDebugMode = this.sceneEl && this.sceneEl.getAttribute('debug');
 
+        if (isDebugMode) {
+          this.components[attrName].flushToDOM();
+        }
+      };
+    }(),
+    writable: window.debug
+  },
 
-    this.updateComponent(attrName, newAttrValue, clobber); // In debug mode, write component data up to the DOM.
-
-    isDebugMode = this.sceneEl && this.sceneEl.getAttribute('debug');
-
-    if (isDebugMode) {
-      this.components[attrName].flushToDOM();
-    }
-  }
   /**
    * Reflect component data in the DOM (as seen from the browser DOM Inspector).
    *
    * @param {bool} recursive - Also flushToDOM on the children.
    **/
+  flushToDOM: {
+    value: function (recursive) {
+      var components = this.components;
+      var child;
+      var children = this.children;
+      var i;
+      var key; // Flush entity's components to DOM.
+
+      for (key in components) {
+        components[key].flushToDOM();
+      } // Recurse.
 
 
-  flushToDOM(recursive) {
-    var components = this.components;
-    var child;
-    var children = this.children;
-    var i;
-    var key; // Flush entity's components to DOM.
-
-    for (key in components) {
-      components[key].flushToDOM();
-    } // Recurse.
-
-
-    if (!recursive) {
-      return;
-    }
-
-    for (i = 0; i < children.length; ++i) {
-      child = children[i];
-
-      if (!child.flushToDOM) {
-        continue;
+      if (!recursive) {
+        return;
       }
 
-      child.flushToDOM(recursive);
+      for (i = 0; i < children.length; ++i) {
+        child = children[i];
+
+        if (!child.flushToDOM) {
+          continue;
+        }
+
+        child.flushToDOM(recursive);
+      }
     }
-  }
+  },
+
   /**
    * If `attr` is a component, returns ALL component data including applied mixins and
    * defaults.
@@ -29636,36 +29203,38 @@ class AEntity extends ANode {
    * @param {string} attr
    * @returns {object|string} Object if component, else string.
    */
+  getAttribute: {
+    value: function (attr) {
+      // If component, return component data.
+      var component;
 
+      if (attr === 'position') {
+        return this.object3D.position;
+      }
 
-  getAttribute(attr) {
-    // If component, return component data.
-    var component;
+      if (attr === 'rotation') {
+        return getRotation(this);
+      }
 
-    if (attr === 'position') {
-      return this.object3D.position;
-    }
+      if (attr === 'scale') {
+        return this.object3D.scale;
+      }
 
-    if (attr === 'rotation') {
-      return getRotation(this);
-    }
+      if (attr === 'visible') {
+        return this.object3D.visible;
+      }
 
-    if (attr === 'scale') {
-      return this.object3D.scale;
-    }
+      component = this.components[attr];
 
-    if (attr === 'visible') {
-      return this.object3D.visible;
-    }
+      if (component) {
+        return component.data;
+      }
 
-    component = this.components[attr];
+      return window.HTMLElement.prototype.getAttribute.call(this, attr);
+    },
+    writable: window.debug
+  },
 
-    if (component) {
-      return component.data;
-    }
-
-    return window.HTMLElement.prototype.getAttribute.call(this, attr);
-  }
   /**
    * If `attr` is a component, returns JUST the component data defined on the entity.
    * Like a partial version of `getComputedAttribute` as returned component data
@@ -29676,74 +29245,79 @@ class AEntity extends ANode {
    * @param {string} attr
    * @returns {object|string} Object if component, else string.
    */
+  getDOMAttribute: {
+    value: function (attr) {
+      // If cached value exists, return partial component data.
+      var component = this.components[attr];
 
+      if (component) {
+        return component.attrValue;
+      }
 
-  getDOMAttribute(attr) {
-    // If cached value exists, return partial component data.
-    var component = this.components[attr];
+      return window.HTMLElement.prototype.getAttribute.call(this, attr);
+    },
+    writable: window.debug
+  },
+  addState: {
+    value: function (state) {
+      if (this.is(state)) {
+        return;
+      }
 
-    if (component) {
-      return component.attrValue;
+      this.states.push(state);
+      this.emit('stateadded', state);
     }
+  },
+  removeState: {
+    value: function (state) {
+      var stateIndex = this.states.indexOf(state);
 
-    return window.HTMLElement.prototype.getAttribute.call(this, attr);
-  }
+      if (stateIndex === -1) {
+        return;
+      }
 
-  addState(state) {
-    if (this.is(state)) {
-      return;
+      this.states.splice(stateIndex, 1);
+      this.emit('stateremoved', state);
     }
+  },
 
-    this.states.push(state);
-    this.emit('stateadded', state);
-  }
-
-  removeState(state) {
-    var stateIndex = this.states.indexOf(state);
-
-    if (stateIndex === -1) {
-      return;
-    }
-
-    this.states.splice(stateIndex, 1);
-    this.emit('stateremoved', state);
-  }
   /**
    * Checks if the element is in a given state. e.g. el.is('alive');
    * @type {string} state - Name of the state we want to check
    */
+  is: {
+    value: function (state) {
+      return this.states.indexOf(state) !== -1;
+    }
+  },
 
-
-  is(state) {
-    return this.states.indexOf(state) !== -1;
-  }
   /**
    * Open Inspector to this entity.
    */
+  inspect: {
+    value: function () {
+      this.sceneEl.components.inspector.openInspector(this);
+    }
+  },
 
-
-  inspect() {
-    this.sceneEl.components.inspector.openInspector(this);
-  }
   /**
    * Clean up memory and return memory to object pools.
    */
+  destroy: {
+    value: function () {
+      var key;
 
+      if (this.parentNode) {
+        warn('Entity can only be destroyed if detached from scenegraph.');
+        return;
+      }
 
-  destroy() {
-    var key;
-
-    if (this.parentNode) {
-      warn('Entity can only be destroyed if detached from scenegraph.');
-      return;
-    }
-
-    for (key in this.components) {
-      this.components[key].destroy();
+      for (key in this.components) {
+        this.components[key].destroy();
+      }
     }
   }
-
-}
+});
 /**
  * Check if a component is *defined* for an entity, including defaults and mixins.
  * Does not check whether the component has been *initialized* for an entity.
@@ -29752,7 +29326,6 @@ class AEntity extends ANode {
  * @param {string} name - Component name.
  * @returns {boolean}
  */
-
 
 function checkComponentDefined(el, name) {
   // Check if element contains the component.
@@ -29830,10 +29403,10 @@ function getRotation(entityEl) {
   return rotationObj;
 }
 
-AEntity.componentsUpdated = [];
-AEntity.singlePropUpdate = {};
-customElements.define('a-entity', AEntity);
-module.exports.AEntity = AEntity;
+AEntity = registerElement('a-entity', {
+  prototype: proto
+});
+module.exports = AEntity;
 
 /***/ }),
 
@@ -29841,10 +29414,11 @@ module.exports.AEntity = AEntity;
 /*!*****************************!*\
   !*** ./src/core/a-mixin.js ***!
   \*****************************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements */
-var ANode = (__webpack_require__(/*! ./a-node */ "./src/core/a-node.js").ANode);
+var ANode = __webpack_require__(/*! ./a-node */ "./src/core/a-node.js");
+
+var registerElement = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").registerElement);
 
 var components = (__webpack_require__(/*! ./component */ "./src/core/component.js").components);
 
@@ -29856,123 +29430,118 @@ var MULTIPLE_COMPONENT_DELIMITER = '__';
  *         are component names and the values are already parsed by the component.
  */
 
-class AMixin extends ANode {
-  constructor() {
-    super();
-    this.componentCache = {};
-    this.isMixin = true;
-  }
-
-  connectedCallback() {
-    // Defer if DOM is not ready.
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.connectedCallback.bind(this));
-      return;
-    }
-
-    this.doConnectedCallback();
-  }
-
-  doConnectedCallback() {
-    super.connectedCallback();
-    this.sceneEl = this.closestScene();
-    this.id = this.getAttribute('id');
-    this.cacheAttributes();
-    this.updateEntities();
-    this.load();
-  }
-
-  attributeChangedCallback(attr, oldVal, newVal) {
-    super.attributeChangedCallback();
-    this.cacheAttribute(attr, newVal);
-    this.updateEntities();
-  }
-  /**
-   * setAttribute that parses and caches component values.
-   */
-
-
-  setAttribute(attr, value) {
-    window.HTMLElement.prototype.setAttribute.call(this, attr, value);
-    this.cacheAttribute(attr, value);
-  }
-  /**
-   * If `attr` is a component, then parse the value using the schema and store it.
-   */
-
-
-  cacheAttribute(attr, value) {
-    var component;
-    var componentName; // Get component data.
-
-    componentName = utils.split(attr, MULTIPLE_COMPONENT_DELIMITER)[0];
-    component = components[componentName];
-
-    if (!component) {
-      return;
-    }
-
-    if (value === undefined) {
-      value = window.HTMLElement.prototype.getAttribute.call(this, attr);
-    }
-
-    this.componentCache[attr] = component.parseAttrValueForCache(value);
-  }
-  /**
-   * If `attr` is a component, then grab pre-parsed value from the cache.
-   * Else do a normal getAttribute.
-   */
-
-
-  getAttribute(attr) {
-    return this.componentCache[attr] || window.HTMLElement.prototype.getAttribute.call(this, attr);
-  }
-  /**
-   * Parse and cache every component defined on the mixin.
-   */
-
-
-  cacheAttributes() {
-    var attributes = this.attributes;
-    var attrName;
-    var i;
-
-    for (i = 0; i < attributes.length; i++) {
-      attrName = attributes[i].name;
-      this.cacheAttribute(attrName);
-    }
-  }
-  /**
-   * For entities that already have been loaded by the time the mixin was attached, tell
-   * those entities to register the mixin and refresh their component data.
-   */
-
-
-  updateEntities() {
-    var entity;
-    var entities;
-    var i;
-
-    if (!this.sceneEl) {
-      return;
-    }
-
-    entities = this.sceneEl.querySelectorAll('[mixin~=' + this.id + ']');
-
-    for (i = 0; i < entities.length; i++) {
-      entity = entities[i];
-
-      if (!entity.hasLoaded || entity.isMixin) {
-        continue;
+module.exports = registerElement('a-mixin', {
+  prototype: Object.create(ANode.prototype, {
+    createdCallback: {
+      value: function () {
+        this.componentCache = {};
+        this.id = this.getAttribute('id');
+        this.isMixin = true;
       }
+    },
+    attributeChangedCallback: {
+      value: function (attr, oldVal, newVal) {
+        this.cacheAttribute(attr, newVal);
+        this.updateEntities();
+      }
+    },
+    attachedCallback: {
+      value: function () {
+        this.sceneEl = this.closestScene();
+        this.cacheAttributes();
+        this.updateEntities();
+        this.load();
+      }
+    },
 
-      entity.mixinUpdate(this.id);
+    /**
+     * setAttribute that parses and caches component values.
+     */
+    setAttribute: {
+      value: function (attr, value) {
+        window.HTMLElement.prototype.setAttribute.call(this, attr, value);
+        this.cacheAttribute(attr, value);
+      }
+    },
+
+    /**
+     * If `attr` is a component, then parse the value using the schema and store it.
+     */
+    cacheAttribute: {
+      value: function (attr, value) {
+        var component;
+        var componentName; // Get component data.
+
+        componentName = utils.split(attr, MULTIPLE_COMPONENT_DELIMITER)[0];
+        component = components[componentName];
+
+        if (!component) {
+          return;
+        }
+
+        if (value === undefined) {
+          value = window.HTMLElement.prototype.getAttribute.call(this, attr);
+        }
+
+        this.componentCache[attr] = component.parseAttrValueForCache(value);
+      }
+    },
+
+    /**
+     * If `attr` is a component, then grab pre-parsed value from the cache.
+     * Else do a normal getAttribute.
+     */
+    getAttribute: {
+      value: function (attr) {
+        return this.componentCache[attr] || window.HTMLElement.prototype.getAttribute.call(this, attr);
+      }
+    },
+
+    /**
+     * Parse and cache every component defined on the mixin.
+     */
+    cacheAttributes: {
+      value: function () {
+        var attributes = this.attributes;
+        var attrName;
+        var i;
+
+        for (i = 0; i < attributes.length; i++) {
+          attrName = attributes[i].name;
+          this.cacheAttribute(attrName);
+        }
+      }
+    },
+
+    /**
+     * For entities that already have been loaded by the time the mixin was attached, tell
+     * those entities to register the mixin and refresh their component data.
+     */
+    updateEntities: {
+      value: function () {
+        var entity;
+        var entities;
+        var i;
+
+        if (!this.sceneEl) {
+          return;
+        }
+
+        entities = this.sceneEl.querySelectorAll('[mixin~=' + this.id + ']');
+
+        for (i = 0; i < entities.length; i++) {
+          entity = entities[i];
+
+          if (!entity.hasLoaded || entity.isMixin) {
+            continue;
+          }
+
+          entity.mixinUpdate(this.id);
+        }
+      }
     }
-  }
-
-}
-
-customElements.define('a-mixin', AMixin);
+  })
+});
 
 /***/ }),
 
@@ -29982,24 +29551,15 @@ customElements.define('a-mixin', AMixin);
   \****************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements, CustomEvent, HTMLElement, MutationObserver */
+/* global CustomEvent */
+var registerElement = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").registerElement);
+
+var isNode = (__webpack_require__(/*! ./a-register-element */ "./src/core/a-register-element.js").isNode);
+
 var utils = __webpack_require__(/*! ../utils/ */ "./src/utils/index.js");
 
 var warn = utils.debug('core:a-node:warn');
 var error = utils.debug('core:a-node:error');
-var knownTags = {
-  'a-scene': true,
-  'a-assets': true,
-  'a-assets-items': true,
-  'a-cubemap': true,
-  'a-mixin': true,
-  'a-node': true,
-  'a-entity': true
-};
-
-function isNode(node) {
-  return node.tagName.toLowerCase() in knownTags || node.isNode;
-}
 /**
  * Base class for A-Frame that manages loading of objects.
  *
@@ -30007,314 +29567,483 @@ function isNode(node) {
  * Nodes emit a `loaded` event when they and their children have initialized.
  */
 
+module.exports = registerElement('a-node', {
+  prototype: Object.create(window.HTMLElement.prototype, {
+    createdCallback: {
+      value: function () {
+        this.computedMixinStr = '';
+        this.hasLoaded = false;
+        this.isNode = true;
+        this.mixinEls = [];
+      },
+      writable: window.debug
+    },
+    attachedCallback: {
+      value: function () {
+        var mixins;
+        this.sceneEl = this.closestScene();
 
-class ANode extends HTMLElement {
-  constructor() {
-    super();
-    this.computedMixinStr = '';
-    this.hasLoaded = false;
-    this.isNode = true;
-    this.mixinEls = [];
-  }
-
-  connectedCallback() {
-    // Defer if DOM is not ready.
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.connectedCallback.bind(this));
-      return;
-    }
-
-    ANode.prototype.doConnectedCallback.call(this);
-  }
-
-  doConnectedCallback() {
-    var mixins;
-    this.sceneEl = this.closestScene();
-
-    if (!this.sceneEl) {
-      warn('You are attempting to attach <' + this.tagName + '> outside of an A-Frame ' + 'scene. Append this element to `<a-scene>` instead.');
-    }
-
-    this.hasLoaded = false;
-    this.emit('nodeready', undefined, false);
-
-    if (!this.isMixin) {
-      mixins = this.getAttribute('mixin');
-
-      if (mixins) {
-        this.updateMixins(mixins);
-      }
-    }
-  }
-  /**
-   * Handle mixin.
-   */
-
-
-  attributeChangedCallback(attr, oldVal, newVal) {
-    // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
-    if (newVal === this.computedMixinStr) {
-      return;
-    }
-
-    if (attr === 'mixin' && !this.isMixin) {
-      this.updateMixins(newVal, oldVal);
-    }
-  }
-  /**
-   * Returns the first scene by traversing up the tree starting from and
-   * including receiver element.
-   */
-
-
-  closestScene() {
-    var element = this;
-
-    while (element) {
-      if (element.isScene) {
-        break;
-      }
-
-      element = element.parentElement;
-    }
-
-    return element;
-  }
-  /**
-   * Returns first element matching a selector by traversing up the tree starting
-   * from and including receiver element.
-   *
-   * @param {string} selector - Selector of element to find.
-   */
-
-
-  closest(selector) {
-    var matches = this.matches || this.mozMatchesSelector || this.msMatchesSelector || this.oMatchesSelector || this.webkitMatchesSelector;
-    var element = this;
-
-    while (element) {
-      if (matches.call(element, selector)) {
-        break;
-      }
-
-      element = element.parentElement;
-    }
-
-    return element;
-  }
-
-  disconnectedCallback() {
-    this.hasLoaded = false;
-  }
-  /**
-   * Wait for children to load, if any.
-   * Then emit `loaded` event and set `hasLoaded`.
-   */
-
-
-  load(cb, childFilter) {
-    var children;
-    var childrenLoaded;
-    var self = this;
-
-    if (this.hasLoaded) {
-      return;
-    } // Default to waiting for all nodes.
-
-
-    childFilter = childFilter || isNode; // Wait for children to load (if any), then load.
-
-    children = this.getChildren();
-    childrenLoaded = children.filter(childFilter).map(function (child) {
-      return new Promise(function waitForLoaded(resolve) {
-        if (child.hasLoaded) {
-          return resolve();
+        if (!this.sceneEl) {
+          warn('You are attempting to attach <' + this.tagName + '> outside of an A-Frame ' + 'scene. Append this element to `<a-scene>` instead.');
         }
 
-        child.addEventListener('loaded', resolve);
-      });
-    });
-    Promise.all(childrenLoaded).then(function emitLoaded() {
-      self.hasLoaded = true;
+        this.hasLoaded = false;
+        this.emit('nodeready', undefined, false);
 
-      if (cb) {
-        cb();
+        if (!this.isMixin) {
+          mixins = this.getAttribute('mixin');
+
+          if (mixins) {
+            this.updateMixins(mixins);
+          }
+        }
+      },
+      writable: window.debug
+    },
+
+    /**
+     * Handle mixin.
+     */
+    attributeChangedCallback: {
+      value: function (attr, oldVal, newVal) {
+        // Ignore if `<a-node>` code is just updating computed mixin in the DOM.
+        if (newVal === this.computedMixinStr) {
+          return;
+        }
+
+        if (attr === 'mixin' && !this.isMixin) {
+          this.updateMixins(newVal, oldVal);
+        }
       }
+    },
 
-      self.setupMutationObserver();
-      self.emit('loaded', undefined, false);
-    }).catch(function (err) {
-      error('Failure loading node: ', err);
-    });
-  }
-  /**
-   * With custom elements V1 attributeChangedCallback only fires
-   * for attributes defined statically via observedAttributes.
-   * One can assign any arbitrary components to an A-Frame entity
-   * hence we can't know the list of attributes beforehand.
-   * This function setup a mutation observer to keep track of the entiy attribute changes
-   * in the DOM and update components accordingly.
-   */
+    /**
+     * Returns the first scene by traversing up the tree starting from and
+     * including receiver element.
+     */
+    closestScene: {
+      value: function closest() {
+        var element = this;
+
+        while (element) {
+          if (element.isScene) {
+            break;
+          }
+
+          element = element.parentElement;
+        }
+
+        return element;
+      }
+    },
+
+    /**
+     * Returns first element matching a selector by traversing up the tree starting
+     * from and including receiver element.
+     *
+     * @param {string} selector - Selector of element to find.
+     */
+    closest: {
+      value: function closest(selector) {
+        var matches = this.matches || this.mozMatchesSelector || this.msMatchesSelector || this.oMatchesSelector || this.webkitMatchesSelector;
+        var element = this;
+
+        while (element) {
+          if (matches.call(element, selector)) {
+            break;
+          }
+
+          element = element.parentElement;
+        }
+
+        return element;
+      }
+    },
+    detachedCallback: {
+      value: function () {
+        this.hasLoaded = false;
+      }
+    },
+
+    /**
+     * Wait for children to load, if any.
+     * Then emit `loaded` event and set `hasLoaded`.
+     */
+    load: {
+      value: function (cb, childFilter) {
+        var children;
+        var childrenLoaded;
+        var self = this;
+
+        if (this.hasLoaded) {
+          return;
+        } // Default to waiting for all nodes.
 
 
-  setupMutationObserver() {
-    var self = this;
-    var observerConfig = {
-      attributes: true,
-      attributeOldValue: true
+        childFilter = childFilter || isNode; // Wait for children to load (if any), then load.
+
+        children = this.getChildren();
+        childrenLoaded = children.filter(childFilter).map(function (child) {
+          return new Promise(function waitForLoaded(resolve) {
+            if (child.hasLoaded) {
+              return resolve();
+            }
+
+            child.addEventListener('loaded', resolve);
+          });
+        });
+        Promise.all(childrenLoaded).then(function emitLoaded() {
+          self.hasLoaded = true;
+
+          if (cb) {
+            cb();
+          }
+
+          self.emit('loaded', undefined, false);
+        }).catch(function (err) {
+          error('Failure loading node: ', err);
+        });
+      },
+      writable: true
+    },
+    getChildren: {
+      value: function () {
+        return Array.prototype.slice.call(this.children, 0);
+      }
+    },
+
+    /**
+     * Unregister old mixins and listeners.
+     * Register new mixins and listeners.
+     * Registering means to update `this.mixinEls` with listeners.
+     */
+    updateMixins: {
+      value: function () {
+        var newMixinIdArray = [];
+        var oldMixinIdArray = [];
+        var mixinIds = {};
+        return function (newMixins, oldMixins) {
+          var i;
+          var newMixinIds;
+          var oldMixinIds;
+          newMixinIdArray.length = 0;
+          oldMixinIdArray.length = 0;
+          newMixinIds = newMixins ? utils.split(newMixins.trim(), /\s+/) : newMixinIdArray;
+          oldMixinIds = oldMixins ? utils.split(oldMixins.trim(), /\s+/) : oldMixinIdArray;
+          mixinIds.newMixinIds = newMixinIds;
+          mixinIds.oldMixinIds = oldMixinIds; // Unregister old mixins.
+
+          for (i = 0; i < oldMixinIds.length; i++) {
+            if (newMixinIds.indexOf(oldMixinIds[i]) === -1) {
+              this.unregisterMixin(oldMixinIds[i]);
+            }
+          } // Register new mixins.
+
+
+          this.computedMixinStr = '';
+          this.mixinEls.length = 0;
+
+          for (i = 0; i < newMixinIds.length; i++) {
+            this.registerMixin(document.getElementById(newMixinIds[i]));
+          } // Update DOM. Keep track of `computedMixinStr` to not recurse back here after
+          // update.
+
+
+          if (this.computedMixinStr) {
+            this.computedMixinStr = this.computedMixinStr.trim();
+            window.HTMLElement.prototype.setAttribute.call(this, 'mixin', this.computedMixinStr);
+          }
+
+          return mixinIds;
+        };
+      }()
+    },
+
+    /**
+     * From mixin ID, add mixin element to `mixinEls`.
+     *
+     * @param {Element} mixinEl
+     */
+    registerMixin: {
+      value: function (mixinEl) {
+        var compositedMixinIds;
+        var i;
+        var mixin;
+
+        if (!mixinEl) {
+          return;
+        } // Register composited mixins (if mixin has mixins).
+
+
+        mixin = mixinEl.getAttribute('mixin');
+
+        if (mixin) {
+          compositedMixinIds = utils.split(mixin.trim(), /\s+/);
+
+          for (i = 0; i < compositedMixinIds.length; i++) {
+            this.registerMixin(document.getElementById(compositedMixinIds[i]));
+          }
+        } // Register mixin.
+
+
+        this.computedMixinStr = this.computedMixinStr + ' ' + mixinEl.id;
+        this.mixinEls.push(mixinEl);
+      }
+    },
+    setAttribute: {
+      value: function (attr, newValue) {
+        if (attr === 'mixin') {
+          this.updateMixins(newValue);
+        }
+
+        window.HTMLElement.prototype.setAttribute.call(this, attr, newValue);
+      }
+    },
+    unregisterMixin: {
+      value: function (mixinId) {
+        var i;
+        var mixinEls = this.mixinEls;
+        var mixinEl;
+
+        for (i = 0; i < mixinEls.length; ++i) {
+          mixinEl = mixinEls[i];
+
+          if (mixinId === mixinEl.id) {
+            mixinEls.splice(i, 1);
+            break;
+          }
+        }
+      }
+    },
+
+    /**
+     * Emit a DOM event.
+     *
+     * @param {string} name - Name of event.
+     * @param {object} [detail={}] - Custom data to pass as `detail` to the event.
+     * @param {boolean} [bubbles=true] - Whether the event should bubble.
+     * @param {object} [extraData] - Extra data to pass to the event, if any.
+     */
+    emit: {
+      value: function () {
+        var data = {};
+        return function (name, detail, bubbles, extraData) {
+          if (bubbles === undefined) {
+            bubbles = true;
+          }
+
+          data.bubbles = !!bubbles;
+          data.detail = detail; // If extra data is present, we need to create a new object.
+
+          if (extraData) {
+            data = utils.extend({}, extraData, data);
+          }
+
+          this.dispatchEvent(new CustomEvent(name, data));
+        };
+      }(),
+      writable: window.debug
+    }
+  })
+});
+
+/***/ }),
+
+/***/ "./src/core/a-register-element.js":
+/*!****************************************!*\
+  !*** ./src/core/a-register-element.js ***!
+  \****************************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+  ------------------------------------------------------------
+  ------------- WARNING WARNING WARNING WARNING --------------
+  ------------------------------------------------------------
+
+  This module wraps registerElement to deal with components that inherit from
+  `ANode` and `AEntity`.  It's a pass through in any other case.
+
+  It wraps some of the prototype methods of the created element to make sure
+  that the corresponding functions in the base prototypes (`AEntity` and `ANode`)
+  are also invoked. The method in the base prototype is always called before the one
+  in the derived prototype.
+*/
+// Polyfill `document.registerElement`.
+__webpack_require__(/*! document-register-element */ "./node_modules/document-register-element/build/document-register-element.js");
+
+var ANode; // Must declare before AEntity. Initialized at the bottom.
+
+var AEntity;
+var knownTags = module.exports.knownTags = {};
+
+function addTagName(tagName) {
+  knownTags[tagName.toLowerCase()] = true;
+}
+/**
+ * Return whether the element type is one of our known registered ones.
+ *
+ * @param {string} node - The name of the tag to register.
+ * @returns {boolean} Whether the tag name matches that of our registered custom elements.
+ */
+
+
+module.exports.isNode = function (node) {
+  return node.tagName.toLowerCase() in knownTags || node.isNode;
+};
+/**
+ * @param {string} tagName - The name of the tag to register.
+ * @param {object} obj - The prototype of the new element.
+ * @returns {object} The prototype of the new element.
+ */
+
+
+module.exports.registerElement = function (tagName, obj) {
+  var proto = Object.getPrototypeOf(obj.prototype);
+  var newObj = obj;
+  var isANode = ANode && proto === ANode.prototype;
+  var isAEntity = AEntity && proto === AEntity.prototype;
+
+  if (isANode || isAEntity) {
+    addTagName(tagName);
+  } // Wrap if element inherits from `ANode`.
+
+
+  if (isANode) {
+    newObj = wrapANodeMethods(obj.prototype);
+    newObj = {
+      prototype: Object.create(proto, newObj)
     };
-    var observer = new MutationObserver(function callAttributeChangedCallback(mutationList) {
-      var i;
-
-      for (i = 0; i < mutationList.length; i++) {
-        if (mutationList[i].type === 'attributes') {
-          var attributeName = mutationList[i].attributeName;
-          var newValue = window.HTMLElement.prototype.getAttribute.call(self, attributeName);
-          var oldValue = mutationList[i].oldValue;
-          self.attributeChangedCallback(attributeName, oldValue, newValue);
-        }
-      }
-    });
-    observer.observe(this, observerConfig);
-  }
-
-  getChildren() {
-    return Array.prototype.slice.call(this.children, 0);
-  }
-  /**
-   * Unregister old mixins and listeners.
-   * Register new mixins and listeners.
-   * Registering means to update `this.mixinEls` with listeners.
-   */
+  } // Wrap if element inherits from `AEntity`.
 
 
-  updateMixins(newMixins, oldMixins) {
-    var newMixinIdArray = ANode.newMixinIdArray;
-    var oldMixinIdArray = ANode.oldMixinIdArray;
-    var mixinIds = ANode.mixinIds;
-    var i;
-    var newMixinIds;
-    var oldMixinIds;
-    newMixinIdArray.length = 0;
-    oldMixinIdArray.length = 0;
-    newMixinIds = newMixins ? utils.split(newMixins.trim(), /\s+/) : newMixinIdArray;
-    oldMixinIds = oldMixins ? utils.split(oldMixins.trim(), /\s+/) : oldMixinIdArray;
-    mixinIds.newMixinIds = newMixinIds;
-    mixinIds.oldMixinIds = oldMixinIds; // Unregister old mixins.
-
-    for (i = 0; i < oldMixinIds.length; i++) {
-      if (newMixinIds.indexOf(oldMixinIds[i]) === -1) {
-        this.unregisterMixin(oldMixinIds[i]);
-      }
-    } // Register new mixins.
+  if (isAEntity) {
+    newObj = wrapAEntityMethods(obj.prototype);
+    newObj = {
+      prototype: Object.create(proto, newObj)
+    };
+  } // Give all functions their proper name.
 
 
-    this.computedMixinStr = '';
-    this.mixinEls.length = 0;
+  Object.getOwnPropertyNames(newObj.prototype).forEach(function (propName) {
+    var propVal = newObj.prototype[propName];
 
-    for (i = 0; i < newMixinIds.length; i++) {
-      this.registerMixin(document.getElementById(newMixinIds[i]));
-    } // Update DOM. Keep track of `computedMixinStr` to not recurse back here after
-    // update.
-
-
-    if (this.computedMixinStr) {
-      this.computedMixinStr = this.computedMixinStr.trim();
-      window.HTMLElement.prototype.setAttribute.call(this, 'mixin', this.computedMixinStr);
+    if (typeof propVal === 'function') {
+      propVal.displayName = propName;
     }
-
-    return mixinIds;
-  }
-  /**
-   * From mixin ID, add mixin element to `mixinEls`.
-   *
-   * @param {Element} mixinEl
-   */
-
-
-  registerMixin(mixinEl) {
-    var compositedMixinIds;
-    var i;
-    var mixin;
-
-    if (!mixinEl) {
-      return;
-    } // Register composited mixins (if mixin has mixins).
+  });
+  return document.registerElement(tagName, newObj);
+};
+/**
+ * Wrap some obj methods to call those on `ANode` base prototype.
+ *
+ * @param {object} obj - Object that contains the methods that will be wrapped.
+ * @return {object} An object with the same properties as the input parameter but
+ * with some of methods wrapped.
+ */
 
 
-    mixin = mixinEl.getAttribute('mixin');
-
-    if (mixin) {
-      compositedMixinIds = utils.split(mixin.trim(), /\s+/);
-
-      for (i = 0; i < compositedMixinIds.length; i++) {
-        this.registerMixin(document.getElementById(compositedMixinIds[i]));
-      }
-    } // Register mixin.
-
-
-    this.computedMixinStr = this.computedMixinStr + ' ' + mixinEl.id;
-    this.mixinEls.push(mixinEl);
-  }
-
-  setAttribute(attr, newValue) {
-    if (attr === 'mixin') {
-      this.updateMixins(newValue);
-    }
-
-    window.HTMLElement.prototype.setAttribute.call(this, attr, newValue);
-  }
-
-  unregisterMixin(mixinId) {
-    var i;
-    var mixinEls = this.mixinEls;
-    var mixinEl;
-
-    for (i = 0; i < mixinEls.length; ++i) {
-      mixinEl = mixinEls[i];
-
-      if (mixinId === mixinEl.id) {
-        mixinEls.splice(i, 1);
-        break;
-      }
-    }
-  }
-  /**
-   * Emit a DOM event.
-   *
-   * @param {string} name - Name of event.
-   * @param {object} [detail={}] - Custom data to pass as `detail` to the event.
-   * @param {boolean} [bubbles=true] - Whether the event should bubble.
-   * @param {object} [extraData] - Extra data to pass to the event, if any.
-   */
+function wrapANodeMethods(obj) {
+  var newObj = {};
+  var ANodeMethods = ['attachedCallback', 'attributeChangedCallback', 'createdCallback', 'detachedCallback'];
+  wrapMethods(newObj, ANodeMethods, obj, ANode.prototype);
+  copyProperties(obj, newObj);
+  return newObj;
+}
+/**
+ * This wraps some of the obj methods to call those on `AEntity` base prototype.
+ *
+ * @param {object} obj - The objects that contains the methods that will be wrapped.
+ * @return {object} - An object with the same properties as the input parameter but
+ * with some of methods wrapped.
+ */
 
 
-  emit(name, detail, bubbles, extraData) {
-    var data = ANode.evtData;
+function wrapAEntityMethods(obj) {
+  var newObj = {};
+  var ANodeMethods = ['attachedCallback', 'attributeChangedCallback', 'createdCallback', 'detachedCallback'];
+  var AEntityMethods = ['attachedCallback', 'attributeChangedCallback', 'createdCallback', 'detachedCallback'];
+  wrapMethods(newObj, ANodeMethods, obj, ANode.prototype);
+  wrapMethods(newObj, AEntityMethods, obj, AEntity.prototype); // Copies the remaining properties into the new object.
 
-    if (bubbles === undefined) {
-      bubbles = true;
-    }
+  copyProperties(obj, newObj);
+  return newObj;
+}
+/**
+ * Wrap a list a methods to ensure that those in the base prototype are called
+ * before the derived one.
+ *
+ * @param {object} targetObj - Object that will contain the wrapped methods.
+ * @param {array} methodList - List of methods from the derivedObj that will be wrapped.
+ * @param {object} derivedObject - Object that inherits from the baseObj.
+ * @param {object} baseObj - Object that derivedObj inherits from.
+ */
 
-    data.bubbles = !!bubbles;
-    data.detail = detail; // If extra data is present, we need to create a new object.
 
-    if (extraData) {
-      data = utils.extend({}, extraData, data);
-    }
-
-    this.dispatchEvent(new CustomEvent(name, data));
-  }
-
+function wrapMethods(targetObj, methodList, derivedObj, baseObj) {
+  methodList.forEach(function (methodName) {
+    wrapMethod(targetObj, methodName, derivedObj, baseObj);
+  });
 }
 
-ANode.evtData = {};
-ANode.newMixinIdArray = [];
-ANode.oldMixinIdArray = [];
-ANode.mixinIds = {};
-customElements.define('a-node', ANode);
-module.exports.ANode = ANode;
-module.exports.knownTags = knownTags;
+module.exports.wrapMethods = wrapMethods;
+/**
+ * Wrap one method to ensure that the one in the base prototype is called before
+ * the one in the derived one.
+ *
+ * @param {object} obj - Object that will contain the wrapped method.
+ * @param {string} methodName - The name of the method that will be wrapped.
+ * @param {object} derivedObject - Object that inherits from the baseObj.
+ * @param {object} baseObj - Object that derivedObj inherits from.
+ */
+
+function wrapMethod(obj, methodName, derivedObj, baseObj) {
+  var derivedMethod = derivedObj[methodName];
+  var baseMethod = baseObj[methodName]; // Derived prototype does not define method, no need to wrap.
+
+  if (!derivedMethod || !baseMethod) {
+    return;
+  } // Derived prototype doesn't override the one in the base one, no need to wrap.
+
+
+  if (derivedMethod === baseMethod) {
+    return;
+  } // Wrap to ensure the base method is called before the one in the derived prototype.
+
+
+  obj[methodName] = {
+    value: function wrappedMethod() {
+      baseMethod.apply(this, arguments);
+      return derivedMethod.apply(this, arguments);
+    },
+    writable: window.debug
+  };
+}
+/**
+ * It copies the properties from source to destination object if they don't
+ * exist already.
+ *
+ * @param {object} source - The object where properties are copied from.
+ * @param {type} destination - The object where properties are copied to.
+ */
+
+
+function copyProperties(source, destination) {
+  var props = Object.getOwnPropertyNames(source);
+  props.forEach(function (prop) {
+    var desc;
+
+    if (!destination[prop]) {
+      desc = Object.getOwnPropertyDescriptor(source, prop);
+      destination[prop] = {
+        value: source[prop],
+        writable: desc.writable
+      };
+    }
+  });
+}
+
+ANode = __webpack_require__(/*! ./a-node */ "./src/core/a-node.js");
+AEntity = __webpack_require__(/*! ./a-entity */ "./src/core/a-entity.js");
 
 /***/ }),
 
@@ -31654,6 +31383,8 @@ var initWakelock = __webpack_require__(/*! ./wakelock */ "./src/core/scene/wakel
 
 var loadingScreen = __webpack_require__(/*! ./loadingScreen */ "./src/core/scene/loadingScreen.js");
 
+var re = __webpack_require__(/*! ../a-register-element */ "./src/core/a-register-element.js");
+
 var scenes = __webpack_require__(/*! ./scenes */ "./src/core/scene/scenes.js");
 
 var systems = (__webpack_require__(/*! ../system */ "./src/core/system.js").systems);
@@ -31663,9 +31394,9 @@ var THREE = __webpack_require__(/*! ../../lib/three */ "./src/lib/three.js");
 var utils = __webpack_require__(/*! ../../utils/ */ "./src/utils/index.js"); // Require after.
 
 
-var AEntity = (__webpack_require__(/*! ../a-entity */ "./src/core/a-entity.js").AEntity);
+var AEntity = __webpack_require__(/*! ../a-entity */ "./src/core/a-entity.js");
 
-var ANode = (__webpack_require__(/*! ../a-node */ "./src/core/a-node.js").ANode);
+var ANode = __webpack_require__(/*! ../a-node */ "./src/core/a-node.js");
 
 var initPostMessageAPI = __webpack_require__(/*! ./postMessage */ "./src/core/scene/postMessage.js");
 
@@ -31673,6 +31404,7 @@ var bind = utils.bind;
 var isIOS = utils.device.isIOS();
 var isMobile = utils.device.isMobile();
 var isWebXRAvailable = utils.device.isWebXRAvailable;
+var registerElement = re.registerElement;
 var warn = utils.debug('core:a-scene:warn');
 
 if (isIOS) {
@@ -31695,827 +31427,850 @@ if (isIOS) {
  */
 
 
-class AScene extends AEntity {
-  constructor() {
-    var self;
-    super();
-    self = this;
-    self.clock = new THREE.Clock();
-    self.isIOS = isIOS;
-    self.isMobile = isMobile;
-    self.hasWebXR = isWebXRAvailable;
-    self.isAR = false;
-    self.isScene = true;
-    self.object3D = new THREE.Scene();
+module.exports.AScene = registerElement('a-scene', {
+  prototype: Object.create(AEntity.prototype, {
+    createdCallback: {
+      value: function () {
+        this.clock = new THREE.Clock();
+        this.isIOS = isIOS;
+        this.isMobile = isMobile;
+        this.hasWebXR = isWebXRAvailable;
+        this.isAR = false;
+        this.isScene = true;
+        this.object3D = new THREE.Scene();
+        var self = this;
 
-    self.object3D.onAfterRender = function (renderer, scene, camera) {
-      // THREE may swap the camera used for the rendering if in VR, so we pass it to tock
-      if (self.isPlaying) {
-        self.tock(self.time, self.delta, camera);
-      }
-    };
-
-    self.resize = bind(self.resize, self);
-    self.render = bind(self.render, self);
-    self.systems = {};
-    self.systemNames = [];
-    self.time = self.delta = 0;
-    self.behaviors = {
-      tick: [],
-      tock: []
-    };
-    self.hasLoaded = false;
-    self.isPlaying = false;
-    self.originalHTML = self.innerHTML;
-  }
-
-  addFullScreenStyles() {
-    document.documentElement.classList.add('a-fullscreen');
-  }
-
-  removeFullScreenStyles() {
-    document.documentElement.classList.remove('a-fullscreen');
-  }
-
-  connectedCallback() {
-    // Defer if DOM is not ready.
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', this.connectedCallback.bind(this));
-      return;
-    }
-
-    this.doConnectedCallback();
-  }
-
-  doConnectedCallback() {
-    var self = this;
-    var embedded = this.hasAttribute('embedded'); // Default components.
-
-    this.setAttribute('inspector', '');
-    this.setAttribute('keyboard-shortcuts', '');
-    this.setAttribute('screenshot', '');
-    this.setAttribute('vr-mode-ui', '');
-    this.setAttribute('device-orientation-permission-ui', '');
-    super.connectedCallback(); // Renderer initialization
-
-    setupCanvas(this);
-    this.setupRenderer();
-    loadingScreen.setup(this, getCanvasSize);
-    this.resize();
-
-    if (!embedded) {
-      this.addFullScreenStyles();
-    }
-
-    initPostMessageAPI(this);
-    initMetaTags(this);
-    initWakelock(this); // Handler to exit VR (e.g., Oculus Browser back button).
-
-    this.onVRPresentChangeBound = bind(this.onVRPresentChange, this);
-    window.addEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound); // Bind functions.
-
-    this.enterVRBound = function () {
-      self.enterVR();
-    };
-
-    this.exitVRBound = function () {
-      self.exitVR();
-    };
-
-    this.exitVRTrueBound = function () {
-      self.exitVR(true);
-    };
-
-    this.pointerRestrictedBound = function () {
-      self.pointerRestricted();
-    };
-
-    this.pointerUnrestrictedBound = function () {
-      self.pointerUnrestricted();
-    };
-
-    if (!isWebXRAvailable) {
-      // Exit VR on `vrdisplaydeactivate` (e.g. taking off Rift headset).
-      window.addEventListener('vrdisplaydeactivate', this.exitVRBound); // Exit VR on `vrdisplaydisconnect` (e.g. unplugging Rift headset).
-
-      window.addEventListener('vrdisplaydisconnect', this.exitVRTrueBound); // Register for mouse restricted events while in VR
-      // (e.g. mouse no longer available on desktop 2D view)
-
-      window.addEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound); // Register for mouse unrestricted events while in VR
-      // (e.g. mouse once again available on desktop 2D view)
-
-      window.addEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
-    }
-
-    window.addEventListener('sessionend', this.resize); // Camera set up by camera system.
-
-    this.addEventListener('cameraready', function () {
-      self.attachedCallbackPostCamera();
-    });
-    this.initSystems(); // WebXR Immersive navigation handler.
-
-    if (this.hasWebXR && navigator.xr && navigator.xr.addEventListener) {
-      navigator.xr.addEventListener('sessiongranted', function () {
-        self.enterVR();
-      });
-    }
-  }
-
-  attachedCallbackPostCamera() {
-    var resize;
-    var self = this;
-    window.addEventListener('load', resize);
-    window.addEventListener('resize', function () {
-      // Workaround for a Webkit bug (https://bugs.webkit.org/show_bug.cgi?id=170595)
-      // where the window does not contain the correct viewport size
-      // after an orientation change. The window size is correct if the operation
-      // is postponed a few milliseconds.
-      // self.resize can be called directly once the bug above is fixed.
-      if (self.isIOS) {
-        setTimeout(self.resize, 100);
-      } else {
-        self.resize();
-      }
-    });
-    this.play(); // Add to scene index.
-
-    scenes.push(this);
-  }
-  /**
-   * Initialize all systems.
-   */
-
-
-  initSystems() {
-    var name; // Initialize camera system first.
-
-    this.initSystem('camera');
-
-    for (name in systems) {
-      if (name === 'camera') {
-        continue;
-      }
-
-      this.initSystem(name);
-    }
-  }
-  /**
-   * Initialize a system.
-   */
-
-
-  initSystem(name) {
-    if (this.systems[name]) {
-      return;
-    }
-
-    this.systems[name] = new systems[name](this);
-    this.systemNames.push(name);
-  }
-  /**
-   * Shut down scene on detach.
-   */
-
-
-  disconnectedCallback() {
-    // Remove from scene index.
-    var sceneIndex = scenes.indexOf(this);
-    super.disconnectedCallback();
-    scenes.splice(sceneIndex, 1);
-    window.removeEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound);
-    window.removeEventListener('vrdisplayactivate', this.enterVRBound);
-    window.removeEventListener('vrdisplaydeactivate', this.exitVRBound);
-    window.removeEventListener('vrdisplayconnect', this.enterVRBound);
-    window.removeEventListener('vrdisplaydisconnect', this.exitVRTrueBound);
-    window.removeEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound);
-    window.removeEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
-    window.removeEventListener('sessionend', this.resize);
-    this.renderer.dispose();
-  }
-  /**
-   * Add ticks and tocks.
-   *
-   * @param {object} behavior - A component.
-   */
-
-
-  addBehavior(behavior) {
-    var behaviorArr;
-    var behaviors = this.behaviors;
-    var behaviorType; // Check if behavior has tick and/or tock and add the behavior to the appropriate list.
-
-    for (behaviorType in behaviors) {
-      if (!behavior[behaviorType]) {
-        continue;
-      }
-
-      behaviorArr = this.behaviors[behaviorType];
-
-      if (behaviorArr.indexOf(behavior) === -1) {
-        behaviorArr.push(behavior);
-      }
-    }
-  }
-  /**
-   * For tests.
-   */
-
-
-  getPointerLockElement() {
-    return document.pointerLockElement;
-  }
-  /**
-   * For tests.
-   */
-
-
-  checkHeadsetConnected() {
-    return utils.device.checkHeadsetConnected();
-  }
-
-  enterAR() {
-    var errorMessage;
-
-    if (!this.hasWebXR) {
-      errorMessage = 'Failed to enter AR mode, WebXR not supported.';
-      throw new Error(errorMessage);
-    }
-
-    if (!utils.device.checkARSupport()) {
-      errorMessage = 'Failed to enter AR, WebXR immersive-ar mode not supported in your browser or device.';
-      throw new Error(errorMessage);
-    }
-
-    return this.enterVR(true);
-  }
-  /**
-   * Call `requestPresent` if WebVR or WebVR polyfill.
-   * Call `requestFullscreen` on desktop.
-   * Handle events, states, fullscreen styles.
-   *
-   * @param {bool?} useAR - if true, try immersive-ar mode
-   * @returns {Promise}
-   */
-
-
-  enterVR(useAR) {
-    var self = this;
-    var vrDisplay;
-    var vrManager = self.renderer.xr;
-    var xrInit; // Don't enter VR if already in VR.
-
-    if (this.is('vr-mode')) {
-      return Promise.resolve('Already in VR.');
-    } // Has VR.
-
-
-    if (this.checkHeadsetConnected() || this.isMobile) {
-      var rendererSystem = self.getAttribute('renderer');
-      vrManager.enabled = true;
-
-      if (this.hasWebXR) {
-        // XR API.
-        if (this.xrSession) {
-          this.xrSession.removeEventListener('end', this.exitVRBound);
-        }
-
-        var refspace = this.sceneEl.systems.webxr.sessionReferenceSpaceType;
-        vrManager.setReferenceSpaceType(refspace);
-        var xrMode = useAR ? 'immersive-ar' : 'immersive-vr';
-        xrInit = this.sceneEl.systems.webxr.sessionConfiguration;
-        return new Promise(function (resolve, reject) {
-          navigator.xr.requestSession(xrMode, xrInit).then(function requestSuccess(xrSession) {
-            self.xrSession = xrSession;
-            vrManager.layersEnabled = xrInit.requiredFeatures.indexOf('layers') !== -1;
-            vrManager.setSession(xrSession).then(function () {
-              vrManager.setFoveation(rendererSystem.foveationLevel);
-            });
-            xrSession.addEventListener('end', self.exitVRBound);
-            enterVRSuccess(resolve);
-          }, function requestFail(error) {
-            var useAR = xrMode === 'immersive-ar';
-            var mode = useAR ? 'AR' : 'VR';
-            throw new Error('Failed to enter ' + mode + ' mode (`requestSession`) ' + error);
-          });
-        });
-      } else {
-        vrDisplay = utils.device.getVRDisplay();
-        vrManager.setDevice(vrDisplay);
-
-        if (vrDisplay.isPresenting && !window.hasNativeWebVRImplementation) {
-          enterVRSuccess();
-          return Promise.resolve();
-        }
-
-        var presentationAttributes = {
-          highRefreshRate: rendererSystem.highRefreshRate
+        this.object3D.onAfterRender = function (renderer, scene, camera) {
+          // THREE may swap the camera used for the rendering if in VR, so we pass it to tock
+          if (self.isPlaying) {
+            self.tock(self.time, self.delta, camera);
+          }
         };
-        return vrDisplay.requestPresent([{
-          source: this.canvas,
-          attributes: presentationAttributes
-        }]).then(enterVRSuccess, enterVRFailure);
+
+        this.resize = bind(this.resize, this);
+        this.render = bind(this.render, this);
+        this.systems = {};
+        this.systemNames = [];
+        this.time = this.delta = 0;
+        this.behaviors = {
+          tick: [],
+          tock: []
+        };
+        this.hasLoaded = false;
+        this.isPlaying = false;
+        this.originalHTML = this.innerHTML; // Default components.
+
+        this.setAttribute('inspector', '');
+        this.setAttribute('keyboard-shortcuts', '');
+        this.setAttribute('screenshot', '');
+        this.setAttribute('vr-mode-ui', '');
+        this.setAttribute('device-orientation-permission-ui', '');
       }
-    } // No VR.
+    },
+    addFullScreenStyles: {
+      value: function () {
+        document.documentElement.classList.add('a-fullscreen');
+      }
+    },
+    removeFullScreenStyles: {
+      value: function () {
+        document.documentElement.classList.remove('a-fullscreen');
+      }
+    },
+    attachedCallback: {
+      value: function () {
+        var self = this;
+        var embedded = this.hasAttribute('embedded'); // Renderer initialization
 
+        setupCanvas(this);
+        this.setupRenderer();
+        loadingScreen.setup(this, getCanvasSize);
+        this.resize();
 
-    enterVRSuccess();
-    return Promise.resolve(); // Callback that happens on enter VR success or enter fullscreen (any API).
+        if (!embedded) {
+          this.addFullScreenStyles();
+        }
 
-    function enterVRSuccess(resolve) {
-      // vrdisplaypresentchange fires only once when the first requestPresent is completed;
-      // the first requestPresent could be called from ondisplayactivate and there is no way
-      // to setup everything from there. Thus, we need to emulate another vrdisplaypresentchange
-      // for the actual requestPresent. Need to make sure there are no issues with firing the
-      // vrdisplaypresentchange multiple times.
-      var event;
+        initPostMessageAPI(this);
+        initMetaTags(this);
+        initWakelock(this); // Handler to exit VR (e.g., Oculus Browser back button).
 
-      if (window.hasNativeWebVRImplementation && !window.hasNativeWebXRImplementation) {
-        event = new CustomEvent('vrdisplaypresentchange', {
-          detail: {
-            display: utils.device.getVRDisplay()
+        this.onVRPresentChangeBound = bind(this.onVRPresentChange, this);
+        window.addEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound); // Bind functions.
+
+        this.enterVRBound = function () {
+          self.enterVR();
+        };
+
+        this.exitVRBound = function () {
+          self.exitVR();
+        };
+
+        this.exitVRTrueBound = function () {
+          self.exitVR(true);
+        };
+
+        this.pointerRestrictedBound = function () {
+          self.pointerRestricted();
+        };
+
+        this.pointerUnrestrictedBound = function () {
+          self.pointerUnrestricted();
+        };
+
+        if (!isWebXRAvailable) {
+          // Exit VR on `vrdisplaydeactivate` (e.g. taking off Rift headset).
+          window.addEventListener('vrdisplaydeactivate', this.exitVRBound); // Exit VR on `vrdisplaydisconnect` (e.g. unplugging Rift headset).
+
+          window.addEventListener('vrdisplaydisconnect', this.exitVRTrueBound); // Register for mouse restricted events while in VR
+          // (e.g. mouse no longer available on desktop 2D view)
+
+          window.addEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound); // Register for mouse unrestricted events while in VR
+          // (e.g. mouse once again available on desktop 2D view)
+
+          window.addEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
+        }
+
+        window.addEventListener('sessionend', this.resize); // Camera set up by camera system.
+
+        this.addEventListener('cameraready', function () {
+          self.attachedCallbackPostCamera();
+        });
+        this.initSystems(); // WebXR Immersive navigation handler.
+
+        if (this.hasWebXR && navigator.xr && navigator.xr.addEventListener) {
+          navigator.xr.addEventListener('sessiongranted', function () {
+            self.enterVR();
+          });
+        }
+      }
+    },
+    attachedCallbackPostCamera: {
+      value: function () {
+        var resize;
+        var self = this;
+        window.addEventListener('load', resize);
+        window.addEventListener('resize', function () {
+          // Workaround for a Webkit bug (https://bugs.webkit.org/show_bug.cgi?id=170595)
+          // where the window does not contain the correct viewport size
+          // after an orientation change. The window size is correct if the operation
+          // is postponed a few milliseconds.
+          // self.resize can be called directly once the bug above is fixed.
+          if (self.isIOS) {
+            setTimeout(self.resize, 100);
+          } else {
+            self.resize();
           }
         });
-        window.dispatchEvent(event);
-      }
+        this.play(); // Add to scene index.
 
-      if (useAR) {
-        self.addState('ar-mode');
-      } else {
-        self.addState('vr-mode');
-      }
+        scenes.push(this);
+      },
+      writable: window.debug
+    },
 
-      self.emit('enter-vr', {
-        target: self
-      }); // Lock to landscape orientation on mobile.
+    /**
+     * Initialize all systems.
+     */
+    initSystems: {
+      value: function () {
+        var name; // Initialize camera system first.
 
-      if (!isWebXRAvailable && self.isMobile && screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape');
-      }
+        this.initSystem('camera');
 
-      self.addFullScreenStyles(); // On mobile, the polyfill handles fullscreen.
-      // TODO: 07/16 Chromium builds break when `requestFullscreen`ing on a canvas
-      // that we are also `requestPresent`ing. Until then, don't fullscreen if headset
-      // connected.
+        for (name in systems) {
+          if (name === 'camera') {
+            continue;
+          }
 
-      if (!self.isMobile && !self.checkHeadsetConnected()) {
-        requestFullscreen(self.canvas);
-      }
-
-      self.resize();
-
-      if (resolve) {
-        resolve();
-      }
-    }
-
-    function enterVRFailure(err) {
-      self.removeState('vr-mode');
-
-      if (err && err.message) {
-        throw new Error('Failed to enter VR mode (`requestPresent`): ' + err.message);
-      } else {
-        throw new Error('Failed to enter VR mode (`requestPresent`).');
-      }
-    }
-  }
-  /**
-  * Call `exitPresent` if WebVR / WebXR or WebVR polyfill.
-  * Handle events, states, fullscreen styles.
-  *
-  * @returns {Promise}
-  */
-
-
-  exitVR() {
-    var self = this;
-    var vrDisplay;
-    var vrManager = this.renderer.xr; // Don't exit VR if not in VR.
-
-    if (!this.is('vr-mode') && !this.is('ar-mode')) {
-      return Promise.resolve('Not in immersive mode.');
-    } // Handle exiting VR if not yet already and in a headset or polyfill.
-
-
-    if (this.checkHeadsetConnected() || this.isMobile) {
-      vrManager.enabled = false;
-      vrDisplay = utils.device.getVRDisplay();
-
-      if (this.hasWebXR) {
-        this.xrSession.removeEventListener('end', this.exitVRBound); // Capture promise to avoid errors.
-
-        this.xrSession.end().then(function () {}, function () {});
-        this.xrSession = undefined;
-        vrManager.setSession(null);
-      } else {
-        if (vrDisplay.isPresenting) {
-          return vrDisplay.exitPresent().then(exitVRSuccess, exitVRFailure);
+          this.initSystem(name);
         }
       }
-    } else {
-      exitFullscreen();
-    } // Handle exiting VR in all other cases (2D fullscreen, external exit VR event).
+    },
 
-
-    exitVRSuccess();
-    return Promise.resolve();
-
-    function exitVRSuccess() {
-      self.removeState('vr-mode');
-      self.removeState('ar-mode'); // Lock to landscape orientation on mobile.
-
-      if (self.isMobile && screen.orientation && screen.orientation.unlock) {
-        screen.orientation.unlock();
-      } // Exiting VR in embedded mode, no longer need fullscreen styles.
-
-
-      if (self.hasAttribute('embedded')) {
-        self.removeFullScreenStyles();
-      }
-
-      self.resize();
-
-      if (self.isIOS) {
-        utils.forceCanvasResizeSafariMobile(self.canvas);
-      }
-
-      self.renderer.setPixelRatio(window.devicePixelRatio);
-      self.emit('exit-vr', {
-        target: self
-      });
-    }
-
-    function exitVRFailure(err) {
-      if (err && err.message) {
-        throw new Error('Failed to exit VR mode (`exitPresent`): ' + err.message);
-      } else {
-        throw new Error('Failed to exit VR mode (`exitPresent`).');
-      }
-    }
-  }
-
-  pointerRestricted() {
-    if (this.canvas) {
-      var pointerLockElement = this.getPointerLockElement();
-
-      if (pointerLockElement && pointerLockElement !== this.canvas && document.exitPointerLock) {
-        // Recreate pointer lock on the canvas, if taken on another element.
-        document.exitPointerLock();
-      }
-
-      if (this.canvas.requestPointerLock) {
-        this.canvas.requestPointerLock();
-      }
-    }
-  }
-
-  pointerUnrestricted() {
-    var pointerLockElement = this.getPointerLockElement();
-
-    if (pointerLockElement && pointerLockElement === this.canvas && document.exitPointerLock) {
-      document.exitPointerLock();
-    }
-  }
-  /**
-   * Handle `vrdisplaypresentchange` event for exiting VR through other means than
-   * `<ESC>` key. For example, GearVR back button on Oculus Browser.
-   */
-
-
-  onVRPresentChange(evt) {
-    // Polyfill places display inside the detail property
-    var display = evt.display || evt.detail.display; // Entering VR.
-
-    if (display && display.isPresenting) {
-      this.enterVR();
-      return;
-    } // Exiting VR.
-
-
-    this.exitVR();
-  }
-  /**
-   * Wraps Entity.getAttribute to take into account for systems.
-   * If system exists, then return system data rather than possible component data.
-   */
-
-
-  getAttribute(attr) {
-    var system = this.systems[attr];
-
-    if (system) {
-      return system.data;
-    }
-
-    return AEntity.prototype.getAttribute.call(this, attr);
-  }
-  /**
-   * `getAttribute` used to be `getDOMAttribute` and `getComputedAttribute` used to be
-   * what `getAttribute` is now. Now legacy code.
-   */
-
-
-  getComputedAttribut(attr) {
-    warn('`getComputedAttribute` is deprecated. Use `getAttribute` instead.');
-    this.getAttribute(attr);
-  }
-  /**
-   * Wraps Entity.getDOMAttribute to take into account for systems.
-   * If system exists, then return system data rather than possible component data.
-   */
-
-
-  getDOMAttribute(attr) {
-    var system = this.systems[attr];
-
-    if (system) {
-      return system.data;
-    }
-
-    return AEntity.prototype.getDOMAttribute.call(this, attr);
-  }
-  /**
-   * Wrap Entity.setAttribute to take into account for systems.
-   * If system exists, then skip component initialization checks and do a normal
-   * setAttribute.
-   */
-
-
-  setAttribute(attr, value, componentPropValue) {
-    var system = this.systems[attr];
-
-    if (system) {
-      ANode.prototype.setAttribute.call(this, attr, value);
-      system.updateProperties(value);
-      return;
-    }
-
-    AEntity.prototype.setAttribute.call(this, attr, value, componentPropValue);
-  }
-  /**
-   * @param {object} behavior - A component.
-   */
-
-
-  removeBehavior(behavior) {
-    var behaviorArr;
-    var behaviorType;
-    var behaviors = this.behaviors;
-    var index; // Check if behavior has tick and/or tock and remove the behavior from the appropriate
-    // array.
-
-    for (behaviorType in behaviors) {
-      if (!behavior[behaviorType]) {
-        continue;
-      }
-
-      behaviorArr = this.behaviors[behaviorType];
-      index = behaviorArr.indexOf(behavior);
-
-      if (index !== -1) {
-        behaviorArr.splice(index, 1);
-      }
-    }
-  }
-
-  resize() {
-    var camera = this.camera;
-    var canvas = this.canvas;
-    var embedded;
-    var isVRPresenting;
-    var size;
-    var isPresenting = this.renderer.xr.isPresenting;
-    isVRPresenting = this.renderer.xr.enabled && isPresenting; // Do not update renderer, if a camera or a canvas have not been injected.
-    // In VR mode, three handles canvas resize based on the dimensions returned by
-    // the getEyeParameters function of the WebVR API. These dimensions are independent of
-    // the window size, therefore should not be overwritten with the window's width and
-    // height, // except when in fullscreen mode.
-
-    if (!camera || !canvas || this.is('vr-mode') && (this.isMobile || isVRPresenting)) {
-      return;
-    } // Update camera.
-
-
-    embedded = this.getAttribute('embedded') && !this.is('vr-mode');
-    size = getCanvasSize(canvas, embedded, this.maxCanvasSize, this.is('vr-mode'));
-    camera.aspect = size.width / size.height;
-    camera.updateProjectionMatrix(); // Notify renderer of size change.
-
-    this.renderer.setSize(size.width, size.height, false);
-    this.emit('rendererresize', null, false);
-  }
-
-  setupRenderer() {
-    var self = this;
-    var renderer;
-    var rendererAttr;
-    var rendererAttrString;
-    var rendererConfig;
-    rendererConfig = {
-      alpha: true,
-      antialias: !isMobile,
-      canvas: this.canvas,
-      logarithmicDepthBuffer: false,
-      powerPreference: 'high-performance'
-    };
-    this.maxCanvasSize = {
-      height: 1920,
-      width: 1920
-    };
-
-    if (this.hasAttribute('renderer')) {
-      rendererAttrString = this.getAttribute('renderer');
-      rendererAttr = utils.styleParser.parse(rendererAttrString);
-
-      if (rendererAttr.precision) {
-        rendererConfig.precision = rendererAttr.precision + 'p';
-      }
-
-      if (rendererAttr.antialias && rendererAttr.antialias !== 'auto') {
-        rendererConfig.antialias = rendererAttr.antialias === 'true';
-      }
-
-      if (rendererAttr.logarithmicDepthBuffer && rendererAttr.logarithmicDepthBuffer !== 'auto') {
-        rendererConfig.logarithmicDepthBuffer = rendererAttr.logarithmicDepthBuffer === 'true';
-      }
-
-      if (rendererAttr.alpha) {
-        rendererConfig.alpha = rendererAttr.alpha === 'true';
-      }
-
-      this.maxCanvasSize = {
-        width: rendererAttr.maxCanvasWidth ? parseInt(rendererAttr.maxCanvasWidth) : this.maxCanvasSize.width,
-        height: rendererAttr.maxCanvasHeight ? parseInt(rendererAttr.maxCanvasHeight) : this.maxCanvasSize.height
-      };
-    }
-
-    renderer = this.renderer = new THREE.WebGLRenderer(rendererConfig);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.sortObjects = false;
-
-    if (this.camera) {
-      renderer.xr.setPoseTarget(this.camera.el.object3D);
-    }
-
-    this.addEventListener('camera-set-active', function () {
-      renderer.xr.setPoseTarget(self.camera.el.object3D);
-    });
-  }
-  /**
-   * Handler attached to elements to help scene know when to kick off.
-   * Scene waits for all entities to load.
-   */
-
-
-  play() {
-    var self = this;
-    var sceneEl = this;
-
-    if (this.renderStarted) {
-      AEntity.prototype.play.call(this);
-      return;
-    }
-
-    this.addEventListener('loaded', function () {
-      var renderer = this.renderer;
-      var vrDisplay;
-      var vrManager = this.renderer.xr;
-      AEntity.prototype.play.call(this); // .play() *before* render.
-
-      if (sceneEl.renderStarted) {
-        return;
-      }
-
-      sceneEl.resize(); // Kick off render loop.
-
-      if (sceneEl.renderer) {
-        if (window.performance) {
-          window.performance.mark('render-started');
+    /**
+     * Initialize a system.
+     */
+    initSystem: {
+      value: function (name) {
+        if (this.systems[name]) {
+          return;
         }
 
-        loadingScreen.remove();
-        vrDisplay = utils.device.getVRDisplay();
+        this.systems[name] = new systems[name](this);
+        this.systemNames.push(name);
+      }
+    },
 
-        if (vrDisplay && vrDisplay.isPresenting) {
-          vrManager.setDevice(vrDisplay);
+    /**
+     * Shut down scene on detach.
+     */
+    detachedCallback: {
+      value: function () {
+        // Remove from scene index.
+        var sceneIndex = scenes.indexOf(this);
+        scenes.splice(sceneIndex, 1);
+        window.removeEventListener('vrdisplaypresentchange', this.onVRPresentChangeBound);
+        window.removeEventListener('vrdisplayactivate', this.enterVRBound);
+        window.removeEventListener('vrdisplaydeactivate', this.exitVRBound);
+        window.removeEventListener('vrdisplayconnect', this.enterVRBound);
+        window.removeEventListener('vrdisplaydisconnect', this.exitVRTrueBound);
+        window.removeEventListener('vrdisplaypointerrestricted', this.pointerRestrictedBound);
+        window.removeEventListener('vrdisplaypointerunrestricted', this.pointerUnrestrictedBound);
+        window.removeEventListener('sessionend', this.resize);
+        this.renderer.dispose();
+      }
+    },
+
+    /**
+     * Add ticks and tocks.
+     *
+     * @param {object} behavior - A component.
+     */
+    addBehavior: {
+      value: function (behavior) {
+        var behaviorArr;
+        var behaviors = this.behaviors;
+        var behaviorType; // Check if behavior has tick and/or tock and add the behavior to the appropriate list.
+
+        for (behaviorType in behaviors) {
+          if (!behavior[behaviorType]) {
+            continue;
+          }
+
+          behaviorArr = this.behaviors[behaviorType];
+
+          if (behaviorArr.indexOf(behavior) === -1) {
+            behaviorArr.push(behavior);
+          }
+        }
+      }
+    },
+
+    /**
+     * For tests.
+     */
+    getPointerLockElement: {
+      value: function () {
+        return document.pointerLockElement;
+      },
+      writable: window.debug
+    },
+
+    /**
+     * For tests.
+     */
+    checkHeadsetConnected: {
+      value: utils.device.checkHeadsetConnected,
+      writable: window.debug
+    },
+    enterAR: {
+      value: function () {
+        var errorMessage;
+
+        if (!this.hasWebXR) {
+          errorMessage = 'Failed to enter AR mode, WebXR not supported.';
+          throw new Error(errorMessage);
+        }
+
+        if (!utils.device.checkARSupport()) {
+          errorMessage = 'Failed to enter AR, WebXR immersive-ar mode not supported in your browser or device.';
+          throw new Error(errorMessage);
+        }
+
+        return this.enterVR(true);
+      }
+    },
+
+    /**
+     * Call `requestPresent` if WebVR or WebVR polyfill.
+     * Call `requestFullscreen` on desktop.
+     * Handle events, states, fullscreen styles.
+     *
+     * @param {bool?} useAR - if true, try immersive-ar mode
+     * @returns {Promise}
+     */
+    enterVR: {
+      value: function (useAR) {
+        var self = this;
+        var vrDisplay;
+        var vrManager = self.renderer.xr;
+        var xrInit; // Don't enter VR if already in VR.
+
+        if (this.is('vr-mode')) {
+          return Promise.resolve('Already in VR.');
+        } // Has VR.
+
+
+        if (this.checkHeadsetConnected() || this.isMobile) {
+          var rendererSystem = self.getAttribute('renderer');
           vrManager.enabled = true;
-          sceneEl.enterVR();
+
+          if (this.hasWebXR) {
+            // XR API.
+            if (this.xrSession) {
+              this.xrSession.removeEventListener('end', this.exitVRBound);
+            }
+
+            var refspace = this.sceneEl.systems.webxr.sessionReferenceSpaceType;
+            vrManager.setReferenceSpaceType(refspace);
+            var xrMode = useAR ? 'immersive-ar' : 'immersive-vr';
+            xrInit = this.sceneEl.systems.webxr.sessionConfiguration;
+            return new Promise(function (resolve, reject) {
+              navigator.xr.requestSession(xrMode, xrInit).then(function requestSuccess(xrSession) {
+                self.xrSession = xrSession;
+                vrManager.layersEnabled = xrInit.requiredFeatures.indexOf('layers') !== -1;
+                vrManager.setSession(xrSession).then(function () {
+                  vrManager.setFoveation(rendererSystem.foveationLevel);
+                });
+                xrSession.addEventListener('end', self.exitVRBound);
+                enterVRSuccess(resolve);
+              }, function requestFail(error) {
+                var useAR = xrMode === 'immersive-ar';
+                var mode = useAR ? 'AR' : 'VR';
+                throw new Error('Failed to enter ' + mode + ' mode (`requestSession`) ' + error);
+              });
+            });
+          } else {
+            vrDisplay = utils.device.getVRDisplay();
+            vrManager.setDevice(vrDisplay);
+
+            if (vrDisplay.isPresenting && !window.hasNativeWebVRImplementation) {
+              enterVRSuccess();
+              return Promise.resolve();
+            }
+
+            var presentationAttributes = {
+              highRefreshRate: rendererSystem.highRefreshRate
+            };
+            return vrDisplay.requestPresent([{
+              source: this.canvas,
+              attributes: presentationAttributes
+            }]).then(enterVRSuccess, enterVRFailure);
+          }
+        } // No VR.
+
+
+        enterVRSuccess();
+        return Promise.resolve(); // Callback that happens on enter VR success or enter fullscreen (any API).
+
+        function enterVRSuccess(resolve) {
+          // vrdisplaypresentchange fires only once when the first requestPresent is completed;
+          // the first requestPresent could be called from ondisplayactivate and there is no way
+          // to setup everything from there. Thus, we need to emulate another vrdisplaypresentchange
+          // for the actual requestPresent. Need to make sure there are no issues with firing the
+          // vrdisplaypresentchange multiple times.
+          var event;
+
+          if (window.hasNativeWebVRImplementation && !window.hasNativeWebXRImplementation) {
+            event = new CustomEvent('vrdisplaypresentchange', {
+              detail: {
+                display: utils.device.getVRDisplay()
+              }
+            });
+            window.dispatchEvent(event);
+          }
+
+          if (useAR) {
+            self.addState('ar-mode');
+          } else {
+            self.addState('vr-mode');
+          }
+
+          self.emit('enter-vr', {
+            target: self
+          }); // Lock to landscape orientation on mobile.
+
+          if (!isWebXRAvailable && self.isMobile && screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape');
+          }
+
+          self.addFullScreenStyles(); // On mobile, the polyfill handles fullscreen.
+          // TODO: 07/16 Chromium builds break when `requestFullscreen`ing on a canvas
+          // that we are also `requestPresent`ing. Until then, don't fullscreen if headset
+          // connected.
+
+          if (!self.isMobile && !self.checkHeadsetConnected()) {
+            requestFullscreen(self.canvas);
+          }
+
+          self.resize();
+
+          if (resolve) {
+            resolve();
+          }
         }
 
-        renderer.setAnimationLoop(this.render);
-        sceneEl.renderStarted = true;
-        sceneEl.emit('renderstart');
+        function enterVRFailure(err) {
+          self.removeState('vr-mode');
+
+          if (err && err.message) {
+            throw new Error('Failed to enter VR mode (`requestPresent`): ' + err.message);
+          } else {
+            throw new Error('Failed to enter VR mode (`requestPresent`).');
+          }
+        }
+      },
+      writable: true
+    },
+
+    /**
+    * Call `exitPresent` if WebVR / WebXR or WebVR polyfill.
+    * Handle events, states, fullscreen styles.
+    *
+    * @returns {Promise}
+    */
+    exitVR: {
+      value: function () {
+        var self = this;
+        var vrDisplay;
+        var vrManager = this.renderer.xr; // Don't exit VR if not in VR.
+
+        if (!this.is('vr-mode') && !this.is('ar-mode')) {
+          return Promise.resolve('Not in immersive mode.');
+        } // Handle exiting VR if not yet already and in a headset or polyfill.
+
+
+        if (this.checkHeadsetConnected() || this.isMobile) {
+          vrManager.enabled = false;
+          vrDisplay = utils.device.getVRDisplay();
+
+          if (this.hasWebXR) {
+            this.xrSession.removeEventListener('end', this.exitVRBound); // Capture promise to avoid errors.
+
+            this.xrSession.end().then(function () {}, function () {});
+            this.xrSession = undefined;
+            vrManager.setSession(null);
+          } else {
+            if (vrDisplay.isPresenting) {
+              return vrDisplay.exitPresent().then(exitVRSuccess, exitVRFailure);
+            }
+          }
+        } else {
+          exitFullscreen();
+        } // Handle exiting VR in all other cases (2D fullscreen, external exit VR event).
+
+
+        exitVRSuccess();
+        return Promise.resolve();
+
+        function exitVRSuccess() {
+          self.removeState('vr-mode');
+          self.removeState('ar-mode'); // Lock to landscape orientation on mobile.
+
+          if (self.isMobile && screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          } // Exiting VR in embedded mode, no longer need fullscreen styles.
+
+
+          if (self.hasAttribute('embedded')) {
+            self.removeFullScreenStyles();
+          }
+
+          self.resize();
+
+          if (self.isIOS) {
+            utils.forceCanvasResizeSafariMobile(self.canvas);
+          }
+
+          self.renderer.setPixelRatio(window.devicePixelRatio);
+          self.emit('exit-vr', {
+            target: self
+          });
+        }
+
+        function exitVRFailure(err) {
+          if (err && err.message) {
+            throw new Error('Failed to exit VR mode (`exitPresent`): ' + err.message);
+          } else {
+            throw new Error('Failed to exit VR mode (`exitPresent`).');
+          }
+        }
+      },
+      writable: true
+    },
+    pointerRestricted: {
+      value: function () {
+        if (this.canvas) {
+          var pointerLockElement = this.getPointerLockElement();
+
+          if (pointerLockElement && pointerLockElement !== this.canvas && document.exitPointerLock) {
+            // Recreate pointer lock on the canvas, if taken on another element.
+            document.exitPointerLock();
+          }
+
+          if (this.canvas.requestPointerLock) {
+            this.canvas.requestPointerLock();
+          }
+        }
       }
-    }); // setTimeout to wait for all nodes to attach and run their callbacks.
+    },
+    pointerUnrestricted: {
+      value: function () {
+        var pointerLockElement = this.getPointerLockElement();
 
-    setTimeout(function () {
-      AEntity.prototype.load.call(self);
-    });
-  }
-  /**
-   * Wrap `updateComponent` to not initialize the component if the component has a system
-   * (aframevr/aframe#2365).
-   */
-
-
-  updateComponent(componentName) {
-    if (componentName in systems) {
-      return;
-    }
-
-    AEntity.prototype.updateComponent.apply(this, arguments);
-  }
-  /**
-   * Behavior-updater meant to be called from scene render.
-   * Abstracted to a different function to facilitate unit testing (`scene.tick()`) without
-   * needing to render.
-   */
-
-
-  tick(time, timeDelta) {
-    var i;
-    var systems = this.systems; // Components.
-
-    for (i = 0; i < this.behaviors.tick.length; i++) {
-      if (!this.behaviors.tick[i].el.isPlaying) {
-        continue;
+        if (pointerLockElement && pointerLockElement === this.canvas && document.exitPointerLock) {
+          document.exitPointerLock();
+        }
       }
+    },
 
-      this.behaviors.tick[i].tick(time, timeDelta);
-    } // Systems.
+    /**
+     * Handle `vrdisplaypresentchange` event for exiting VR through other means than
+     * `<ESC>` key. For example, GearVR back button on Oculus Browser.
+     */
+    onVRPresentChange: {
+      value: function (evt) {
+        // Polyfill places display inside the detail property
+        var display = evt.display || evt.detail.display; // Entering VR.
+
+        if (display && display.isPresenting) {
+          this.enterVR();
+          return;
+        } // Exiting VR.
 
 
-    for (i = 0; i < this.systemNames.length; i++) {
-      if (!systems[this.systemNames[i]].tick) {
-        continue;
+        this.exitVR();
       }
+    },
 
-      systems[this.systemNames[i]].tick(time, timeDelta);
-    }
-  }
-  /**
-   * Behavior-updater meant to be called after scene render for post processing purposes.
-   * Abstracted to a different function to facilitate unit testing (`scene.tock()`) without
-   * needing to render.
-   */
+    /**
+     * Wraps Entity.getAttribute to take into account for systems.
+     * If system exists, then return system data rather than possible component data.
+     */
+    getAttribute: {
+      value: function (attr) {
+        var system = this.systems[attr];
 
+        if (system) {
+          return system.data;
+        }
 
-  tock(time, timeDelta, camera) {
-    var i;
-    var systems = this.systems; // Components.
-
-    for (i = 0; i < this.behaviors.tock.length; i++) {
-      if (!this.behaviors.tock[i].el.isPlaying) {
-        continue;
+        return AEntity.prototype.getAttribute.call(this, attr);
       }
+    },
 
-      this.behaviors.tock[i].tock(time, timeDelta, camera);
-    } // Systems.
-
-
-    for (i = 0; i < this.systemNames.length; i++) {
-      if (!systems[this.systemNames[i]].tock) {
-        continue;
+    /**
+     * `getAttribute` used to be `getDOMAttribute` and `getComputedAttribute` used to be
+     * what `getAttribute` is now. Now legacy code.
+     */
+    getComputedAttribute: {
+      value: function (attr) {
+        warn('`getComputedAttribute` is deprecated. Use `getAttribute` instead.');
+        this.getAttribute(attr);
       }
+    },
 
-      systems[this.systemNames[i]].tock(time, timeDelta, camera);
+    /**
+     * Wraps Entity.getDOMAttribute to take into account for systems.
+     * If system exists, then return system data rather than possible component data.
+     */
+    getDOMAttribute: {
+      value: function (attr) {
+        var system = this.systems[attr];
+
+        if (system) {
+          return system.data;
+        }
+
+        return AEntity.prototype.getDOMAttribute.call(this, attr);
+      }
+    },
+
+    /**
+     * Wrap Entity.setAttribute to take into account for systems.
+     * If system exists, then skip component initialization checks and do a normal
+     * setAttribute.
+     */
+    setAttribute: {
+      value: function (attr, value, componentPropValue) {
+        var system = this.systems[attr];
+
+        if (system) {
+          ANode.prototype.setAttribute.call(this, attr, value);
+          system.updateProperties(value);
+          return;
+        }
+
+        AEntity.prototype.setAttribute.call(this, attr, value, componentPropValue);
+      }
+    },
+
+    /**
+     * @param {object} behavior - A component.
+     */
+    removeBehavior: {
+      value: function (behavior) {
+        var behaviorArr;
+        var behaviorType;
+        var behaviors = this.behaviors;
+        var index; // Check if behavior has tick and/or tock and remove the behavior from the appropriate
+        // array.
+
+        for (behaviorType in behaviors) {
+          if (!behavior[behaviorType]) {
+            continue;
+          }
+
+          behaviorArr = this.behaviors[behaviorType];
+          index = behaviorArr.indexOf(behavior);
+
+          if (index !== -1) {
+            behaviorArr.splice(index, 1);
+          }
+        }
+      }
+    },
+    resize: {
+      value: function () {
+        var camera = this.camera;
+        var canvas = this.canvas;
+        var embedded;
+        var isVRPresenting;
+        var size;
+        var isPresenting = this.renderer.xr.isPresenting;
+        isVRPresenting = this.renderer.xr.enabled && isPresenting; // Do not update renderer, if a camera or a canvas have not been injected.
+        // In VR mode, three handles canvas resize based on the dimensions returned by
+        // the getEyeParameters function of the WebVR API. These dimensions are independent of
+        // the window size, therefore should not be overwritten with the window's width and
+        // height, // except when in fullscreen mode.
+
+        if (!camera || !canvas || this.is('vr-mode') && (this.isMobile || isVRPresenting)) {
+          return;
+        } // Update camera.
+
+
+        embedded = this.getAttribute('embedded') && !this.is('vr-mode');
+        size = getCanvasSize(canvas, embedded, this.maxCanvasSize, this.is('vr-mode'));
+        camera.aspect = size.width / size.height;
+        camera.updateProjectionMatrix(); // Notify renderer of size change.
+
+        this.renderer.setSize(size.width, size.height, false);
+        this.emit('rendererresize', null, false);
+      },
+      writable: true
+    },
+    setupRenderer: {
+      value: function () {
+        var self = this;
+        var renderer;
+        var rendererAttr;
+        var rendererAttrString;
+        var rendererConfig;
+        rendererConfig = {
+          alpha: true,
+          antialias: !isMobile,
+          canvas: this.canvas,
+          logarithmicDepthBuffer: false,
+          powerPreference: 'high-performance'
+        };
+        this.maxCanvasSize = {
+          height: 1920,
+          width: 1920
+        };
+
+        if (this.hasAttribute('renderer')) {
+          rendererAttrString = this.getAttribute('renderer');
+          rendererAttr = utils.styleParser.parse(rendererAttrString);
+
+          if (rendererAttr.precision) {
+            rendererConfig.precision = rendererAttr.precision + 'p';
+          }
+
+          if (rendererAttr.antialias && rendererAttr.antialias !== 'auto') {
+            rendererConfig.antialias = rendererAttr.antialias === 'true';
+          }
+
+          if (rendererAttr.logarithmicDepthBuffer && rendererAttr.logarithmicDepthBuffer !== 'auto') {
+            rendererConfig.logarithmicDepthBuffer = rendererAttr.logarithmicDepthBuffer === 'true';
+          }
+
+          if (rendererAttr.alpha) {
+            rendererConfig.alpha = rendererAttr.alpha === 'true';
+          }
+
+          this.maxCanvasSize = {
+            width: rendererAttr.maxCanvasWidth ? parseInt(rendererAttr.maxCanvasWidth) : this.maxCanvasSize.width,
+            height: rendererAttr.maxCanvasHeight ? parseInt(rendererAttr.maxCanvasHeight) : this.maxCanvasSize.height
+          };
+        }
+
+        renderer = this.renderer = new THREE.WebGLRenderer(rendererConfig);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.sortObjects = false;
+
+        if (this.camera) {
+          renderer.xr.setPoseTarget(this.camera.el.object3D);
+        }
+
+        this.addEventListener('camera-set-active', function () {
+          renderer.xr.setPoseTarget(self.camera.el.object3D);
+        });
+      },
+      writable: window.debug
+    },
+
+    /**
+     * Handler attached to elements to help scene know when to kick off.
+     * Scene waits for all entities to load.
+     */
+    play: {
+      value: function () {
+        var self = this;
+        var sceneEl = this;
+
+        if (this.renderStarted) {
+          AEntity.prototype.play.call(this);
+          return;
+        }
+
+        this.addEventListener('loaded', function () {
+          var renderer = this.renderer;
+          var vrDisplay;
+          var vrManager = this.renderer.xr;
+          AEntity.prototype.play.call(this); // .play() *before* render.
+
+          if (sceneEl.renderStarted) {
+            return;
+          }
+
+          sceneEl.resize(); // Kick off render loop.
+
+          if (sceneEl.renderer) {
+            if (window.performance) {
+              window.performance.mark('render-started');
+            }
+
+            loadingScreen.remove();
+            vrDisplay = utils.device.getVRDisplay();
+
+            if (vrDisplay && vrDisplay.isPresenting) {
+              vrManager.setDevice(vrDisplay);
+              vrManager.enabled = true;
+              sceneEl.enterVR();
+            }
+
+            renderer.setAnimationLoop(this.render);
+            sceneEl.renderStarted = true;
+            sceneEl.emit('renderstart');
+          }
+        }); // setTimeout to wait for all nodes to attach and run their callbacks.
+
+        setTimeout(function () {
+          AEntity.prototype.load.call(self);
+        });
+      }
+    },
+
+    /**
+     * Wrap `updateComponent` to not initialize the component if the component has a system
+     * (aframevr/aframe#2365).
+     */
+    updateComponent: {
+      value: function (componentName) {
+        if (componentName in systems) {
+          return;
+        }
+
+        AEntity.prototype.updateComponent.apply(this, arguments);
+      }
+    },
+
+    /**
+     * Behavior-updater meant to be called from scene render.
+     * Abstracted to a different function to facilitate unit testing (`scene.tick()`) without
+     * needing to render.
+     */
+    tick: {
+      value: function (time, timeDelta) {
+        var i;
+        var systems = this.systems; // Components.
+
+        for (i = 0; i < this.behaviors.tick.length; i++) {
+          if (!this.behaviors.tick[i].el.isPlaying) {
+            continue;
+          }
+
+          this.behaviors.tick[i].tick(time, timeDelta);
+        } // Systems.
+
+
+        for (i = 0; i < this.systemNames.length; i++) {
+          if (!systems[this.systemNames[i]].tick) {
+            continue;
+          }
+
+          systems[this.systemNames[i]].tick(time, timeDelta);
+        }
+      }
+    },
+
+    /**
+     * Behavior-updater meant to be called after scene render for post processing purposes.
+     * Abstracted to a different function to facilitate unit testing (`scene.tock()`) without
+     * needing to render.
+     */
+    tock: {
+      value: function (time, timeDelta, camera) {
+        var i;
+        var systems = this.systems; // Components.
+
+        for (i = 0; i < this.behaviors.tock.length; i++) {
+          if (!this.behaviors.tock[i].el.isPlaying) {
+            continue;
+          }
+
+          this.behaviors.tock[i].tock(time, timeDelta, camera);
+        } // Systems.
+
+
+        for (i = 0; i < this.systemNames.length; i++) {
+          if (!systems[this.systemNames[i]].tock) {
+            continue;
+          }
+
+          systems[this.systemNames[i]].tock(time, timeDelta, camera);
+        }
+      }
+    },
+
+    /**
+     * The render loop.
+     *
+     * Updates animations.
+     * Updates behaviors.
+     * Renders with request animation frame.
+     */
+    render: {
+      value: function (time, frame) {
+        var renderer = this.renderer;
+        this.frame = frame;
+        this.delta = this.clock.getDelta() * 1000;
+        this.time = this.clock.elapsedTime * 1000;
+
+        if (this.isPlaying) {
+          this.tick(this.time, this.delta);
+        }
+
+        var savedBackground = null;
+
+        if (this.is('ar-mode')) {
+          // In AR mode, don't render the default background. Hide it, then
+          // restore it again after rendering.
+          savedBackground = this.object3D.background;
+          this.object3D.background = null;
+        }
+
+        renderer.render(this.object3D, this.camera);
+
+        if (savedBackground) {
+          this.object3D.background = savedBackground;
+        }
+      },
+      writable: true
     }
-  }
-  /**
-   * The render loop.
-   *
-   * Updates animations.
-   * Updates behaviors.
-   * Renders with request animation frame.
-   */
-
-
-  render(time, frame) {
-    var renderer = this.renderer;
-    this.frame = frame;
-    this.delta = this.clock.getDelta() * 1000;
-    this.time = this.clock.elapsedTime * 1000;
-
-    if (this.isPlaying) {
-      this.tick(this.time, this.delta);
-    }
-
-    var savedBackground = null;
-
-    if (this.is('ar-mode')) {
-      // In AR mode, don't render the default background. Hide it, then
-      // restore it again after rendering.
-      savedBackground = this.object3D.background;
-      this.object3D.background = null;
-    }
-
-    renderer.render(this.object3D, this.camera);
-
-    if (savedBackground) {
-      this.object3D.background = savedBackground;
-    }
-  }
-
-}
+  })
+});
 /**
  * Return size constrained to maxSize - maintaining aspect ratio.
  *
@@ -32523,7 +32278,6 @@ class AScene extends AEntity {
  * @param {object} maxSize - Max size parameters (width and height).
  * @returns {object} Width and height.
  */
-
 
 function constrainSizeTo(size, maxSize) {
   var aspectRatio;
@@ -32551,8 +32305,6 @@ function constrainSizeTo(size, maxSize) {
 
   return size;
 }
-
-window.customElements.define('a-scene', AScene);
 /**
  * Return the canvas size where the scene will be rendered.
  * Will be always the window size except when the scene is embedded.
@@ -32564,6 +32316,7 @@ window.customElements.define('a-scene', AScene);
  * @param {object} max - Max size parameters
  * @param {boolean} isVR - If in VR
  */
+
 
 function getCanvasSize(canvasEl, embedded, maxSize, isVR) {
   if (!canvasEl.parentElement) {
@@ -32670,8 +32423,7 @@ function setupCanvas(sceneEl) {
   }
 }
 
-module.exports.setupCanvas = setupCanvas;
-module.exports.AScene = AScene;
+module.exports.setupCanvas = setupCanvas; // For testing.
 
 /***/ }),
 
@@ -33768,12 +33520,11 @@ __webpack_require__(/*! ./primitives/meshPrimitives */ "./src/extras/primitives/
   \*********************************************/
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-/* global customElements */
-var knownTags = (__webpack_require__(/*! ../../core/a-node */ "./src/core/a-node.js").knownTags);
-
-var AEntity = (__webpack_require__(/*! ../../core/a-entity */ "./src/core/a-entity.js").AEntity);
+var AEntity = __webpack_require__(/*! ../../core/a-entity */ "./src/core/a-entity.js");
 
 var components = (__webpack_require__(/*! ../../core/component */ "./src/core/component.js").components);
+
+var registerElement = (__webpack_require__(/*! ../../core/a-register-element */ "./src/core/a-register-element.js").registerElement);
 
 var utils = __webpack_require__(/*! ../../utils/ */ "./src/utils/index.js");
 
@@ -33781,173 +33532,173 @@ var debug = utils.debug;
 var setComponentProperty = utils.entity.setComponentProperty;
 var log = debug('extras:primitives:debug');
 var warn = debug('extras:primitives:warn');
-var error = debug('extras:primitives:error');
 var primitives = module.exports.primitives = {};
 
 module.exports.registerPrimitive = function registerPrimitive(name, definition) {
   name = name.toLowerCase();
-
-  if (knownTags[name]) {
-    error('Trying to register primitive ' + name + ' that has been already previously registered');
-    return;
-  }
-
-  knownTags[name] = true;
   log('Registering <%s>', name); // Deprecation warning for defaultAttributes usage.
 
   if (definition.defaultAttributes) {
     warn("The 'defaultAttributes' object is deprecated. Use 'defaultComponents' instead.");
   }
 
-  var mappings = definition.mappings || {};
-  var primitiveClass = class extends AEntity {
-    constructor() {
-      super();
-      this.defaultComponentsFromPrimitive = definition.defaultComponents || definition.defaultAttributes || {};
-      this.deprecated = definition.deprecated || null;
-      this.deprecatedMappings = definition.deprecatedMappings || {};
-      this.mappings = mappings;
-
-      if (definition.deprecated) {
-        console.warn(definition.deprecated);
-      }
-
-      this.resolveMappingCollisions();
-    }
-    /**
-     * If a mapping collides with a registered component name
-     * it renames the mapping to componentname-property
-     */
-
-
-    resolveMappingCollisions() {
-      var mappings = this.mappings;
-      var self = this;
-      Object.keys(mappings).forEach(function resolveCollision(key) {
-        var newAttribute;
-
-        if (key !== key.toLowerCase()) {
-          warn('Mapping keys should be specified in lower case. The mapping key ' + key + ' may not be recognized');
-        }
-
-        if (components[key]) {
-          newAttribute = mappings[key].replace('.', '-');
-          mappings[newAttribute] = mappings[key];
-          delete mappings[key];
-          console.warn('The primitive ' + self.tagName.toLowerCase() + ' has a mapping collision. ' + 'The attribute ' + key + ' has the same name as a registered component and' + ' has been renamed to ' + newAttribute);
-        }
-      });
-    }
-
-    getExtraComponents() {
-      var attr;
-      var data;
-      var i;
-      var mapping;
-      var mixins;
-      var path;
-      var self = this; // Gather component data from default components.
-
-      data = utils.clone(this.defaultComponentsFromPrimitive); // Factor in mixins to overwrite default components.
-
-      mixins = this.getAttribute('mixin');
-
-      if (mixins) {
-        mixins = mixins.trim().split(' ');
-        mixins.forEach(function applyMixin(mixinId) {
-          var mixinComponents = self.sceneEl.querySelector('#' + mixinId).componentCache;
-          Object.keys(mixinComponents).forEach(function setComponent(name) {
-            data[name] = extend(data[name], mixinComponents[name]);
-          });
-        });
-      } // Gather component data from mappings.
-
-
-      for (i = 0; i < this.attributes.length; i++) {
-        attr = this.attributes[i];
-        mapping = this.mappings[attr.name];
-
-        if (mapping) {
-          path = utils.entity.getComponentPropertyPath(mapping);
-
-          if (path.constructor === Array) {
-            data[path[0]] = data[path[0]] || {};
-            data[path[0]][path[1]] = attr.value.trim();
-          } else {
-            data[path] = attr.value.trim();
+  var primitive = registerElement(name, {
+    prototype: Object.create(AEntity.prototype, {
+      defaultComponentsFromPrimitive: {
+        value: definition.defaultComponents || definition.defaultAttributes || {}
+      },
+      deprecated: {
+        value: definition.deprecated || null
+      },
+      deprecatedMappings: {
+        value: definition.deprecatedMappings || {}
+      },
+      mappings: {
+        value: definition.mappings || {}
+      },
+      createdCallback: {
+        value: function () {
+          if (definition.deprecated) {
+            console.warn(definition.deprecated);
           }
 
-          continue;
+          this.resolveMappingCollisions();
         }
-      }
+      },
 
-      return data;
       /**
-       * For the base to be extensible, both objects must be pure JavaScript objects.
-       * The function assumes that base is undefined, or null or a pure object.
+       * If a mapping collides with a registered component name
+       * it renames the mapping to componentname-property
        */
+      resolveMappingCollisions: {
+        value: function () {
+          var mappings = this.mappings;
+          var self = this;
+          Object.keys(mappings).forEach(function resolveCollision(key) {
+            var newAttribute;
 
-      function extend(base, extension) {
-        if (isUndefined(base)) {
-          return copy(extension);
+            if (key !== key.toLowerCase()) {
+              warn('Mapping keys should be specified in lower case. The mapping key ' + key + ' may not be recognized');
+            }
+
+            if (components[key]) {
+              newAttribute = mappings[key].replace('.', '-');
+              mappings[newAttribute] = mappings[key];
+              delete mappings[key];
+              console.warn('The primitive ' + self.tagName.toLowerCase() + ' has a mapping collision. ' + 'The attribute ' + key + ' has the same name as a registered component and' + ' has been renamed to ' + newAttribute);
+            }
+          });
         }
+      },
+      getExtraComponents: {
+        value: function () {
+          var attr;
+          var data;
+          var i;
+          var mapping;
+          var mixins;
+          var path;
+          var self = this; // Gather component data from default components.
 
-        if (isUndefined(extension)) {
-          return copy(base);
+          data = utils.clone(this.defaultComponentsFromPrimitive); // Factor in mixins to overwrite default components.
+
+          mixins = this.getAttribute('mixin');
+
+          if (mixins) {
+            mixins = mixins.trim().split(' ');
+            mixins.forEach(function applyMixin(mixinId) {
+              var mixinComponents = self.sceneEl.querySelector('#' + mixinId).componentCache;
+              Object.keys(mixinComponents).forEach(function setComponent(name) {
+                data[name] = extend(data[name], mixinComponents[name]);
+              });
+            });
+          } // Gather component data from mappings.
+
+
+          for (i = 0; i < this.attributes.length; i++) {
+            attr = this.attributes[i];
+            mapping = this.mappings[attr.name];
+
+            if (mapping) {
+              path = utils.entity.getComponentPropertyPath(mapping);
+
+              if (path.constructor === Array) {
+                data[path[0]] = data[path[0]] || {};
+                data[path[0]][path[1]] = attr.value.trim();
+              } else {
+                data[path] = attr.value.trim();
+              }
+
+              continue;
+            }
+          }
+
+          return data;
+          /**
+           * For the base to be extensible, both objects must be pure JavaScript objects.
+           * The function assumes that base is undefined, or null or a pure object.
+           */
+
+          function extend(base, extension) {
+            if (isUndefined(base)) {
+              return copy(extension);
+            }
+
+            if (isUndefined(extension)) {
+              return copy(base);
+            }
+
+            if (isPureObject(base) && isPureObject(extension)) {
+              return utils.extendDeep(base, extension);
+            }
+
+            return copy(extension);
+          }
+
+          function isUndefined(value) {
+            return typeof value === 'undefined';
+          }
+
+          function copy(value) {
+            if (isPureObject(value)) {
+              return utils.extendDeep({}, value);
+            }
+
+            return value;
+          }
+
+          function isPureObject(value) {
+            return value !== null && value.constructor === Object;
+          }
         }
+      },
 
-        if (isPureObject(base) && isPureObject(extension)) {
-          return utils.extendDeep(base, extension);
+      /**
+       * Sync to attribute to component property whenever mapped attribute changes.
+       * If attribute is mapped to a component property, set the component property using
+       * the attribute value.
+       */
+      attributeChangedCallback: {
+        value: function (attr, oldVal, value) {
+          var componentName = this.mappings[attr];
+
+          if (attr in this.deprecatedMappings) {
+            console.warn(this.deprecatedMappings[attr]);
+          }
+
+          if (!attr || !componentName) {
+            return;
+          } // Set value.
+
+
+          setComponentProperty(this, componentName, value);
         }
-
-        return copy(extension);
       }
+    })
+  }); // Store.
 
-      function isUndefined(value) {
-        return typeof value === 'undefined';
-      }
-
-      function copy(value) {
-        if (isPureObject(value)) {
-          return utils.extendDeep({}, value);
-        }
-
-        return value;
-      }
-
-      function isPureObject(value) {
-        return value !== null && value.constructor === Object;
-      }
-    }
-    /**
-     * Sync to attribute to component property whenever mapped attribute changes.
-     * If attribute is mapped to a component property, set the component property using
-     * the attribute value.
-     */
-
-
-    attributeChangedCallback(attr, oldVal, value) {
-      var componentName = this.mappings[attr];
-
-      if (attr in this.deprecatedMappings) {
-        console.warn(this.deprecatedMappings[attr]);
-      }
-
-      if (!attr || !componentName) {
-        super.attributeChangedCallback(attr, oldVal, value);
-        return;
-      } // Set value.
-
-
-      setComponentProperty(this, componentName, value);
-    }
-
-  };
-  customElements.define(name, primitiveClass);
-  primitiveClass.mappings = mappings; // Store.
-
-  primitives[name] = primitiveClass;
-  return primitiveClass;
+  primitives[name] = primitive;
+  return primitive;
 };
 /**
  * Add component mappings using schema.
@@ -34266,7 +34017,7 @@ registerPrimitive('a-sky', utils.extendDeep({}, getMeshMixin(), {
     },
     scale: '-1 1 1'
   },
-  mappings: utils.extendDeep({}, meshPrimitives['a-sphere'].mappings)
+  mappings: utils.extendDeep({}, meshPrimitives['a-sphere'].prototype.mappings)
 }));
 
 /***/ }),
@@ -35090,11 +34841,8 @@ registerGeometry('triangle', {
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 // Polyfill `Promise`.
-window.Promise = window.Promise || __webpack_require__(/*! promise-polyfill */ "./node_modules/promise-polyfill/Promise.js");
-
-__webpack_require__(/*! @ungap/custom-elements */ "./node_modules/@ungap/custom-elements/index.js"); // WebVR polyfill
+window.Promise = window.Promise || __webpack_require__(/*! promise-polyfill */ "./node_modules/promise-polyfill/Promise.js"); // WebVR polyfill
 // Check before the polyfill runs.
-
 
 window.hasNativeWebVRImplementation = !!window.navigator.getVRDisplays || !!window.navigator.getVRDevices;
 window.hasNativeWebXRImplementation = navigator.xr !== undefined; // If native WebXR or WebVR are defined WebVRPolyfill does not initialize.
@@ -35187,9 +34935,9 @@ __webpack_require__(/*! ./shaders/index */ "./src/shaders/index.js"); // Registe
 __webpack_require__(/*! ./systems/index */ "./src/systems/index.js"); // Register standard systems.
 
 
-var ANode = (__webpack_require__(/*! ./core/a-node */ "./src/core/a-node.js").ANode);
+var ANode = __webpack_require__(/*! ./core/a-node */ "./src/core/a-node.js");
 
-var AEntity = (__webpack_require__(/*! ./core/a-entity */ "./src/core/a-entity.js").AEntity); // Depends on ANode and core components.
+var AEntity = __webpack_require__(/*! ./core/a-entity */ "./src/core/a-entity.js"); // Depends on ANode and core components.
 
 
 __webpack_require__(/*! ./core/a-assets */ "./src/core/a-assets.js");
@@ -35203,7 +34951,7 @@ __webpack_require__(/*! ./extras/components/ */ "./src/extras/components/index.j
 
 __webpack_require__(/*! ./extras/primitives/ */ "./src/extras/primitives/index.js");
 
-console.log('A-Frame Version: 1.3.0 (Date 2022-10-27, Commit #633cc89a)');
+console.log('A-Frame Version: 1.3.0 (Date 2022-11-25, Commit #c95b883f)');
 console.log('THREE Version (https://github.com/supermedium/three.js):', pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
 module.exports = window.AFRAME = {
@@ -35216,6 +34964,7 @@ module.exports = window.AFRAME = {
   coreComponents: Object.keys(components),
   geometries: (__webpack_require__(/*! ./core/geometry */ "./src/core/geometry.js").geometries),
   registerComponent: registerComponent,
+  registerElement: (__webpack_require__(/*! ./core/a-register-element */ "./src/core/a-register-element.js").registerElement),
   registerGeometry: registerGeometry,
   registerPrimitive: registerPrimitive,
   registerShader: registerShader,
@@ -35452,6 +35201,7 @@ module.exports.Shader = registerShader('flat', {
     getMaterialData(data, this.materialData);
     this.rendererSystem.applyColorCorrection(this.materialData.color);
     this.material = new THREE.MeshBasicMaterial(this.materialData);
+    utils.material.updateMap(this, data);
   },
   update: function (data) {
     this.updateMaterial(data);
@@ -36222,6 +35972,29 @@ module.exports.Shader = registerShader('standard', {
     this.rendererSystem.applyColorCorrection(this.materialData.color);
     this.rendererSystem.applyColorCorrection(this.materialData.emissive);
     this.material = new THREE.MeshStandardMaterial(this.materialData);
+    utils.material.updateMap(this, data);
+
+    if (data.normalMap) {
+      utils.material.updateDistortionMap('normal', this, data);
+    }
+
+    if (data.displacementMap) {
+      utils.material.updateDistortionMap('displacement', this, data);
+    }
+
+    if (data.ambientOcclusionMap) {
+      utils.material.updateDistortionMap('ambientOcclusion', this, data);
+    }
+
+    if (data.metalnessMap) {
+      utils.material.updateDistortionMap('metalness', this, data);
+    }
+
+    if (data.roughnessMap) {
+      utils.material.updateDistortionMap('roughness', this, data);
+    }
+
+    this.updateEnvMap(data);
   },
   update: function (data) {
     this.updateMaterial(data);
@@ -51885,7 +51658,7 @@ class WorkerPool {
 /***/ ((module) => {
 
 "use strict";
-module.exports = JSON.parse('{"name":"aframe","version":"1.3.0","description":"A web framework for building virtual reality experiences.","homepage":"https://aframe.io/","main":"dist/aframe-master.js","scripts":{"dev":"cross-env INSPECTOR_VERSION=dev webpack serve","dist":"node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max","dist:max":"webpack --config webpack.config.js","dist:min":"webpack --config webpack.prod.config.js","docs":"markserv --dir docs --port 9001","preghpages":"node ./scripts/preghpages.js","ghpages":"ghpages -p gh-pages/","lint":"semistandard -v | snazzy","lint:fix":"semistandard --fix","precommit":"npm run lint","prepush":"node scripts/testOnlyCheck.js","prerelease":"node scripts/release.js 1.2.0 1.3.0","start":"npm run dev","start:https":"npm run dev -- --server-type https","test":"karma start ./tests/karma.conf.js","test:docs":"node scripts/docsLint.js","test:firefox":"npm test -- --browsers Firefox","test:chrome":"npm test -- --browsers Chrome","test:nobrowser":"NO_BROWSER=true npm test","test:node":"mocha --ui tdd tests/node"},"repository":"aframevr/aframe","license":"MIT","files":["dist/*","docs/**/*","src/**/*","vendor/**/*"],"dependencies":{"@ungap/custom-elements":"^1.1.0","buffer":"^6.0.3","custom-event-polyfill":"^1.0.6","debug":"ngokevin/debug#noTimestamp","deep-assign":"^2.0.0","load-bmfont":"^1.2.3","object-assign":"^4.0.1","present":"0.0.6","promise-polyfill":"^3.1.0","super-animejs":"^3.1.0","super-three":"^0.144.0","three-bmfont-text":"dmarcos/three-bmfont-text#21d017046216e318362c48abd1a48bddfb6e0733","webvr-polyfill":"^0.10.12"},"devDependencies":{"@babel/core":"^7.17.10","babel-loader":"^8.2.5","babel-plugin-istanbul":"^6.1.1","chai":"^4.3.6","chai-shallow-deep-equal":"^1.4.0","chalk":"^1.1.3","cross-env":"^7.0.3","css-loader":"^6.7.1","ghpages":"0.0.8","git-rev":"^0.2.1","glob":"^8.0.3","husky":"^0.11.7","jsdom":"^20.0.0","karma":"^6.4.0","karma-chai-shallow-deep-equal":"0.0.4","karma-chrome-launcher":"^3.1.1","karma-coverage":"^2.2.0","karma-env-preprocessor":"^0.1.1","karma-firefox-launcher":"^2.1.2","karma-mocha":"^2.0.1","karma-mocha-reporter":"^2.2.5","karma-sinon-chai":"^2.0.2","karma-webpack":"^5.0.0","markserv":"github:sukima/markserv#feature/fix-broken-websoketio-link","mocha":"^10.0.0","replace-in-file":"^2.5.3","semistandard":"^9.0.0","shelljs":"^0.7.7","shx":"^0.2.2","sinon":"<12.0.0","sinon-chai":"^3.7.0","snazzy":"^5.0.0","style-loader":"^3.3.1","too-wordy":"ngokevin/too-wordy","webpack":"^5.73.0","webpack-cli":"^4.10.0","webpack-dev-server":"^4.11.0","webpack-merge":"^5.8.0","write-good":"^1.0.8"},"link":true,"semistandard":{"ignore":["build/**","dist/**","examples/**/shaders/*.js","**/vendor/**"]},"keywords":["3d","aframe","cardboard","components","oculus","three","three.js","rift","vive","vr","web-components","webvr"],"engines":{"node":">= 4.6.0","npm":">= 2.15.9"}}');
+module.exports = JSON.parse('{"name":"aframe","version":"1.3.0","description":"A web framework for building virtual reality experiences.","homepage":"https://aframe.io/","main":"dist/aframe-master.js","scripts":{"dev":"cross-env INSPECTOR_VERSION=dev webpack serve","dist":"node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max","dist:max":"webpack --config webpack.config.js","dist:min":"webpack --config webpack.prod.config.js","docs":"markserv --dir docs --port 9001","preghpages":"node ./scripts/preghpages.js","ghpages":"ghpages -p gh-pages/","lint":"semistandard -v | snazzy","lint:fix":"semistandard --fix","precommit":"npm run lint","prepush":"node scripts/testOnlyCheck.js","prerelease":"node scripts/release.js 1.2.0 1.3.0","start":"npm run dev","start:https":"npm run dev -- --server-type https","test":"karma start ./tests/karma.conf.js","test:docs":"node scripts/docsLint.js","test:firefox":"npm test -- --browsers Firefox","test:chrome":"npm test -- --browsers Chrome","test:nobrowser":"NO_BROWSER=true npm test","test:node":"mocha --ui tdd tests/node"},"repository":"aframevr/aframe","license":"MIT","files":["dist/*","docs/**/*","src/**/*","vendor/**/*"],"dependencies":{"buffer":"^6.0.3","custom-event-polyfill":"^1.0.6","debug":"ngokevin/debug#noTimestamp","deep-assign":"^2.0.0","document-register-element":"dmarcos/document-register-element#8ccc532b7f3744be954574caf3072a5fd260ca90","load-bmfont":"^1.2.3","object-assign":"^4.0.1","present":"0.0.6","promise-polyfill":"^3.1.0","super-animejs":"^3.1.0","super-three":"^0.144.0","three-bmfont-text":"dmarcos/three-bmfont-text#21d017046216e318362c48abd1a48bddfb6e0733","webvr-polyfill":"^0.10.12"},"devDependencies":{"@babel/core":"^7.17.10","babel-loader":"^8.2.5","babel-plugin-istanbul":"^6.1.1","chai":"^4.3.6","chai-shallow-deep-equal":"^1.4.0","chalk":"^1.1.3","cross-env":"^7.0.3","css-loader":"^6.7.1","ghpages":"0.0.8","git-rev":"^0.2.1","glob":"^8.0.3","husky":"^0.11.7","jsdom":"^20.0.0","karma":"^6.4.0","karma-chai-shallow-deep-equal":"0.0.4","karma-chrome-launcher":"^3.1.1","karma-coverage":"^2.2.0","karma-env-preprocessor":"^0.1.1","karma-firefox-launcher":"^2.1.2","karma-mocha":"^2.0.1","karma-mocha-reporter":"^2.2.5","karma-sinon-chai":"^2.0.2","karma-webpack":"^5.0.0","markserv":"github:sukima/markserv#feature/fix-broken-websoketio-link","mocha":"^10.0.0","replace-in-file":"^2.5.3","semistandard":"^9.0.0","shelljs":"^0.7.7","shx":"^0.2.2","sinon":"<12.0.0","sinon-chai":"^3.7.0","snazzy":"^5.0.0","style-loader":"^3.3.1","too-wordy":"ngokevin/too-wordy","webpack":"^5.73.0","webpack-cli":"^4.10.0","webpack-dev-server":"^4.11.0","webpack-merge":"^5.8.0","write-good":"^1.0.8"},"link":true,"semistandard":{"ignore":["build/**","dist/**","examples/**/shaders/*.js","**/vendor/**"]},"keywords":["3d","aframe","cardboard","components","oculus","three","three.js","rift","vive","vr","web-components","webvr"],"engines":{"node":">= 4.6.0","npm":">= 2.15.9"}}');
 
 /***/ })
 
