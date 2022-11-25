@@ -33,7 +33,9 @@
       <a class="btn btn-default" href="@avatar_url@">Manage Avatar</a>
     </div>
     <div class="flex-12">
-      <a class="btn btn-default" href="@room_url@">Enter VR</a>
+      <if @write_p;literal@ true>
+        <a class="btn btn-default" href="@room_url@">Enter VR</a>
+      </if>
       <if @write_p;literal@ true and @stream_url@ not nil>
         <a class="btn btn-default" href="@stream_url@">Stream to Room</a>
       </if>

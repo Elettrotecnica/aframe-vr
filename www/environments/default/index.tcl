@@ -5,10 +5,8 @@ ad_page_contract {
 
 }
 
-auth::require_login
-if {![acs_user::site_wide_admin_p]} {
-    ns_returnunauthorized
-    ad_script_abort
-}
+::permission::require_permission \
+    -object_id [ad_conn package_id] \
+    -privilege write
 
 set package_url [ad_conn package_url]
