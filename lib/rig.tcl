@@ -14,6 +14,15 @@ if {$janus_url eq ""} {
         "Janus server not configured. This room will not use WebRTC features."
 }
 
+set environment [parameter::get -parameter environment -default default]
+set room_url environments/${environment}
+
+if {![regexp "^.*/$room_url/?\$" [ns_conn url]]} {
+    ad_log warning "Access to invalid environment detected."
+    ad_returnredirect [ad_conn package_url]$room_url
+    ad_script_abort
+}
+
 aframe_vr::room::require
 
 set janus_room [parameter::get -parameter janus_room]
