@@ -2,8 +2,6 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <title>Hello, WebVR! • A-Frame</title>
-    <meta name="description" content="Hello, WebVR! • A-Frame">
     <include src="/packages/aframe-vr/lib/header">
   </head>
   <body>

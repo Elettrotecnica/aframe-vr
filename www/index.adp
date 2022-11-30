@@ -34,7 +34,7 @@
     </div>
     <div class="flex-12">
       <if @write_p;literal@ true>
-        <a class="btn btn-default" href="@room_url@">Enter VR</a>
+        <a class="btn btn-default" href="enter-vr">Enter VR</a>
       </if>
       <if @write_p;literal@ true and @stream_url@ not nil>
         <a class="btn btn-default" href="@stream_url@">Stream to Room</a>
