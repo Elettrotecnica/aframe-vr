@@ -4,7 +4,9 @@
   <a-camera id="client-@user_id;literal@"
             simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
             oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@"
-            janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@">
+            <if @janus_url@ not nil>
+               janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
+            </if>>
   </a-camera>
   <!-- hand controls -->
   <a-entity id="client-@user_id;literal@-left-hand"

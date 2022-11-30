@@ -10,11 +10,8 @@ set username [person::name -person_id $user_id]
 
 set janus_url [parameter::get -parameter janus_url -default ""]
 if {$janus_url eq ""} {
-    if {[security::secure_conn_p]} {
-        set janus_url https://localhost:8089/janus
-    } else {
-        set janus_url http://localhost:8088/janus
-    }
+    ns_log notice "Aframe VR instance [ad_conn package_id]:" \
+        "Janus server not configured. This room will not use WebRTC features."
 }
 
 aframe_vr::room::require
