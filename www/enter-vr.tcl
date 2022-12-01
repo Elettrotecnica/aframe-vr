@@ -10,3 +10,5 @@ ad_page_contract {
 
 set environment [parameter::get -parameter environment -default default]
 set room_url environments/${environment}
+
+set webrtc_p [expr {[parameter::get -parameter janus_url -default ""] ne ""}]
