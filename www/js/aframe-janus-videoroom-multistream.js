@@ -58,7 +58,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     // can set the 'string_ids' property to true in the plugin conf to
     // use strings. In such setup, one must also set 'stringIds'
     // component flag to true.
-    var id = this.data.id ? this.data.id : this.el.getAttribute('id');
+    const id = this.data.id ? this.data.id : this.el.getAttribute('id');
     this.stringIds = this.data.stringIds;
     if (this.stringIds) {
       // With string ids I can use the display property for the human
@@ -97,7 +97,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
   _toggleMute: function () {
     if (this.pluginHandle) {
-      var muted = this.pluginHandle.isAudioMuted();
+      const muted = this.pluginHandle.isAudioMuted();
       if (this.data.muted && !muted) {
         window.Janus.log('Muting local stream...');
         this.pluginHandle.muteAudio();
@@ -129,13 +129,13 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     }
     this.remoteTracks[feed.id].push(track);
 
-    let id = this.stringIds ? feed.id : feed.display;
-    let e = document.getElementById(id);
-    if (!e || ! e.object3D) {
+    const id = this.stringIds ? feed.id : feed.display;
+    const e = document.getElementById(id);
+    if (!e || !e.object3D) {
       return;
     }
 
-    let stream = new MediaStream([track]);
+    const stream = new MediaStream([track]);
     if (track.kind === 'video') {
       // Track is a video: we require a video element that will
       // become the material of our object.
@@ -169,8 +169,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       return;
     }
 
-    let id = this.stringIds ? feed.id : feed.display;
-    let e = document.getElementById(id);
+    const id = this.stringIds ? feed.id : feed.display;
+    const e = document.getElementById(id);
 
     if (!e || ! e.object3D) {
       return;
@@ -178,7 +178,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
     if (track.kind === 'video') {
       e.setAttribute('material', 'src', null);
-      let v = e.querySelector('video');
+      const v = e.querySelector('video');
       if (v) {
         v.parentElement.removeChild(v);
       }
@@ -190,7 +190,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
   _unsubscribeFrom: function (id) {
     // Unsubscribe from this publisher
-    var feed = this.feedStreams[id];
+    const feed = this.feedStreams[id];
     if (!feed) {
       return;
     }
@@ -210,7 +210,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     delete this.feeds[id];
     delete this.feedStreams[id];
     // Send an unsubscribe request
-    var unsubscribe = {
+    const unsubscribe = {
       request: 'unsubscribe',
       streams: [{ feed: id }]
     };
@@ -225,16 +225,16 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     // Publish our stream
 
     // We want sendonly audio
-    let tracks = [];
+    const tracks = [];
     tracks.push({ type: 'audio', capture: true, recv: false });
 
-    var self = this;
+    const self = this;
     this.pluginHandle.createOffer({
       tracks: tracks,
       success: function (jsep) {
         window.Janus.debug('Got publisher SDP!');
         window.Janus.debug(jsep);
-        var publish = { request: 'configure', audio: true, video: false };
+        const publish = { request: 'configure', audio: true, video: false };
         // You can force a specific codec to use when publishing by using the
         // audiocodec and videocodec properties, for instance:
         // publish['audiocodec'] = 'opus'
@@ -273,11 +273,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     if (this.remoteFeed) {
       // Prepare the streams to subscribe to, as an array: we have the list of
       // streams the feeds are publishing, so we can choose what to pick or skip
-      var subscription = [];
-      for (var s in sources) {
-        var streams = sources[s];
-        for (var i in streams) {
-          var stream = streams[i];
+      const subscription = [];
+      for (const s in sources) {
+        const streams = sources[s];
+        for (const i in streams) {
+          const stream = streams[i];
           // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
           if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
              (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
@@ -327,11 +327,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         window.Janus.log('  -- This is a multistream subscriber');
         // Prepare the streams to subscribe to, as an array: we have the list of
         // streams the feed is publishing, so we can choose what to pick or skip
-        var subscription = [];
-        for (var s in sources) {
-          var streams = sources[s];
-          for (var i in streams) {
-            var stream = streams[i];
+        const subscription = [];
+        for (const s in sources) {
+          const streams = sources[s];
+          for (const i in streams) {
+            const stream = streams[i];
             // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
             if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
                (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
@@ -360,7 +360,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           }
         }
         // We wait for the plugin to send us an offer
-        var subscribe = {
+        const subscribe = {
           request: 'join',
           room: self.room,
           pin: self.pin,
@@ -386,7 +386,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       },
       onmessage: function (msg, jsep) {
         window.Janus.debug(' ::: Got a message (subscriber) :::', msg);
-        var event = msg['videoroom'];
+        const event = msg['videoroom'];
         window.Janus.debug('Event: ' + event);
         if (msg['error']) {
           window.Janus.error(msg['error']);
@@ -397,19 +397,20 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             window.Janus.log('Successfully attached to feed in room ' + msg['room']);
           } else if (event === 'event') {
             // Check if we got an event on a simulcast-related event from this publisher
-            var mid = msg['mid'];
-            var substream = msg['substream'];
-            var temporal = msg['temporal'];
-            if ((substream !== null && substream !== undefined) || (temporal !== null && temporal !== undefined)) {
+            const mid = msg['mid'];
+            const substream = msg['substream'];
+            const temporal = msg['temporal'];
+            if ((substream !== null && substream !== undefined) ||
+                (temporal !== null && temporal !== undefined)) {
               // Check which this feed this refers to
-              var sub = self.subStreams[mid];
-              var feed = self.feedStreams[sub.feed_id];
+              const sub = self.subStreams[mid];
+              const feed = self.feedStreams[sub.feed_id];
               if (!self.simulcastStarted[sub.feed_id]) {
                 self.simulcastStarted[sub.feed_id] = true;
               }
 
               // Check the substream
-              var index = feed;
+              const index = feed;
               if (substream === 0) {
                 window.Janus.log('Switched simulcast substream! (lower quality)', null, {timeOut: 2000});
               } else if (substream === 1) {
@@ -432,8 +433,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         }
         if (msg['streams']) {
           // Update map of subscriptions by mid
-          for (var i in msg['streams']) {
-            var mid = msg['streams'][i]['mid'];
+          for (const i in msg['streams']) {
+            const mid = msg['streams'][i]['mid'];
             self.subStreams[mid] = msg['streams'][i];
           }
         }
@@ -452,7 +453,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             success: function (jsep) {
               window.Janus.debug('Got SDP!');
               window.Janus.debug(jsep);
-              var body = { request: 'start', room: self.room };
+              const body = { request: 'start', room: self.room };
               self.remoteFeed.send({ message: body, jsep: jsep });
             },
             error: function (error) {
@@ -467,8 +468,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       onremotetrack: function (track, mid, on) {
         window.Janus.debug('Remote track (mid=' + mid + ') ' + (on ? 'added' : 'removed') + ':', track);
         // Which publisher are we getting on this mid?
-        var sub = self.subStreams[mid];
-        var feed = self.feedStreams[sub.feed_id];
+        const sub = self.subStreams[mid];
+        const feed = self.feedStreams[sub.feed_id];
         window.Janus.debug(' >> This track is coming from feed ' + sub.feed_id + ':', feed);
         if (on) {
           if (sub.feed_id == self.id) {
@@ -483,7 +484,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       },
       oncleanup: function () {
         window.Janus.log(' ::: Got a cleanup notification (remote feed) :::');
-        for (var i in self.feeds) {
+        for (const i in self.feeds) {
           if (self.bitrateTimer[i]) {
             clearInterval(self.bitrateTimer[i]);
           }
@@ -496,7 +497,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
   },
 
   _connect: function () {
-    var self = this;
+    const self = this;
 
     // Initialize the library (all console debuggers enabled)
     window.Janus.init({
@@ -526,7 +527,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     self.pluginHandle = pluginHandle;
                     window.Janus.log('Plugin attached! (' + self.pluginHandle.getPlugin() + ', id=' + self.pluginHandle.getId() + ')');
                     window.Janus.log('  -- This is a publisher/manager');
-                    var register = {
+                    const register = {
                       request: 'join',
                       room: self.room,
                       pin: self.pin,
@@ -552,14 +553,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   },
                   webrtcState: function (on) {
                     window.Janus.log('Janus says our WebRTC PeerConnection is ' + (on ? 'up' : 'down') + ' now');
-                    // We might cap the bitrate here
-                    // var bitrate = self.bitrate;
-                    // if (bitrate === 0) {
-                    //   window.Janus.log('Not limiting bandwidth via REMB');
-                    // } else {
-                    //   window.Janus.log('Capping bandwidth to ' + bitrate + ' via REMB');
-                    // }
-                    // self.pluginHandle.send({ message: { request: 'configure', bitrate: bitrate }});
                   },
                   slowLink: function (uplink, lost, mid) {
                     window.Janus.warn('Janus reports problems ' + (uplink ? 'sending' : 'receiving') +
@@ -567,7 +560,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   },
                   onmessage: function (msg, jsep) {
                     window.Janus.debug(' ::: Got a message (publisher) :::', msg);
-                    var event = msg['videoroom'];
+                    const event = msg['videoroom'];
                     window.Janus.debug('Event: ' + event);
                     if (event != undefined && event != null) {
                       if (event === 'joined') {
@@ -578,18 +571,18 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         self._publishOwnFeed();
                         // Any new feed to attach to?
                         if (msg['publishers']) {
-                          var list = msg['publishers'];
+                          const list = msg['publishers'];
                           window.Janus.debug('Got a list of available publishers/feeds:', list);
-                          var sources = null;
-                          for (var f in list) {
+                          const sources = [];
+                          for (const f in list) {
                             if (list[f]['dummy']) {
                               continue;
                             }
-                            var id = list[f]['id'];
-                            var display = list[f]['display'];
-                            var streams = list[f]['streams'];
-                            for (var i in streams) {
-                              var stream = streams[i];
+                            const id = list[f]['id'];
+                            const display = list[f]['display'];
+                            const streams = list[f]['streams'];
+                            for (const i in streams) {
+                              const stream = streams[i];
                               stream['id'] = id;
                               stream['display'] = display;
                             }
@@ -599,12 +592,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               streams: streams
                             }
                             window.Janus.debug('  >> [' + id + '] ' + display + ':', streams);
-                            if (!sources) {
-                              sources = [];
-                            }
                             sources.push(streams);
                           }
-                          if (sources) {
+                          if (sources.length > 0) {
                             self._subscribeTo(sources);
                           }
                         }
@@ -615,9 +605,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                       } else if (event === 'event') {
                         // Any info on our streams or a new feed to attach to?
                         if (msg['streams']) {
-                          var streams = msg['streams'];
-                          for (var i in streams) {
-                            var stream = streams[i];
+                          const streams = msg['streams'];
+                          for (const i in streams) {
+                            const stream = streams[i];
                             stream['id'] = self.id;
                             stream['display'] = self.display;
                           }
@@ -627,18 +617,18 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                             streams: streams
                           }
                         } else if (msg['publishers']) {
-                          var list = msg['publishers'];
+                          const list = msg['publishers'];
                           window.Janus.debug('Got a list of available publishers/feeds:', list);
-                          var sources = null;
-                          for (var f in list) {
+                          const sources = [];
+                          for (const f in list) {
                             if (list[f]['dummy']) {
                               continue;
                             }
-                            var id = list[f]['id'];
-                            var display = list[f]['display'];
-                            var streams = list[f]['streams'];
-                            for (var i in streams) {
-                              var stream = streams[i];
+                            const id = list[f]['id'];
+                            const display = list[f]['display'];
+                            const streams = list[f]['streams'];
+                            for (const i in streams) {
+                              const stream = streams[i];
                               stream['id'] = id;
                               stream['display'] = display;
                             }
@@ -648,22 +638,19 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               streams: streams
                             }
                             window.Janus.debug('  >> [' + id + '] ' + display + ':', streams);
-                            if (!sources) {
-                              sources = [];
-                            }
                             sources.push(streams);
                           }
-                          if (sources) {
+                          if (sources.length > 0) {
                             self._subscribeTo(sources);
                           }
                         } else if (msg['leaving']) {
                           // One of the publishers has gone away?
-                          var leaving = msg['leaving'];
+                          const leaving = msg['leaving'];
                           window.Janus.log('Publisher left: ' + leaving);
                           self._unsubscribeFrom(leaving);
                         } else if (msg['unpublished']) {
                           // One of the publishers has unpublished?
-                          var unpublished = msg['unpublished'];
+                          const unpublished = msg['unpublished'];
                           window.Janus.log('Publisher left: ' + unpublished);
                           if (unpublished === 'ok') {
                             // That's us
