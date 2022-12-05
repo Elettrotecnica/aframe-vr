@@ -32,10 +32,10 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   send: function (data) {
-    var self = this;
     if (this.websocket.readyState === window.WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(data));
     } else {
+      const self = this;
       this.websocket.addEventListener('open', function () {
         self.websocket.send(JSON.stringify(data));
       });
@@ -43,8 +43,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _defaultWsURI: function () {
-    var proto = window.location.protocol;
-    var host = window.location.host;
+    const proto = window.location.protocol;
+    const host = window.location.host;
     return (proto === 'https:' ? 'wss:' : 'ws:') + '//' + host + '/aframe-vr/connect';
   },
 
@@ -58,8 +58,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // default, the attribute named after the property is
     // changed).
     var i = 0;
-    var elementsToUpdate = el.querySelectorAll('[data-' + property + ']');
-    for (var e of elementsToUpdate) {
+    const elementsToUpdate = el.querySelectorAll('[data-' + property + ']');
+    for (const e of elementsToUpdate) {
       var att = e.getAttribute('data-' + property);
       if (att.length <= 0) {
         att = property;
@@ -83,7 +83,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         console.error('Element ' + data.id + ' does not belong to the scene.');
       }
     } else {
-      var template = document.querySelector(data.template);
+      const template = document.querySelector(data.template);
       if (template) {
         el = template.content.firstElementChild.cloneNode(true);
         el.setAttribute('id', data.id);
@@ -118,14 +118,14 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _delete: function (data) {
     // Delete an item locally
-    var el = document.getElementById(data.id);
+    const el = document.getElementById(data.id);
     if (!el) return;
     el.parentElement.removeChild(el);
   },
 
   _onMessage: function (e) {
     // Handle the different kinds of websocket events
-    var m = JSON.parse(e.data);
+    const m = JSON.parse(e.data);
     switch (m.type) {
       case 'create':
         this._onRemoteCreate(m);
@@ -150,7 +150,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   _onRemoteUpdate: function (data) {
     // React to update notification by updating the local
     // item
-    var el = document.getElementById(data.id);
+    const el = document.getElementById(data.id);
     if (!el || el.sceneEl !== this.sceneEl) return;
     this._update(el, data);
   },
@@ -162,15 +162,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _connect: function () {
-    var self = this;
-    var websocket;
+    const self = this;
+    const websocket = new window.WebSocket(this.wsURI);
 
-    // Connect to the websocket backend.
-    if ('WebSocket' in window) {
-      websocket = new window.WebSocket(this.wsURI);
-    } else {
-      websocket = new window.MozWebSocket(this.wsURI);
-    }
     websocket.onopen = function (e) {
       console.log('Connected');
     };
@@ -225,7 +219,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   remove: function () {
-    var data = {
+    const data = {
       id: this.networkId,
       type: 'delete'
     };
@@ -233,47 +227,42 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   _doAttach: function () {
-    var self = this;
+    const self = this;
 
-    const data = {
+    this.networkedScene.send({
       type: 'create',
       id: this.networkId,
       name: this.name,
       template: this.template,
       color: this.color
-    };
-
-    this.networkedScene.send(data);
+    });
 
     this.el.setAttribute('absolute-position-listener', '');
     this.el.addEventListener('absolutePositionChanged', function (e) {
-      const data = {
+      self.networkedScene.send({
         id: self.networkId,
         type: 'update',
         position: JSON.stringify(e.detail)
-      };
-      self.networkedScene.send(data);
+      });
     });
 
     this.el.setAttribute('absolute-rotation-listener', '');
     this.el.addEventListener('absoluteRotationChanged', function (e) {
-      const data = {
+      self.networkedScene.send({
         id: self.networkId,
         type: 'update',
         rotation: JSON.stringify(e.detail)
-      };
-      self.networkedScene.send(data);
+      });
     });
 
     // This is a hand: also track gestures
-    if (this.el.components['hand-controls']) {
+    if (this.el.getAttribute('hand-controls')) {
       this.el.addEventListener('elGesture', function (e) {
-        const data = {
+        self.networkedScene.send({
           id: self.networkId,
           type: 'update',
           gesture: e.detail.gesture
-        };
-        self.networkedScene.send(data);
+        });
       });
     }
 
@@ -293,10 +282,10 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   _attach: function () {
-    var self = this;
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
-    if (this.el.components['hand-controls']) {
+    if (this.el.getAttribute('hand-controls')) {
+      const self = this;
       this.el.addEventListener('controllerconnected', function () {
         self._doAttach();
       });
