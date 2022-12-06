@@ -44,12 +44,12 @@
         thumbnail!
       </p>
     </div>
-    <if @avatar_image_exists_p@>
+    <if @avatar_image_exists_p;literal@ true>
       <div class="flex-12">
         <img src="@avatar_image_url@" width="320">
       </div>
     </if>
-    <if @avatar_exists_p@>
+    <if @avatar_exists_p;literal@ true>
       <div class="flex-12">
         You already have an avatar
         <a id="download" href="@avatar_url@">Download</a>
