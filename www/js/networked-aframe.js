@@ -23,6 +23,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     }
     this.websocket = this._connect();
     this.sceneEl = this.el.sceneEl;
+    this.isHeadset = window.AFRAME.utils.device.checkHeadsetConnected();
   },
 
   remove: function () {
@@ -197,7 +198,6 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     template: {type: 'string'},
     color: {type: 'color', default: ''},
     name: {default: ''},
-    selfCleanup: {type: 'boolean', default: true}
   },
 
   init: function () {
@@ -205,17 +205,21 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.template = this.data.template;
     this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
     this.name = this.data.name;
-    this.selfCleanup = this.data.selfCleanup;
-
-    this.lastPosition = null;
-    this.lastRotation = null;
 
     this.color = this.data.color;
     if (this.color.length === 0) {
       this.color = '#' + Math.random().toString(16).substr(2, 6);
     }
 
-    this._attach();
+    //
+    // Headsets will enter the scene at the start of immersive mode,
+    // browsers will enter right away.
+    //
+    if (this.networkedScene.isHeadset) {
+      this.el.sceneEl.addEventListener('enter-vr', this._attach.bind(this));
+    } else {
+      this._attach();
+    }
   },
 
   remove: function () {
@@ -266,31 +270,34 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
       });
     }
 
-    if (this.selfCleanup) {
+    if (this.networkedScene.isHeadset) {
+      //
       // window.onbeforeunload is not triggered easily on e.g. oculus,
       // because one does seldom close the app explicitly. We delete
-      // the avatar on exit of immersive mode
-      if (window.AFRAME.utils.device.checkHeadsetConnected()) {
-        this.el.sceneEl.addEventListener('exit-vr', function () {
-          self.remove();
-        });
-      }
-      window.addEventListener('beforeunload', function () {
-        self.remove();
-      });
+      // the avatar also on exit of immersive mode.
+      //
+      this.el.sceneEl.addEventListener('exit-vr', this.remove.bind(this));
     }
+    window.addEventListener('beforeunload', this.remove.bind(this));
   },
 
   _attach: function () {
+    //
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
+    //
     if (this.el.getAttribute('hand-controls')) {
-      const self = this;
-      this.el.addEventListener('controllerconnected', function () {
-        self._doAttach();
-      });
+      this.el.addEventListener('controllerconnected', this._doAttach.bind(this));
     } else {
       this._doAttach();
     }
   }
 });
+
+//
+// Local variables:
+//    mode: javascript
+//    js-indent-level: 2
+//    indent-tabs-mode: nil
+// End:
+//
