@@ -27,6 +27,12 @@
         <button id="mutebutton" class="btn btn-default btn-warning">Mute</button>
       </div>
       <canvas width="25" height="150"></canvas>
+      <div class="checkbox">
+        <label>
+          <input type="checkbox" id="pushtotalk">Use PushToTalk
+          <audio id="pushtotalk-audio" style="display: none;" src="audio/roger.mp3"></audio>
+        </label>
+      </div>
     </div>
   </div>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
@@ -44,15 +50,77 @@
             // generate the audio meter.
             //
             const iframe = document.querySelector('#vr').contentWindow.document;
-            document.querySelector('#mutebutton').addEventListener('click', function (e) {
+            const camera = iframe.querySelector('a-camera');
+            const janus = camera.getAttribute('janus-videoroom-entity');
+            const hands = iframe.querySelectorAll('a-entity[hand-controls]');
+            const audioTrack = stream.getAudioTracks()[0];
+            const muteButton = document.querySelector('#mutebutton');
+
+            function mute() {
+                camera.setAttribute('janus-videoroom-entity', 'muted', true);
+                audioTrack.enabled = false;
+                muteButton.classList.add('btn-primary');
+                muteButton.classList.remove('btn-warning');
+                muteButton.textContent = 'Unmute';
+            }
+            function unMute() {
+                camera.setAttribute('janus-videoroom-entity', 'muted', false);
+                audioTrack.enabled = true;
+                muteButton.classList.add('btn-warning');
+                muteButton.classList.remove('btn-primary');
+                muteButton.textContent = 'Mute';
+            }
+
+            muteButton.addEventListener('click', function (e) {
                 e.preventDefault();
-                const camera = iframe.querySelector('a-camera');
-                const muted = camera.getAttribute('janus-videoroom-entity').muted;
-                camera.setAttribute('janus-videoroom-entity', 'muted', !muted);
-                stream.getAudioTracks()[0].enabled = muted;
-                this.classList.toggle('btn-warning');
-                this.classList.toggle('btn-primary');
-                this.textContent = muted ? 'Mute' : 'Unmute';
+                const muted = janus.muted;
+                if (muted) {
+                    unMute();
+                } else {
+                    mute();
+                }
+            });
+
+            const pushToTalkAudio = document.querySelector('#pushtotalk-audio');
+            function pushToTalkHandler(e) {
+                console.log('HERE');
+                const muted = janus.muted;
+                if (muted &&
+                    (e.type === 'abuttondown' ||
+                     e.type === 'xbuttondown' ||
+                     (e.type === 'keydown' && e.ctrlKey)
+                    )
+                   ) {
+                    unMute();
+                    pushToTalkAudio.play();
+                } else {
+                    mute();
+                }
+            }
+            document.querySelector('#pushtotalk').addEventListener('click', function (e) {
+                if (this.checked) {
+                    mute();
+                    mutebutton.setAttribute('disabled', '');
+                    document.body.addEventListener('keydown', pushToTalkHandler);
+                    document.body.addEventListener('keyup', pushToTalkHandler);
+                    for (const hand of hands) {
+                        hand.addEventListener('abuttondown', pushToTalkHandler);
+                        hand.addEventListener('xbuttondown', pushToTalkHandler);
+                        hand.addEventListener('xbuttonup', pushToTalkHandler);
+                        hand.addEventListener('abuttonup', pushToTalkHandler);
+                    }
+                } else {
+                    unMute();
+                    mutebutton.removeAttribute('disabled');
+                    document.body.removeEventListener('keydown', pushToTalkHandler);
+                    document.body.removeEventListener('keyup', pushToTalkHandler);
+                    for (const hand of hands) {
+                        hand.removeEventListener('abuttondown', pushToTalkHandler);
+                        hand.removeEventListener('xbuttondown', pushToTalkHandler);
+                        hand.removeEventListener('xbuttonup', pushToTalkHandler);
+                        hand.removeEventListener('abuttonup', pushToTalkHandler);
+                    }
+                }
             });
 
             const audioContext = new window.AudioContext();
