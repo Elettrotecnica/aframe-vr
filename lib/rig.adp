@@ -1,4 +1,4 @@
-<a-entity id="avatar-model" gltf-model="#avatar-glb-@user_id;literal@" visible="false"></a-entity>
+<!-- <a-entity id="avatar-model" gltf-model="#avatar-glb-@user_id;literal@" visible="false"></a-entity> -->
 <a-entity id="myCameraRig">
   <!-- camera -->
   <a-camera id="client-@user_id;literal@"
