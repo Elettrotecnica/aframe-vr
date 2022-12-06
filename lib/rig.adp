@@ -20,4 +20,3 @@
             oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc">
   </a-entity>
 </a-entity>
-</a-scene>
