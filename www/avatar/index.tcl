@@ -114,7 +114,7 @@ ad_form \
             }
         }
 
-        if {!$thumbnail} {
+        if {!$thumbnail_p} {
             #
             # Something went wrong retrieving the avatar thumbnail, so
             # avatar appearance and thumbnail might not correspond
