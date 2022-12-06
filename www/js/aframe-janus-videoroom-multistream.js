@@ -117,74 +117,68 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     }
   },
 
-  // Adds a track to the scene
-  _addTrack: function (feed, track) {
-    if (!feed) {
-      return;
-    }
-    if (!this.remoteTracks[feed.id]) {
-      this.remoteTracks[feed.id] = [];
-    } else if (this.remoteTracks[feed.id].includes(track)) {
-      return;
-    }
-    this.remoteTracks[feed.id].push(track);
+  _feedToHTMLId: function (feed) {
+    return this.stringIds ? feed.id : feed.display;
+  },
 
-    const id = this.stringIds ? feed.id : feed.display;
-    const e = document.getElementById(id);
-    if (!e || !e.object3D) {
-      return;
-    }
-
+  _attachTrack: function (element, track) {
     const stream = new MediaStream([track]);
     if (track.kind === 'video') {
       // Track is a video: we require a video element that will
       // become the material of our object.
-      let v = e.querySelector('video');
+      let v = element.querySelector('video');
       if (!v) {
         v = document.createElement('video');
         v.autoplay = true;
         // We create an element with a unique id so that aframe won't
         // try to reuse old video elements from the cache.
         v.id = track.id + (new Date()).getTime();
-        e.appendChild(v);
+        element.appendChild(v);
       }
       v.srcObject = stream;
-      e.setAttribute('material', 'src', '#' + v.id);
+      element.setAttribute('material', 'src', '#' + v.id);
     } else if (track.kind === 'audio') {
       // Track is audio: we attach it to the element.
       // TODO: right now we assume audio to be positional.
-      e.setAttribute('mediastream-sound', '');
-      e.components['mediastream-sound'].setMediaStream(stream);
+      element.setAttribute('mediastream-sound', '');
+      element.components['mediastream-sound'].setMediaStream(stream);
       // We also attach the listener component to track sound on
       // this entity and be able to react to sound.
-      e.setAttribute('mediastream-listener', '');
-      e.components['mediastream-listener'].setMediaStream(stream);
+      element.setAttribute('mediastream-listener', '');
+      element.components['mediastream-listener'].setMediaStream(stream);
     }
-
   },
 
-  // Deletes a track from the scene
-  _removeTrack: function (feed, track) {
+  // Adds a track to the scene
+  _addTrack: function (feed, track) {
     if (!feed) {
       return;
     }
 
-    const id = this.stringIds ? feed.id : feed.display;
-    const e = document.getElementById(id);
+    const id = this._feedToHTMLId(feed);
 
-    if (!e || ! e.object3D) {
-      return;
+    if (!this.remoteTracks[id]) {
+      this.remoteTracks[id] = [];
     }
+    this.remoteTracks[id].push(track);
 
+    const element = document.getElementById(id);
+    if (element && element.object3D) {
+      this._attachTrack(element, track);
+    }
+  },
+
+  // Deletes a track from the scene
+  _removeTrack: function (element, track) {
     if (track.kind === 'video') {
-      e.setAttribute('material', 'src', null);
-      const v = e.querySelector('video');
+      element.setAttribute('material', 'src', null);
+      const v = element.querySelector('video');
       if (v) {
         v.parentElement.removeChild(v);
       }
     } else {
-      e.removeAttribute('mediastream-sound');
-      e.removeAttribute('mediastream-listener');
+      element.removeAttribute('mediastream-sound');
+      element.removeAttribute('mediastream-listener');
     }
   },
 
@@ -197,10 +191,15 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
     window.Janus.debug('Feed ' + id + ' (' + feed.display + ') has left the room, detaching');
 
-    for (track of this.remoteTracks[feed.id]) {
-      console.log('removing track', track, feed);
-      this._removeTrack(feed, track);
+    const htmlId = this._feedToHTMLId(feed);
+    const element = document.getElementById(htmlId);
+    if (element && element.object3D) {
+      for (track of this.remoteTracks[htmlId]) {
+        console.log('removing track from element', element, track);
+        this._removeTrack(element, track);
+      }
     }
+    delete this.remoteTracks[htmlId];
 
     if (this.bitrateTimer[id]) {
       clearInterval(this.bitrateTimer[id]);
@@ -218,7 +217,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       this.remoteFeed.send({ message: unsubscribe });
     }
     delete this.subscriptions[id];
-    delete this.remoteTracks[id];
   },
 
   _publishOwnFeed: function () {
@@ -322,7 +320,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       opaqueId: self.display,
       success: function (pluginHandle) {
         self.remoteFeed = pluginHandle;
-        self.remoteTracks = {};
         window.Janus.log('Plugin attached! (' + self.remoteFeed.getPlugin() + ', id=' + self.remoteFeed.getId() + ')');
         window.Janus.log('  -- This is a multistream subscriber');
         // Prepare the streams to subscribe to, as an array: we have the list of
@@ -704,6 +701,24 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               window.location.reload();
             }
           });
+      }
+    });
+
+    //
+    // We might have gotten the tracks already for element that are
+    // still not part of the scene. We detect whenever a new element
+    // is attached to the scene, check if this has tracks belonging to
+    // it and attach them.
+    //
+    this.el.sceneEl.addEventListener('child-attached', function (e) {
+      const element = e.detail.el;
+      const tracks = self.remoteTracks[element.id];
+      if (tracks) {
+        e.detail.el.addEventListener('loaded', function (e) {
+          for (const track of tracks) {
+            self._attachTrack(element, track);
+          }
+        });
       }
     });
   }
