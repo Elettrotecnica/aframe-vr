@@ -46,10 +46,11 @@ ad_form \
         #
         # Request the avatar's glb model.
         #
-        set tmpfile [ad_tmpnam]
+        set wfd [ad_opentmpfile tmpfile]
         set response [ns_http run -method GET -spoolsize 0 \
-                          -outputfile $tmpfile \
+                          -outputchan $wfd \
                           $avatar_api_url?useHands=false]
+        close $wfd
 
         set status [dict get $response status]
         if {$status != 200} {
@@ -99,10 +100,11 @@ ad_form \
                                   renders] \
                              0]
 
-                set tmpfile [ad_tmpnam]
+                set wfd [ad_opentmpfile tmpfile]
                 set response [ns_http run -method GET -spoolsize 0 \
                                   -outputfile $tmpfile \
                                   $url]
+                close $wfd
                 set status [dict get $response status]
                 if {$status == 200} {
                     file rename -force $tmpfile $avatar_image_file
