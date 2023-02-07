@@ -13,7 +13,7 @@ try {
     foreach package_id [apm_package_ids_from_key -package_key aframe-vr -mounted] {
         aframe_vr::room::require -package_id $package_id
     }
-} on error {errmg} {
+} on error {errmsg} {
     ad_log warning "Could not create the Janus rooms for VR. Is the Janus server down?" $errmsg
 }
 
