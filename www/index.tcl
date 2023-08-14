@@ -18,7 +18,13 @@ set environment [parameter::get -parameter environment -default default]
 
 set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
 if {[llength $surfaces] != 0} {
-    set stream_url streaming/
+    try {
+        aframe_vr::room::require
+    } on error {errmsg} {
+        ns_log warning $errmsg
+    } on ok {} {
+        set stream_url streaming/
+    }
 }
 
 

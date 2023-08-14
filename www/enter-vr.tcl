@@ -11,4 +11,14 @@ ad_page_contract {
 set environment [parameter::get -parameter environment -default default]
 set room_url environments/${environment}
 
-set webrtc_p [expr {[parameter::get -parameter janus_url -default ""] ne ""}]
+set janus_url [parameter::get -parameter janus_url -default ""]
+if {$janus_url ne ""} {
+    try {
+        aframe_vr::room::require
+    } on error {errmsg} {
+        ns_log warning $errmsg
+        set janus_url ""
+    }
+}
+
+set webrtc_p [expr {$janus_url ne ""}]
