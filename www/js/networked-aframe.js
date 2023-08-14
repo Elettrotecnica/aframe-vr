@@ -260,7 +260,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     });
 
     // This is a hand: also track gestures
-    if (this.el.getAttribute('hand-controls')) {
+    if (this.el.getAttribute('local-hand-controls')) {
       this.el.addEventListener('elGesture', function (e) {
         self.networkedScene.send({
           id: self.networkId,
@@ -286,7 +286,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     // Not all clients will support controllers, therefore, we attach
     // the hands to the network only upon controller connection.
     //
-    if (this.el.getAttribute('hand-controls')) {
+    if (this.el.getAttribute('local-hand-controls')) {
       this.el.addEventListener('controllerconnected', this._doAttach.bind(this));
     } else {
       this._doAttach();
