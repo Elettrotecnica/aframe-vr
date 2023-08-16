@@ -1945,9 +1945,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     if (el) {
       if (el.sceneEl === this.sceneEl) {
         this._update(el, data);
-        console.warn('Element ' + data.id + ' already exists. Updating instead.');
+        console.warn('Element already exists. Updating instead.', data);
       } else {
-        console.error('Element ' + data.id + ' does not belong to the scene.');
+        console.error('Element does not belong to the scene.', data);
       }
     } else {
       const template = document.querySelector(data.template);
@@ -1956,9 +1956,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         el.setAttribute('id', data.id);
         this._update(el, data);
         this.sceneEl.appendChild(el);
-        console.log('Element ' + data.id + ' created.');
+        console.log('Element created.', data);
       } else {
-        console.error('Template ' + template + ' not found while creating element ' + data.id + '.');
+        console.error('Template not found while creating element.', data);
       }
     }
     return el;
