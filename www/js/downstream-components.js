@@ -1954,8 +1954,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       if (template) {
         el = template.content.firstElementChild.cloneNode(true);
         el.setAttribute('id', data.id);
-        this._update(el, data);
         this.sceneEl.appendChild(el);
+        this._update(el, data);
         console.log('Element created.', data);
       } else {
         console.error('Template not found while creating element.', data);
