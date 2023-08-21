@@ -26,7 +26,7 @@ window.AFRAME.registerComponent('absolute-position-listener', {
       newValue.x = 0;
       newValue.y = 0;
       newValue.z = 0;
-      var el = this.el;
+      let el = this.el;
       while (el && el.object3D && el !== this.el.sceneEl) {
         newValue.x += el.object3D.position.x;
         newValue.y += el.object3D.position.y;
@@ -66,7 +66,7 @@ window.AFRAME.registerComponent('absolute-rotation-listener', {
       newValue.x = 0;
       newValue.y = 0;
       newValue.z = 0;
-      var el = this.el;
+      let el = this.el;
       while (el && el.object3D && el !== this.el.sceneEl) {
         newValue.x += el.object3D.rotation.x;
         newValue.y += el.object3D.rotation.y;
@@ -389,7 +389,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
 
     // If the user supplied a custom template for this node we will
     // use it, otherwise we default to an a-entity.
-    var el;
+    let el;
     if (nodeTemplate && nodeTemplate.content.firstElementChild) {
       el = nodeTemplate.content.firstElementChild.cloneNode(true);
     } else {
@@ -509,8 +509,8 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   },
 
   update: function () {
-    var self = this;
-    var el = this.el;
+    const self = this;
+    const el = this.el;
 
     if (this.data.lookAt) {
       this.lookAt = this.data.lookAt;
@@ -526,7 +526,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       this.idle = this.idleTimeout;
     }
 
-    var src = this.data.model;
+    const src = this.data.model;
     if (!src) { return; }
 
     this.remove();
@@ -1924,10 +1924,10 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // tells which is the real attribute we should change (by
     // default, the attribute named after the property is
     // changed).
-    var i = 0;
+    let i = 0;
     const elementsToUpdate = el.querySelectorAll('[data-' + property + ']');
     for (const e of elementsToUpdate) {
-      var att = e.getAttribute('data-' + property);
+      let att = e.getAttribute('data-' + property);
       if (att.length <= 0) {
         att = property;
       }
@@ -1941,7 +1941,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _create: function (data) {
     // Create an item locally
-    var el = document.getElementById(data.id);
+    let el = document.getElementById(data.id);
     if (el) {
       if (el.sceneEl === this.sceneEl) {
         this._update(el, data);
