@@ -2063,6 +2063,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     networkId: {type: 'string'},
     template: {type: 'string'},
     color: {type: 'color', default: ''},
+    randomColor: {type: 'boolean', default: false},
     name: {default: ''},
   },
 
@@ -2072,9 +2073,10 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
     this.name = this.data.name;
 
-    this.color = this.data.color;
-    if (this.color.length === 0) {
+    if (this.data.randomColor) {
       this.color = '#' + Math.random().toString(16).substr(2, 6);
+    } else {
+      this.color = this.data.color;
     }
 
     //
