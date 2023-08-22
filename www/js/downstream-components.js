@@ -1890,6 +1890,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     this.websocket = this._connect();
     this.sceneEl = this.el.sceneEl;
     this.isHeadset = window.AFRAME.utils.device.checkHeadsetConnected();
+
+    this._addDelegatedListeners();
   },
 
   remove: function () {
@@ -1907,6 +1909,83 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         self.websocket.send(JSON.stringify(data));
       });
     }
+  },
+
+  _clear: function () {
+    //
+    // Cleanup all our networked entities. Invoked before leaving a VR
+    // experience.
+    //
+    for (const e of document.querySelectorAll('[oacs-networked-entity]')) {
+      e.components['oacs-networked-entity'].remove();
+    }
+  },
+
+  _addDelegatedListeners: function () {
+    const self = this;
+    window.addEventListener('absolutePositionChanged', function (e) {
+      const component = e.target.components['oacs-networked-entity'];
+      if (component) {
+        self.send({
+          id: component.networkId,
+          type: 'update',
+          position: JSON.stringify(e.detail)
+        });
+      }
+    });
+    window.addEventListener('absoluteRotationChanged', function (e) {
+      const component = e.target.components['oacs-networked-entity'];
+      if (component) {
+        self.send({
+          id: component.networkId,
+          type: 'update',
+          rotation: JSON.stringify(e.detail)
+        });
+      }
+    });
+    window.addEventListener('elGesture', function (e) {
+      const component = e.target.components['oacs-networked-entity'];
+      //
+      // Track gesture. Note that this event is specific to the
+      // local-hand-control, so this must be a hand.
+      //
+      if (component) {
+        self.send({
+          id: component.networkId,
+          type: 'update',
+          gesture: e.detail.gesture
+        });
+      }
+    });
+
+    if (this.isHeadset) {
+      //
+      // window.onbeforeunload is not triggered easily on e.g. oculus,
+      // because one does seldom close the app explicitly. We delete
+      // the avatar also on exit of immersive mode.
+      //
+      window.addEventListener('exit-vr', this._clear);
+
+      window.addEventListener('enter-vr', function (e) {
+        const entities = document.querySelectorAll('[oacs-networked-entity]:not([local-hand-controls])');
+        for (const e of entities) {
+          e.components['oacs-networked-entity'].attach();
+        }
+      });
+
+      //
+      // Not all clients will support controllers, therefore, we attach
+      // the hands to the network only upon controller connection.
+      //
+      window.addEventListener('controllerconnected', function (e) {
+        const component = e.target.components['oacs-networked-entity'];
+        if (component && e.target.getAttribute('local-hand-controls')) {
+          component.attach();
+        }
+      });
+    }
+
+    window.addEventListener('beforeunload', this._clear);
   },
 
   _defaultWsURI: function () {
@@ -2080,13 +2159,14 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     }
 
     //
-    // Headsets will enter the scene at the start of immersive mode,
-    // browsers will enter right away.
+    // - headsets will enter the scene at the start of immersive mode
+    //   - handled in the networked scene
+    // - hands will be generated when controllers connect - handled in
+    //   the networked scene
+    // - browsers will enter right away - this we do now
     //
-    if (this.networkedScene.isHeadset) {
-      this.el.sceneEl.addEventListener('enter-vr', this._attach.bind(this));
-    } else {
-      this._attach();
+    if (!this.networkedScene.isHeadset) {
+      this.attach();
     }
   },
 
@@ -2098,7 +2178,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.networkedScene.send(data);
   },
 
-  _doAttach: function () {
+  attach: function () {
     const self = this;
 
     this.networkedScene.send({
@@ -2110,55 +2190,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     });
 
     this.el.setAttribute('absolute-position-listener', '');
-    this.el.addEventListener('absolutePositionChanged', function (e) {
-      self.networkedScene.send({
-        id: self.networkId,
-        type: 'update',
-        position: JSON.stringify(e.detail)
-      });
-    });
-
     this.el.setAttribute('absolute-rotation-listener', '');
-    this.el.addEventListener('absoluteRotationChanged', function (e) {
-      self.networkedScene.send({
-        id: self.networkId,
-        type: 'update',
-        rotation: JSON.stringify(e.detail)
-      });
-    });
-
-    // This is a hand: also track gestures
-    if (this.el.getAttribute('local-hand-controls')) {
-      this.el.addEventListener('elGesture', function (e) {
-        self.networkedScene.send({
-          id: self.networkId,
-          type: 'update',
-          gesture: e.detail.gesture
-        });
-      });
-    }
-
-    if (this.networkedScene.isHeadset) {
-      //
-      // window.onbeforeunload is not triggered easily on e.g. oculus,
-      // because one does seldom close the app explicitly. We delete
-      // the avatar also on exit of immersive mode.
-      //
-      this.el.sceneEl.addEventListener('exit-vr', this.remove.bind(this));
-    }
-    window.addEventListener('beforeunload', this.remove.bind(this));
-  },
-
-  _attach: function () {
-    //
-    // Not all clients will support controllers, therefore, we attach
-    // the hands to the network only upon controller connection.
-    //
-    if (this.el.getAttribute('local-hand-controls')) {
-      this.el.addEventListener('controllerconnected', this._doAttach.bind(this));
-    } else {
-      this._doAttach();
-    }
   }
 });
 
