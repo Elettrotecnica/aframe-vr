@@ -1917,7 +1917,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // experience.
     //
     for (const e of document.querySelectorAll('[oacs-networked-entity]')) {
-      e.components['oacs-networked-entity'].remove();
+      e.components['oacs-networked-entity'].delete();
     }
   },
 
@@ -1943,22 +1943,23 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         });
       }
     });
-    window.addEventListener('elGesture', function (e) {
-      const component = e.target.components['oacs-networked-entity'];
+
+    if (this.isHeadset) {
       //
       // Track gesture. Note that this event is specific to the
       // local-hand-control, so this must be a hand.
       //
-      if (component) {
-        self.send({
-          id: component.networkId,
-          type: 'update',
-          gesture: e.detail.gesture
-        });
-      }
-    });
+      window.addEventListener('elGesture', function (e) {
+        const component = e.target.components['oacs-networked-entity'];
+        if (component) {
+          self.send({
+            id: component.networkId,
+            type: 'update',
+            gesture: e.detail.gesture
+          });
+        }
+      });
 
-    if (this.isHeadset) {
       //
       // window.onbeforeunload is not triggered easily on e.g. oculus,
       // because one does seldom close the app explicitly. We delete
@@ -1966,6 +1967,10 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       //
       window.addEventListener('exit-vr', this._clear);
 
+      //
+      // On a headset, all networked entities that are not hands will
+      // be generated upon entering immersive mode.
+      //
       window.addEventListener('enter-vr', function (e) {
         const entities = document.querySelectorAll('[oacs-networked-entity]:not([local-hand-controls])');
         for (const e of entities) {
@@ -1985,6 +1990,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       });
     }
 
+    //
+    // When the page is closed, clear our stuff.
+    //
     window.addEventListener('beforeunload', this._clear);
   },
 
@@ -2159,18 +2167,29 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     }
 
     //
-    // - headsets will enter the scene at the start of immersive mode
-    //   - handled in the networked scene
-    // - hands will be generated when controllers connect - handled in
-    //   the networked scene
-    // - browsers will enter right away - this we do now
+    // When we are on a headset, our entity will be attached by the
+    // scene upon certain conditions. On a browser, we can proceed
+    // right away.
     //
     if (!this.networkedScene.isHeadset) {
       this.attach();
     }
   },
 
+  delete: function () {
+    const data = {
+      id: this.networkId,
+      type: 'delete'
+    };
+    this.networkedScene.send(data);
+  },
+
   remove: function () {
+    this.el.removeAttribute('absolute-position-listener');
+    this.el.removeAttribute('absolute-rotation-listener');
+  },
+
+  delete: function () {
     const data = {
       id: this.networkId,
       type: 'delete'
