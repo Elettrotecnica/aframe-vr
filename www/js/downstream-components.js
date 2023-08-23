@@ -1893,7 +1893,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this._addDelegatedListeners();
 
-    this.releasedEntities = {};
+    this.localTemplates = {};
   },
 
   remove: function () {
@@ -1911,6 +1911,26 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         self.websocket.send(JSON.stringify(data));
       });
     }
+  },
+
+  grab: function (id) {
+    //
+    // Attempt obtaining control over a networked entity.
+    //
+    this.send({
+      id: id,
+      type: 'release'
+    });
+  },
+
+  release: function (id) {
+    //
+    // Attempt relinquishing control over a networked entity.
+    //
+    this.send({
+      id: id,
+      type: 'grab'
+    });
   },
 
   _clear: function () {
@@ -2092,6 +2112,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       case 'create':
         this._onRemoteCreate(m);
         break;
+      case 'created':
+        this._onRemoteCreated(m);
+        break;
       case 'delete':
         this._onRemoteDelete(m);
         break;
@@ -2115,6 +2138,14 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     this._create(data);
   },
 
+  _onRemoteCreated: function (data) {
+    //
+    // We received confermation that our entity was created. Now we
+    // can start to display it.
+    //
+    document.getElementById(data.id)?.setAttribute("visible", true);
+  },
+
   _onRemoteUpdate: function (data) {
     // React to update notification by updating the local
     // item
@@ -2131,25 +2162,30 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _onRemoteGrab: function (data) {
     //
-    // Somebody left and asked us to take ownership of a shared entity
-    // we have previously released.
+    // Somebody asked us to take ownership of a shared entity we have
+    // previously released.
+    //
+    // Note: we remove the old entity and create a fresh one every
+    // time because extracting an entity from the dom triggers its
+    // destruction and not all components are capable of
+    // re-initialization.
     //
     const remoteEntity = document.getElementById(data.id);
-    const savedEntity = this.releasedEntities[data.id];
-    if (remoteEntity && savedEntity) {
+    const localTemplate = this.localTemplates[data.id];
+    if (remoteEntity && localTemplate) {
       //
       // Clone the frozen networked entity so that all of its
       // component are re-initialized.
       //
-      const newEntity = savedEntity.content.firstElementChild.cloneNode(true);
+      const localEntity = localTemplate.content.firstElementChild.cloneNode(true);
       //
       // Switch the remote-control entity with the networked one.
       //
-      this.sceneEl.replaceChild(newEntity, remoteEntity);
+      this.sceneEl.replaceChild(localEntity, remoteEntity);
       //
       // Apply current status to the new networked entity.
       //
-      this._update(newEntity, data);
+      this._update(localEntity, data);
     }
   },
 
@@ -2158,20 +2194,31 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // This happend when we tried to create a networked entity that is
     // already managed by somebody else.
     //
+    // Note: we remove the old entity and create a fresh one every
+    // time because extracting an entity from the dom triggers its
+    // destruction and not all components are capable of
+    // re-initialization.
+    //
     const el = document.querySelector('#' + data.id + '[oacs-networked-entity]');
     if (el) {
-      //
-      // We freeze the networked entity in a template. This extracts
-      // the entity from the page without triggering component
-      // removals.
-      //
-      const c = document.createElement('template');
-      c.content.appendChild(el);
-      this.releasedEntities[el.id] = c;
+      if (!this.localTemplates[el.id]) {
+        //
+        // First time we release an entity, this is saved away as
+        // template in case we will gain back control over it.
+        //
+        this.localTemplates[el.id] = document.createElement('template');
+        this.localTemplates[el.id].content.appendChild(el);
+      } else {
+        //
+        // In other cases, we just get the entity out of the way.
+        //
+        el.parentElement.removeChild(el);
+      }
       //
       // We can now create the remote-controlled version of the
       // entity.
       //
+      data.template = el.components['oacs-networked-entity'].template;
       this._create(data);
     }
   },
@@ -2217,6 +2264,14 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   init: function () {
+    //
+    // A networked entity starts invisible and becomes visible only
+    // when the backed confirms its creation. This is to avoid the
+    // entity starting its local behavior before we realize it is
+    // actually already taken and should use its remote one.
+    //
+    this.el.setAttribute('visible', false);
+
     this.networkedScene = this.el.sceneEl.systems['oacs-networked-scene'];
     this.template = this.data.template;
     this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');

@@ -82,23 +82,28 @@ namespace eval ws::aframevr {
                 #
                 nsv_array set vrchat-${chat} {}
 
-                set object_exists_p [nsv_get vrchat-${chat} ${id} status]
-                if {!$object_exists_p} {
+                if {![nsv_get vrchat-${chat} ${id} status]} {
                     set status [list]
                 }
 
-                if {$op eq "create"} {
-                    if {$object_exists_p &&
-                        [dict exists $status template] &&
-                        [dict exists $status owner] &&
-                        [dict get $status owner] ne $channel &&
-                        [::ws::send [dict get $status owner] ""]
-                    } {
+                if {$op ne "release" &&
+                    [dict exists $status owner] &&
+                    [dict get $status owner] ne $channel &&
+                    [::ws::send [dict get $status owner] ""]
+                } {
+                    #
+                    # For any operation except "release", we deny
+                    # acting on an existing object unless we are the
+                    # owners.
+                    #
+                    if {[dict exists $status template]} {
                         #
-                        # We were asked to create an object that is
-                        # already maintained by another active
-                        # peer. We will instruct the client to release
-                        # it instead of trying to control it as well.
+                        # The peer issuing the request will be asked to
+                        # release control over this object.
+                        #
+                        # A template is needed so that the peer will
+                        # know how to build its remote object
+                        # representation.
                         #
                         # The message will also carry the current
                         # status of the object so the client can sync
@@ -113,15 +118,8 @@ namespace eval ws::aframevr {
                                                  -opcode text \
                                                  [::ws::aframevr::object_to_json $status] \
                                                 ]
-                        return
-                    } else {
-                        #
-                        # We are the first creating this object, is
-                        # ours now.
-                        #
-                        dict set status owner $channel
-                        ns_log debug "vrchat-${chat} $id: creating" $msg "this belongs to" $channel
                     }
+                    return
                 }
 
                 if {$op eq "grab"} {
@@ -145,10 +143,6 @@ namespace eval ws::aframevr {
                     #
                     # We pick the first subscriber that is not us.
                     #
-                    # We use the subscribers in reversed order as a
-                    # cheap approach to avoid putting all of the
-                    # responsibility on the same peer.
-                    #
                     set transferred_p false
                     foreach c [::ws::subscribers $chat] {
                         if {$c ne $channel && [::ws::send $c $msg]} {
@@ -160,6 +154,16 @@ namespace eval ws::aframevr {
                     }
 
                     if {$transferred_p} {
+                        #
+                        # Inform the peer they may now release the
+                        # object.
+                        #
+                        dict unset status owner
+                        dict set status type release
+                        ::ws::send $channel [ns_connchan wsencode \
+                                                 -opcode text \
+                                                 [::ws::aframevr::object_to_json $status] \
+                                                ]
                         ns_log debug "vrchat-${chat} $id: transferred object ownership to $c"
                     } else {
                         #
@@ -172,12 +176,65 @@ namespace eval ws::aframevr {
                     return
                 }
 
+                if {$op eq "release"} {
+                    #
+                    # We want to get control over an object.
+                    #
+
+                    #
+                    # Relay the message to the current owner
+                    #
+                    if {[dict exists $status owner] &&
+                        [dict get $status owner] ne $channel} {
+                        ::ws::send [dict get $status owner] \
+                            [ns_connchan wsencode -opcode text $msg]
+                    }
+
+                    #
+                    # Save the new owner
+                    #
+                    dict set status owner $channel
+                    nsv_set vrchat-${chat} $id $status
+
+                    #
+                    # Inform the peer they may now take the object.
+                    #
+                    dict unset status owner
+                    dict set status type grab
+                    ::ws::send $channel [ns_connchan wsencode \
+                                             -opcode text \
+                                             [::ws::aframevr::object_to_json $status] \
+                                            ]
+                    return
+                }
+
+                #
+                # From here on, we assume we are either the rightful
+                # owners of this object, or that the previous owner
+                # has left.
+                #
+                dict set m owner $channel
+                ns_log debug "vrchat-${chat} $id: after" $msg "this object belongs to" $channel
+
                 #
                 # Update the server-side state of the object.
                 #
                 set status [dict merge $status $m]
                 nsv_set vrchat-${chat} $id $status
                 ns_log debug "vrchat-${chat} $id: persisting updated status" $status
+
+                if {$op eq "create"} {
+                    #
+                    # Reply back to the peer that their object was
+                    # created.
+                    #
+                    ::ws::send $channel [ns_connchan wsencode \
+                                             -opcode text \
+                                             [::ws::aframevr::object_to_json \
+                                                  [list id $id type created] \
+                                                 ] \
+                                            ]
+                }
             }
         }
 
