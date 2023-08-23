@@ -3,18 +3,30 @@ ad_library {
 }
 
 namespace eval ws::aframevr {
-    #
-    # The proc "connect" is called, whenever a new websocket is
-    # established.  The chat is named via the url to allow multiple
-    # independent chats on different urls.
-    #
+
     nsf::proc connect {} {
+        #
+        # Called whenever a new websocket is established.  The chat is
+        # named via the url to allow multiple independent chats on
+        # different urls.
+        #
         set chat [ns_conn url]
-	set channel [ws::handshake -callback [list ws::aframevr::send_to_all -chat $chat]]
+	set channel [::ws::handshake -callback [list ws::aframevr::handle_message -chat $chat]]
 	ws::subscribe $channel $chat
 
         ::ws::aframevr::send_objects \
             -chat $chat -channel $channel
+    }
+
+    nsf::proc object_to_json {
+        data
+    } {
+        #
+        # Serialize data to JSON
+        #
+        return [::json::write object {*}[dict map {k v} $data {
+            set v [::json::write string $v]
+        }]]
     }
 
     nsf::proc send_objects {
@@ -28,56 +40,153 @@ namespace eval ws::aframevr {
         foreach id [nsv_array names vrchat-${chat}] {
             set data [nsv_get vrchat-${chat} $id]
             dict set data type create
-            set json [::json::write object {*}[dict map {k v} $data {
-                set v [::json::write string $v]
-            }]]
+            set json [::ws::aframevr::object_to_json $data]
             ::ws::send $channel [ns_connchan wsencode -opcode text $json]
         }
     }
 
-    #
-    # Whenever we receive a message, send it to all subscribers of the
-    # chat, except the current one.
-    #
-    nsf::proc send_to_all {
+    nsf::proc handle_message {
         {-chat "chat"}
         channel msg
     } {
+        #
+        # Deal with websocket messages
+        #
+
+        #
+        # Client may send keepalive pings, we just log it in case.
+        #
         if {$msg eq "ping"} {
-            ns_log notice "websocket '$chat', channel '$channel': ping received."
+            ns_log debug "websocket '$chat', channel '$channel': ping received."
             return
         }
-        # ns_log warning "Received $msg"
 
-        try {
-            # Parse the message
-            set m [::json::json2dict $msg]
-            set id [dict get $m id]
+        #
+        # Parse the message
+        #
+        set m [::json::json2dict $msg]
 
-            if {[dict get $m type] eq "delete"} {
+        set id [dict get $m id]
+        set op [dict get $m type]
+
+        switch $op {
+            "delete" {
+                #
                 # Destroy object info
+                #
                 nsv_unset -nocomplain -- vrchat-${chat} $id
-            } else {
+            }
+            default {
+                #
                 # Make sure nsv exists
+                #
                 nsv_array set vrchat-${chat} {}
 
-                if {![nsv_get vrchat-${chat} ${id} status]} {
+                set object_exists_p [nsv_get vrchat-${chat} ${id} status]
+                if {!$object_exists_p} {
                     set status [list]
                 }
-                # Take note of all the relevant object status
-                # information and store it so that it can be provided
-                # to clients connecting in the future
-                nsv_set vrchat-${chat} $id [dict merge $status $m]
-                #ns_log warning "persisting $m from $msg"
-            }
 
-        } on error {errmsg} {
-            ns_log error "Parsing of $msg failed: $errmsg"
+                if {$op eq "create"} {
+                    if {$object_exists_p &&
+                        [dict exists $status template] &&
+                        [dict exists $status owner] &&
+                        [dict get $status owner] ne $channel &&
+                        [::ws::send [dict get $status owner] ""]
+                    } {
+                        #
+                        # We were asked to create an object that is
+                        # already maintained by another active
+                        # peer. We will instruct the client to release
+                        # it instead of trying to control it as well.
+                        #
+                        # The message will also carry the current
+                        # status of the object so the client can sync
+                        # it.
+                        #
+                        # We do not disclose the owner.
+                        #
+                        ns_log debug "vrchat-${chat} $id: this object belongs to" [dict get $status owner] "$channel will release it."
+                        dict unset status owner
+                        dict set status type release
+                        ::ws::send $channel [ns_connchan wsencode \
+                                                 -opcode text \
+                                                 [::ws::aframevr::object_to_json $status] \
+                                                ]
+                        return
+                    } else {
+                        #
+                        # We are the first creating this object, is
+                        # ours now.
+                        #
+                        dict set status owner $channel
+                        ns_log debug "vrchat-${chat} $id: creating" $msg "this belongs to" $channel
+                    }
+                }
+
+                if {$op eq "grab"} {
+                    #
+                    # We try to transfer ownership of this object to
+                    # somebody else.
+                    #
+
+                    #
+                    # Compute the message. We do not disclose the
+                    # owner.
+                    #
+                    set msg $status
+                    dict unset msg owner
+                    dict set msg type grab
+                    set msg [ns_connchan wsencode \
+                                 -opcode text \
+                                 [::ws::aframevr::object_to_json $msg] \
+                                ]
+
+                    #
+                    # We pick the first subscriber that is not us.
+                    #
+                    # We use the subscribers in reversed order as a
+                    # cheap approach to avoid putting all of the
+                    # responsibility on the same peer.
+                    #
+                    set transferred_p false
+                    foreach c [::ws::subscribers $chat] {
+                        if {$c ne $channel && [::ws::send $c $msg]} {
+                            dict set status owner $c
+                            nsv_set vrchat-${chat} $id $status
+                            set transferred_p true
+                            break
+                        }
+                    }
+
+                    if {$transferred_p} {
+                        ns_log debug "vrchat-${chat} $id: transferred object ownership to $c"
+                    } else {
+                        #
+                        # Nobody there to give this object to. We
+                        # delete the object.
+                        #
+                        nsv_unset -nocomplain -- vrchat-${chat} $id
+                        ns_log debug "vrchat-${chat} $id: no candidates for this object. Deleting..."
+                    }
+                    return
+                }
+
+                #
+                # Update the server-side state of the object.
+                #
+                set status [dict merge $status $m]
+                nsv_set vrchat-${chat} $id $status
+                ns_log debug "vrchat-${chat} $id: persisting updated status" $status
+            }
         }
 
-        set exclude [list $channel]
-        #set exclude [list]
-        ::ws::multicast -exclude $exclude $chat [ns_connchan wsencode -opcode text $msg]
+        #
+        # Default behavior is to broadcast the message as is to the
+        # other peers.
+        #
+        ns_log debug "vrchat-${chat} $id: broadcasting" $msg
+        ::ws::multicast -exclude [list $channel] $chat [ns_connchan wsencode -opcode text $msg]
     }
 }
 
