@@ -9,13 +9,48 @@
     <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
     <script src="https://c-frame.github.io/aframe-physics-system/dist/aframe-physics-system.js"></script>
     <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-      AFRAME.registerComponent('venue-physics', {
-        init: function() {
-          this.el.addEventListener('model-loaded', function () {
-            this.setAttribute('ammo-body', 'type: static');
-            this.setAttribute('ammo-shape', 'type: mesh');
-          });
-        }});
+      window.addEventListener('load', function () {
+        //
+        // When the venue physics model has finished loading, generate
+        // a static body from its mesh.
+        //
+        document.querySelector('a-gltf-model[src="#venue-physics"]').addEventListener('model-loaded', function () {
+          this.setAttribute('ammo-body', 'type: static');
+          this.setAttribute('ammo-shape', 'type: mesh');
+        });
+
+        //
+        // Make our local avatar a kinematic body
+        //
+        const camera = document.querySelector('a-camera');
+        camera.setAttribute('ammo-body', 'type: kinematic');
+        camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.0');
+
+        //
+        // Once controllers connect, make them a kinematic body.
+        //
+        for (const hand of document.querySelectorAll('[local-hand-control]')) {
+          hand.addEventListener('controllerconnected', function () {
+            this.setAttribute('ammo-body', 'type: kinematic');
+            this.setAttribute('ammo-shape', 'type: sphere');
+          }, {once: true });
+        }
+
+        document.querySelector('a-scene').addEventListener('collidestart', function (e) {
+          //
+          // When a physics-enabled networked entity, such as our hands
+          // touches another networked entity that we do not currently
+          // control, request to become this entity's owners.
+          //
+          const networkedScene = this.systems['oacs-networked-scene'];
+          const isNetworkedEntity = networkedScene.localTemplates[e.target.id];
+          const isCurrentlyOurs = e.target.getAttribute('oacs-networked-entity');
+          const isTouchedByUs = e.detail.targetEl.getAttribute('oacs-networked-entity');
+          if (isNetworkedEntity && !isCurrentlyOurs && isTouchedByUs) {
+            networkedScene.grab(e.target.id);
+          }
+        });
+      });
     </script>
   </head>
   <body>
@@ -31,9 +66,13 @@
         <a-asset-item id="venue" src="models/venue.glb"></a-asset-item>
         <a-asset-item id="navmesh" src="models/navmesh.glb"></a-asset-item>
         <img id="bake" src="models/venue-lightmap.webp">
+        <img id="ball-texture" src="models/ball.jpg">
 
         <template id="ball">
           <a-sphere
+             ammo-body="type: kinematic; emitCollisionEvents: true"
+             ammo-shape="type: sphere"
+             material="src: #ball-texture"
              radius="0.5">
           </a-sphere>
         </template>
@@ -54,14 +93,14 @@
          id="theball"
          position="-1 3 -1.5"
          radius="0.5"
+         material="src: #ball-texture"
          ammo-body="type: dynamic"
          ammo-shape="type: sphere">
       </a-sphere>
 
       <a-gltf-model
          src="#venue-physics"
-         visible="false"
-         venue-physics="">
+         visible="false">
       </a-gltf-model>
 
       <a-gltf-model
