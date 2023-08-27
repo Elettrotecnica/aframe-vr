@@ -14,15 +14,15 @@ needed to move things around on the scene and Janus does the WebRTC
 stuff for multimedia. This VR you can definitely host on premise! ;-)
 
 ## Main features
-* [ReadyPlayerMe](https://vr.readyplayer.me/) half-body avatar support.
+* [ReadyPlayerMe](https://vr.readyplayer.me/) half-body avatar support
 * virtual hands via VR controllers
 * teleport controls
 * audio chat and WebRTC multimedia using [janus-gateway and the multistream videoroom plugin](https://janus.conf.meetecho.com/mvideoroomtest.html)
+* shared interactive networked entities, that all participants can interact with
 
 ## Future (?) improvements
 * import items in VR via UI
-* networked interaction with the environment
-* any kind of validation of the networked actions. This makes it currently unsuitable for "low trust" scenarios such as competitive games
+* "application based" server-side validation of the networked actions. This makes it currently unsuitable for "low trust" scenarios such as competitive games
 * hybrid participation support (e.g. chat)
 * ...
 
