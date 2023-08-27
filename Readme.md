@@ -8,7 +8,7 @@ to [Mozilla Hubs](https://hubs.mozilla.com/) in spirit, based on
 
 ## Why implementing a worse Mozilla Hubs?
 Hubs is great, but also quite complex. It currently offers no way to
-self-host it on premise and is made by many moving party.  Here, the
+self-host it on premise and depends on many subsystems.  Here, the
 focus is on keeping it simple. NaviServer does the Websocket stuff
 needed to move things around on the scene and Janus does the WebRTC
 stuff for multimedia. This VR you can definitely host on premise! ;-)
