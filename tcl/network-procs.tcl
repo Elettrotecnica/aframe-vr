@@ -96,29 +96,22 @@ namespace eval ws::aframevr {
                     # acting on an existing object unless we are the
                     # owners.
                     #
-                    if {[dict exists $status template]} {
-                        #
-                        # The peer issuing the request will be asked to
-                        # release control over this object.
-                        #
-                        # A template is needed so that the peer will
-                        # know how to build its remote object
-                        # representation.
-                        #
-                        # The message will also carry the current
-                        # status of the object so the client can sync
-                        # it.
-                        #
-                        # We do not disclose the owner.
-                        #
-                        ns_log debug "vrchat-${chat} $id: this object belongs to" [dict get $status owner] "$channel will release it."
-                        dict unset status owner
-                        dict set status type release
-                        ::ws::send $channel [ns_connchan wsencode \
-                                                 -opcode text \
-                                                 [::ws::aframevr::object_to_json $status] \
-                                                ]
-                    }
+                    # The peer issuing the request will be asked to
+                    # release control over this object.
+                    #
+                    # The message will also carry the current
+                    # status of the object so the client can sync
+                    # it.
+                    #
+                    # We do not disclose the owner.
+                    #
+                    ns_log debug "vrchat-${chat} $id: this object belongs to" [dict get $status owner] "$channel will release it."
+                    dict unset status owner
+                    dict set status type release
+                    ::ws::send $channel [ns_connchan wsencode \
+                                             -opcode text \
+                                             [::ws::aframevr::object_to_json $status] \
+                                            ]
                     return
                 }
 
