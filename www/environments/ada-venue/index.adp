@@ -36,18 +36,26 @@
           }, {once: true });
         }
 
-        document.querySelector('a-scene').addEventListener('collidestart', function (e) {
-          //
-          // When a physics-enabled networked entity, such as our hands
-          // touches another networked entity that we do not currently
-          // control, request to become this entity's owners.
-          //
-          const networkedScene = this.systems['oacs-networked-scene'];
-          const isNetworkedEntity = networkedScene.localTemplates[e.target.id];
-          const isCurrentlyOurs = e.target.getAttribute('oacs-networked-entity');
-          const isTouchedByUs = e.detail.targetEl.getAttribute('oacs-networked-entity');
-          if (isNetworkedEntity && !isCurrentlyOurs && isTouchedByUs) {
-            networkedScene.grab(e.target.id);
+        const ball = document.querySelector('#ball');
+        ball.addEventListener('grab', function (e) {
+          if (this.components['ammo-body'].data.type === 'kinematic') {
+            this.removeAttribute('ammo-shape');
+            this.removeAttribute('ammo-body');
+            this.setAttribute('ammo-body', 'type: dynamic; emitCollisionEvents: false');
+            this.setAttribute('ammo-shape', 'type: sphere');
+          }
+        });
+        ball.addEventListener('release', function (e) {
+          if (this.components['ammo-body'].data.type === 'dynamic') {
+            this.removeAttribute('ammo-shape');
+            this.removeAttribute('ammo-body');
+            this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+            this.setAttribute('ammo-shape', 'type: sphere');
+          }
+        });
+        ball.addEventListener('collidestart', function (e) {
+          if (e.detail.targetEl.matches('a-camera, [local-hand-controls]')) {
+            e.target.components['oacs-networked-entity'].networkedScene.grab(this.id);
           }
         });
       });
@@ -59,7 +67,7 @@
        reflection="directionalLight:#dirlight;"
        renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
        shadow="type: pcfsoft"
-       physics="driver: ammo"
+       physics="driver: ammo; debug: false"
        >
       <a-assets>
         <a-asset-item id="venue-physics" src="models/venue-physics.glb"></a-asset-item>
@@ -67,15 +75,6 @@
         <a-asset-item id="navmesh" src="models/navmesh.glb"></a-asset-item>
         <img id="bake" src="models/venue-lightmap.webp">
         <img id="ball-texture" src="models/ball.jpg">
-
-        <template id="ball">
-          <a-sphere
-             ammo-body="type: kinematic; emitCollisionEvents: true"
-             ammo-shape="type: sphere"
-             material="src: #ball-texture"
-             radius="0.5">
-          </a-sphere>
-        </template>
 
         <include src="/packages/aframe-vr/lib/avatars">
 
@@ -90,7 +89,7 @@
 
       <a-sphere
          oacs-networked-entity="template: #ball; permanent: true"
-         id="theball"
+         id="ball"
          position="-1 3 -1.5"
          radius="0.5"
          material="src: #ball-texture"

@@ -1898,8 +1898,6 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this._addDelegatedListeners();
 
-    this.localTemplates = {};
-
     this.messageQueue = [];
   },
 
@@ -2147,7 +2145,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // We received confermation that our entity was created. Now we
     // can start to display it.
     //
-    document.getElementById(data.id)?.setAttribute("visible", true);
+    document.getElementById(data.id)?.setAttribute('visible', true);
   },
 
   _onRemoteUpdate: function (data) {
@@ -2166,64 +2164,33 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _onRemoteGrab: function (data) {
     //
-    // Somebody asked us to take ownership of a shared entity we have
-    // previously released.
+    // Entity was given back to us. Restart syncronizing its status
+    // with the network and notify the scene.
     //
-    // Note: we remove the old entity and create a fresh one every
-    // time because extracting an entity from the dom triggers its
-    // destruction and not all components are capable of
-    // re-initialization.
-    //
-    const remoteEntity = document.getElementById(data.id);
-    const localTemplate = this.localTemplates[data.id];
-    if (remoteEntity && localTemplate) {
-      //
-      // Clone the frozen networked entity so that all of its
-      // component are re-initialized.
-      //
-      const localEntity = localTemplate.content.firstElementChild.cloneNode(true);
-      //
-      // Switch the remote-control entity with the networked one.
-      //
-      this.sceneEl.replaceChild(localEntity, remoteEntity);
-      //
-      // Apply current status to the new networked entity.
-      //
-      this._update(localEntity, data);
+    const grabbedEntity = document.getElementById(data.id);
+    if (grabbedEntity &&
+        grabbedEntity.components &&
+        grabbedEntity.components['oacs-networked-entity']) {
+      grabbedEntity.components['oacs-networked-entity'].play();
+      grabbedEntity.setAttribute('visible', true);
+      grabbedEntity.emit('grab');
     }
   },
 
   _onRemoteRelease: function (data) {
     //
-    // This happend when we tried to create a networked entity that is
-    // already managed by somebody else.
+    // We were asked to relinquish control over this entity. Stop
+    // sending our own status, get status from the network and notify
+    // the scene.
     //
-    // Note: we remove the old entity and create a fresh one every
-    // time because extracting an entity from the dom triggers its
-    // destruction and not all components are capable of
-    // re-initialization.
-    //
-    const el = document.querySelector('#' + data.id + '[oacs-networked-entity]');
-    if (el) {
-      if (!this.localTemplates[el.id]) {
-        //
-        // First time we release an entity, this is saved away as
-        // template in case we will gain back control over it.
-        //
-        this.localTemplates[el.id] = document.createElement('template');
-        this.localTemplates[el.id].content.appendChild(el);
-      } else {
-        //
-        // In other cases, we just get the entity out of the way.
-        //
-        el.parentElement.removeChild(el);
-      }
-      //
-      // We can now create the remote-controlled version of the
-      // entity.
-      //
-      data.template = el.components['oacs-networked-entity'].template;
-      this._create(data);
+    const releasedEntity = document.getElementById(data.id);
+    if (releasedEntity &&
+        releasedEntity.components &&
+        releasedEntity.components['oacs-networked-entity']) {
+      releasedEntity.components['oacs-networked-entity'].pause();
+      releasedEntity.setAttribute('visible', true);
+      this._update(releasedEntity, data);
+      releasedEntity.emit('release');
     }
   },
 
@@ -2302,7 +2269,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     }
   },
 
-  remove: function () {
+  pause: function () {
     //
     // Removing this component just shuts down event generation on
     // changes, but does not delete the item for the other peers.
@@ -2311,12 +2278,26 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.el.removeAttribute('absolute-rotation-listener');
   },
 
+  play: function () {
+    //
+    // Removing this component just shuts down event generation on
+    // changes, but does not delete the item for the other peers.
+    //
+    this.el.setAttribute('absolute-position-listener', '');
+    this.el.setAttribute('absolute-rotation-listener', '');
+  },
+
   delete: function () {
-    const data = {
-      id: this.networkId,
-      type: this.permanent ? 'grab' : 'delete'
-    };
-    this.networkedScene.send(data);
+    //
+    // Delete the entity only if we are currently in charge of it.
+    //
+    if (this.isPlaying) {
+      const data = {
+        id: this.networkId,
+        type: this.permanent ? 'grab' : 'delete'
+      };
+      this.networkedScene.send(data);
+    }
   },
 
   attach: function () {
@@ -2329,9 +2310,6 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
       template: this.template,
       color: this.color
     });
-
-    this.el.setAttribute('absolute-position-listener', '');
-    this.el.setAttribute('absolute-rotation-listener', '');
   }
 });
 
