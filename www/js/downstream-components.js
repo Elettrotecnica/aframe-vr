@@ -1912,8 +1912,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this.messageQueue = [];
 
-    this.grabEvent = new Event('grab');
-    this.releaseEvent = new Event('release');
+    this.grabEvent = new Event('grab', {bubbles: true});
+    this.releaseEvent = new Event('release', {bubbles: true});
   },
 
   remove: function () {
