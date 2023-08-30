@@ -1911,6 +1911,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     this._addDelegatedListeners();
 
     this.messageQueue = [];
+
+    this.grabEvent = new Event('grab');
+    this.releaseEvent = new Event('release');
   },
 
   remove: function () {
@@ -2185,7 +2188,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         grabbedEntity.components['oacs-networked-entity']) {
       grabbedEntity.components['oacs-networked-entity'].play();
       grabbedEntity.setAttribute('visible', true);
-      grabbedEntity.emit('grab');
+      grabbedEntity.dispatchEvent(this.grabEvent);
     }
   },
 
@@ -2202,7 +2205,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       releasedEntity.components['oacs-networked-entity'].pause();
       releasedEntity.setAttribute('visible', true);
       this._update(releasedEntity, data);
-      releasedEntity.emit('release');
+      releasedEntity.dispatchEvent(this.releaseEvent);
     }
   },
 
