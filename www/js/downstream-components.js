@@ -9,14 +9,20 @@
  * would not change.
 */
 window.AFRAME.registerComponent('absolute-position-listener', {
-  tick: function () {
-    const newValue = this._getAbsolutePosition();
-    const stringCoords = window.AFRAME.utils.coordinates.stringify(newValue);
-    if (this.lastPosition !== stringCoords) {
-      this.el.emit('absolutePositionChanged', newValue);
-      this.lastPosition = stringCoords;
-    }
-  },
+  tick: (function () {
+    const lastPosition = {'x': 0, 'y': 0, 'z': 0};
+    return function () {
+      const newValue = this._getAbsolutePosition();
+      if (lastPosition.x !== newValue.x ||
+          lastPosition.y !== newValue.y ||
+          lastPosition.z !== newValue.z) {
+        this.el.emit('absolutePositionChanged', newValue);
+        lastPosition.x = newValue.x;
+        lastPosition.y = newValue.y;
+        lastPosition.z = newValue.z;
+      }
+    };
+  })(),
   _getAbsolutePosition: (function () {
     const newValue = {'x': 0, 'y': 0, 'z': 0};
     return function () {
@@ -49,14 +55,20 @@ window.AFRAME.registerComponent('absolute-position-listener', {
  * would not change.
 */
 window.AFRAME.registerComponent('absolute-rotation-listener', {
-  tick: function () {
-    const newValue = this._getAbsoluteRotation();
-    const stringCoords = window.AFRAME.utils.coordinates.stringify(newValue);
-    if (this.lastRotation !== stringCoords) {
-      this.el.emit('absoluteRotationChanged', newValue);
-      this.lastRotation = stringCoords;
-    }
-  },
+  tick: (function () {
+    const lastRotation = {'x': 0, 'y': 0, 'z': 0};
+    return function () {
+      const newValue = this._getAbsoluteRotation();
+      if (lastRotation.x !== newValue.x ||
+          lastRotation.y !== newValue.y ||
+          lastRotation.z !== newValue.z) {
+        this.el.emit('absoluteRotationChanged', newValue);
+        lastRotation.x = newValue.x;
+        lastRotation.y = newValue.y;
+        lastRotation.z = newValue.z;
+      }
+    };
+  })(),
   _getAbsoluteRotation: (function () {
     const newValue = {'x': 0, 'y': 0, 'z': 0};
     return function () {
