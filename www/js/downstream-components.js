@@ -156,7 +156,7 @@ window.AFRAME.registerComponent('mediastream-sound', {
 
   destroySound () {
     if (this.sound) {
-      this.el.emit('sound-source-removed', { soundSource: this.soundSource });
+      // this.el.emit('sound-source-removed', { soundSource: this.soundSource });
       this.sound.disconnect();
       this.el.removeObject3D(this.attrName);
       this.sound = null;
@@ -206,7 +206,7 @@ window.AFRAME.registerComponent('mediastream-sound', {
 
     this.soundSource = this.sound.context.createMediaStreamSource(newStream);
     this.sound.setNodeSource(this.soundSource);
-    this.el.emit('sound-source-set', { soundSource: this.soundSource });
+    // this.el.emit('sound-source-set', { soundSource: this.soundSource });
     this.stream = newStream;
   }
 });
