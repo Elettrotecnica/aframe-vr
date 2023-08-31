@@ -234,7 +234,7 @@ window.AFRAME.registerComponent('mediastream-listener', {
     const self = this;
     this.el.sceneEl.addEventListener('mediastream-listener-loud', function (e) {
       if (e.target !== self.el) {
-        self.loudItems[e.target] = e.target.components['mediastream-listener'].loudness;
+        self.loudItems[e.target] = [e.target, e.target.components['mediastream-listener'].loudness];
         console.log(self.el, ' detects sound from ', e.target);
       }
     });
@@ -268,15 +268,16 @@ window.AFRAME.registerComponent('mediastream-listener', {
     const myPosition = this.el.object3D.position;
 
     for (const e in this.loudItems) {
-      const loudness = this.loudItems[e];
-      const soundPosition = e.object3D.position;
+      const el = this.loudItems[e][0];
+      const loudness = this.loudItems[e][1];
+      const soundPosition = el.object3D.position;
       const distance = myPosition.distanceTo(soundPosition);
       // We use an inverse quadratic attenuation based on the
       // distance.
       const noise = loudness / distance ** 2;
       if (noise > 0 && noise > maxNoise) {
         maxNoise = noise;
-        maxItem = e;
+        maxItem = el;
       }
     }
 
