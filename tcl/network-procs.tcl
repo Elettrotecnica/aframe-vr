@@ -37,8 +37,7 @@ namespace eval ws::aframevr {
         # Serialize every object in the room and send them to the
         # newly connected client so that they can populate the room.
         #
-        foreach id [nsv_array names vrchat-${chat}] {
-            set data [nsv_get vrchat-${chat} $id]
+        foreach {id data} [nsv_array get vrchat-${chat}] {
             dict set data type create
             set json [::ws::aframevr::object_to_json $data]
             ::ws::send $channel [ns_connchan wsencode -opcode text $json]
