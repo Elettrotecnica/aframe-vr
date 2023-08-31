@@ -17,16 +17,6 @@
                 position="0 -0.4 -0.5"
                 rotation="0 180 0">
     </template>
-    <template id="avatar-left-hand-@user_data.user_id;literal@">
-      <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly;"
-                copy-material="from: #client-@user_data.user_id;literal@; fromObjectName: Wolf3D_Hands; toObjectName: handR2320">
-      </a-entity>
-    </template>
-    <template id="avatar-right-hand-@user_data.user_id;literal@">
-      <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly;"
-                copy-material="from: #client-@user_data.user_id;literal@; fromObjectName: Wolf3D_Hands; toObjectName: handR2320">
-      </a-entity>
-    </template>
   </if>
   <else>
     <template id="avatar-template-@user_data.user_id;literal@">
@@ -71,11 +61,11 @@
         </a-entity>
       </a-entity>
     </template>
-    <template id="avatar-left-hand-@user_data.user_id;literal@">
-      <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
-    </template>
-    <template id="avatar-right-hand-@user_data.user_id;literal@">
-      <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
-    </template>
   </else>
+  <template id="avatar-left-hand-@user_data.user_id;literal@">
+    <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+  </template>
+  <template id="avatar-right-hand-@user_data.user_id;literal@">
+    <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+  </template>
 </multiple>
