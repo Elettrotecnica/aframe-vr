@@ -24,6 +24,13 @@ namespace eval ws::aframevr {
         #
         # Serialize data to JSON
         #
+
+        #
+        # The owner is an internal property that we do not want to
+        # disclose.
+        #
+        dict unset data owner
+
         return [::json::write object {*}[dict map {k v} $data {
             set v [::json::write string $v]
         }]]
@@ -105,7 +112,6 @@ namespace eval ws::aframevr {
                     # We do not disclose the owner.
                     #
                     ns_log debug "vrchat-${chat} $id: this object belongs to" [dict get $status owner] "$channel will release it."
-                    dict unset status owner
                     dict set status type release
                     ::ws::send $channel [ns_connchan wsencode \
                                              -opcode text \
@@ -125,7 +131,6 @@ namespace eval ws::aframevr {
                     # owner.
                     #
                     set msg $status
-                    dict unset msg owner
                     dict set msg type grab
                     set msg [ns_connchan wsencode \
                                  -opcode text \
@@ -150,7 +155,6 @@ namespace eval ws::aframevr {
                         # Inform the peer they may now release the
                         # object.
                         #
-                        dict unset status owner
                         dict set status type release
                         ::ws::send $channel [ns_connchan wsencode \
                                                  -opcode text \
@@ -191,7 +195,6 @@ namespace eval ws::aframevr {
                     #
                     # Inform the peer they may now take the object.
                     #
-                    dict unset status owner
                     dict set status type grab
                     ::ws::send $channel [ns_connchan wsencode \
                                              -opcode text \
