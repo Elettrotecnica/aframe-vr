@@ -51,10 +51,13 @@
             //
             const iframe = document.querySelector('#vr').contentWindow.document;
             const camera = iframe.querySelector('a-camera');
-            const janus = camera.getAttribute('janus-videoroom-entity');
             const hands = iframe.querySelectorAll('a-entity[hand-controls]');
             const audioTrack = stream.getAudioTracks()[0];
             const muteButton = document.querySelector('#mutebutton');
+
+            function isMuted() {
+                return camera.getAttribute('janus-videoroom-entity').muted;
+            }
 
             function mute() {
                 camera.setAttribute('janus-videoroom-entity', 'muted', true);
@@ -73,7 +76,7 @@
 
             muteButton.addEventListener('click', function (e) {
                 e.preventDefault();
-                const muted = janus.muted;
+                const muted = isMuted();
                 if (muted) {
                     unMute();
                 } else {
@@ -83,8 +86,7 @@
 
             const pushToTalkAudio = document.querySelector('#pushtotalk-audio');
             function pushToTalkHandler(e) {
-                console.log('HERE');
-                const muted = janus.muted;
+                const muted = isMuted();
                 if (muted &&
                     (e.type === 'abuttondown' ||
                      e.type === 'xbuttondown' ||
