@@ -2,16 +2,19 @@
   <property name="doc(title)">Enter VR</property>
 
   <style>
+    #toolbar {
+       display: flex;
+       flex-wrap: nowrap;
+    }
     #toolbar > div {
-       float: left;
-       margin-left: 10px;
+       margin-left: 2pt;
     }
     #audiometer {
        display: none;
        text-align: center;
     }
     #mutebutton {
-       margin-bottom: 5px;
+       margin-bottom: 1pt;
     }
   </style>
   <iframe
