@@ -226,35 +226,36 @@ window.AFRAME.registerComponent('mediastream-listener', {
     this.dataArray = null;
     this.analyser = null;
     this.isMakingNoise = false;
+    this.loudness = 0;
+    this.loudEvent = new Event('mediastream-listener-loud', {bubbles: true});
+    this.silentEvent = new Event('mediastream-listener-silent', {bubbles: true});
+
     this.loudItems = {};
-    let self = this;
+    const self = this;
     this.el.sceneEl.addEventListener('mediastream-listener-loud', function (e) {
-      self.loudItems[e.detail.el] = e.detail;
+      if (e.target !== self.el) {
+        self.loudItems[e.target] = e.target.components['mediastream-listener'].loudness;
+        console.log(self.el, ' detects sound from ', e.target);
+      }
     });
     this.el.sceneEl.addEventListener('mediastream-listener-silent', function (e) {
-      if (self.loudItems[e.detail.el]) {
-        self.loudItems[e.detail.el].delete;
+      if (e.target !== self.el) {
+        delete self.loudItems[e.target];
+        console.log(self.el, ' does not hear ', e.target);
       }
     });
   },
 
   tick: function () {
     if (!this.stream) return;
-    let loudness = this._getLoudness();
-    if (loudness > 127) {
+    this.loudness = this._getLoudness();
+    if (this.loudness > 127) {
       if (!this.isMakingNoise) {
-        this.el.sceneEl.emit('mediastream-listener-loud', {
-          el: this.el,
-          loudness: loudness
-        });
-        console.log('sound');
+        this.el.dispatchEvent(this.loudEvent);
         this.isMakingNoise = true;
       }
     } else if (this.isMakingNoise) {
-      this.el.sceneEl.emit('mediastream-listener-silent', {
-        el: this.el
-      });
-      console.log('no sound');
+      this.el.dispatchEvent(this.silentEvent);
       this.isMakingNoise = false;
     }
   },
@@ -264,16 +265,15 @@ window.AFRAME.registerComponent('mediastream-listener', {
     let maxNoise = 0;
     let maxItem = null;
 
-    for (let key in this.loudItems) {
-      let e = this.loudItems[key].el;
-      if (e === this.el) continue;
-      let loudness = this.loudItems[key].loudness;
-      let myPosition = this.el.object3D.position;
-      let soundPosition = e.object3D.position;
-      let distance = myPosition.distanceTo(soundPosition);
+    const myPosition = this.el.object3D.position;
+
+    for (const e in this.loudItems) {
+      const loudness = this.loudItems[e];
+      const soundPosition = e.object3D.position;
+      const distance = myPosition.distanceTo(soundPosition);
       // We use an inverse quadratic attenuation based on the
       // distance.
-      let noise = loudness / distance ** 2;
+      const noise = loudness / distance ** 2;
       if (noise > 0 && noise > maxNoise) {
         maxNoise = noise;
         maxItem = e;
@@ -287,7 +287,7 @@ window.AFRAME.registerComponent('mediastream-listener', {
   _getLoudness: function () {
     let maxByteFrequencyData = 0;
     this.analyser.getByteFrequencyData(this.dataArray);
-    for (let d of this.dataArray) {
+    for (const d of this.dataArray) {
       if (d > maxByteFrequencyData) {
         maxByteFrequencyData = d;
       }
