@@ -15,9 +15,12 @@
     }
   </style>
   <iframe
-     id="vr"
-     style="border:0px; width:100%; height:100%; min-height:480px;"
-     src="@room_url@"></iframe>
+    id="vr"
+    style="border:0px; width:100%; height:100%; min-height:480px;"
+    <if @webrtc_p;literal@ true>data-src="@room_url@"</if>
+    <else>src="@room_url@"</else>
+    >
+  </iframe>
   <div id="toolbar">
     <div>
       <button class="btn btn-default btn-danger" data-href=".">Exit</button>
@@ -43,13 +46,14 @@
         });
     }
     <if @webrtc_p;literal@ true>
+        const iframeElement = document.querySelector('#vr');
         function audioMeter(stream) {
             //
             // When the mute button is pressed, we silence our
             // WebRTC stream and also the local stream used to
             // generate the audio meter.
             //
-            const iframe = document.querySelector('#vr').contentWindow.document;
+            const iframe = iframeElement.contentWindow.document;
             const camera = iframe.querySelector('a-camera');
             const hands = iframe.querySelectorAll('a-entity[hand-controls]');
             const audioTrack = stream.getAudioTracks()[0];
@@ -177,10 +181,13 @@
                 console.error(err);
             }
         }
-        window.addEventListener('load', function (e) {
-            navigator.mediaDevices.getUserMedia({audio: true})
-                .then(audioMeter)
-                .catch(handleError);
-        });
+        navigator.mediaDevices.getUserMedia({audio: true})
+           .then((stream) => {
+               iframeElement.addEventListener('load', function () {
+                   audioMeter(stream);
+               });
+               iframeElement.setAttribute('src', iframeElement.getAttribute('data-src'));
+           })
+          .catch(handleError);
     </if>
   </script>
