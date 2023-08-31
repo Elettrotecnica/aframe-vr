@@ -817,6 +817,8 @@ window.AFRAME.registerComponent('local-hand-controls', {
     el.addEventListener('controllerconnected', this.onControllerConnected);
     el.addEventListener('controllerdisconnected', this.onControllerDisconnected);
 
+    this.gestureEvent = new Event('local-hand-control-gesture', {bubbles: true});
+
     // Hidden by default.
     el.object3D.visible = false;
   },
@@ -1066,10 +1068,14 @@ window.AFRAME.registerComponent('local-hand-controls', {
     eventName = getGestureEventName(gesture, true);
     if (eventName) { el.emit(eventName); }
 
-    // Custom: also emit the raw gesture+lastGesture event
-    // (hand-controls supports more gestures than the events it can
-    // emit atm)
-    el.emit('elGesture', {'gesture': gesture, 'lastGesture': lastGesture});
+    //
+    // Different from the upstream hand-controls, we emit an event for
+    // every gesture, regardless of this being mapped to an action.
+    //
+    // Consumers of this event will find the plain gesture in the
+    // 'gesture' property of this component.
+    //
+    el.dispatchEvent(this.gestureEvent);
   },
 
   /**
@@ -1988,13 +1994,13 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       // Track gesture. Note that this event is specific to the
       // local-hand-control, so this must be a hand.
       //
-      window.addEventListener('elGesture', function (e) {
+      window.addEventListener('local-hand-control-gesture', function (e) {
         const component = e.target.components['oacs-networked-entity'];
         if (component) {
           self.send({
             id: component.networkId,
             type: 'update',
-            gesture: e.detail.gesture
+            gesture: e.target.components['local-hand-controls'].gesture
           });
         }
       });
