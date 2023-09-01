@@ -2295,8 +2295,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
 
   pause: function () {
     //
-    // Removing this component just shuts down event generation on
-    // changes, but does not delete the item for the other peers.
+    // Shuts down event generation on changes
     //
     this.el.removeAttribute('absolute-position-listener');
     this.el.removeAttribute('absolute-rotation-listener');
@@ -2304,8 +2303,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
 
   play: function () {
     //
-    // Removing this component just shuts down event generation on
-    // changes, but does not delete the item for the other peers.
+    // Start event generation on changes
     //
     this.el.setAttribute('absolute-position-listener', '');
     this.el.setAttribute('absolute-rotation-listener', '');
