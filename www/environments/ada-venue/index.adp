@@ -88,7 +88,7 @@
       <a-entity hide-on-enter-ar position="0 -0.2 0" environment="lighting:none;shadow:true;preset: osiris;"></a-entity>
 
       <a-sphere
-         oacs-networked-entity="template: #ball; permanent: true"
+         oacs-networked-entity="permanent: true"
          id="ball"
          position="-1 3 -1.5"
          radius="0.5"

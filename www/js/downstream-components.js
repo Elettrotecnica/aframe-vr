@@ -2076,29 +2076,24 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // Create an item locally
     let el = document.getElementById(data.id);
     if (el) {
-      if (el.sceneEl === this.sceneEl) {
-        this._update(el, data);
-        console.warn('Element already exists. Updating instead.', data);
-      } else {
-        console.error('Element does not belong to the scene.', data);
-      }
+      this._update(el, data);
+      console.log('Element already exists. Updating instead.', el, data);
+    } else if (data.template) {
+      this.sceneEl.insertAdjacentHTML('beforeend', data.template);
+      const template = this.sceneEl.lastElementChild;
+      el = template.content.firstElementChild.cloneNode(true);
+      el.setAttribute('id', data.id);
+      //
+      // Ensure entity is visible only in its final, updated state
+      // by toggling visibility.
+      //
+      el.setAttribute('visible', false);
+      this.sceneEl.appendChild(el);
+      this._update(el, data);
+      el.setAttribute('visible', true);
+      console.log('Element created', el, data);
     } else {
-      const template = document.querySelector(data.template);
-      if (template) {
-        el = template.content.firstElementChild.cloneNode(true);
-        el.setAttribute('id', data.id);
-        //
-        // Ensure entity is visible only in its final, updated state
-        // by toggling visibility.
-        //
-        el.setAttribute('visible', false);
-        this.sceneEl.appendChild(el);
-        this._update(el, data);
-        el.setAttribute('visible', true);
-        console.log('Element created.', data);
-      } else {
-        console.error('Template not found while creating element.', data);
-      }
+      console.log('No template for this element. Skipping.', data);
     }
     return el;
   },
@@ -2269,7 +2264,15 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.el.setAttribute('visible', false);
 
     this.networkedScene = this.el.sceneEl.systems['oacs-networked-scene'];
-    this.template = this.data.template;
+
+    if (this.data.template) {
+      //
+      // The template is serialized and sent in full to the
+      // peers. This enables to spawn arbitrary entities.
+      //
+      this.template = document.querySelector(this.data.template).outerHTML;
+    }
+
     this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
     this.name = this.data.name;
     this.permanent = this.data.permanent;
@@ -2323,15 +2326,16 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
   },
 
   attach: function () {
-    const self = this;
-
-    this.networkedScene.send({
+    const msg = {
       type: 'create',
       id: this.networkId,
       name: this.name,
-      template: this.template,
       color: this.color
-    });
+    }
+    if (this.template) {
+      msg.template = this.template;
+    }
+    this.networkedScene.send(msg);
   }
 });
 
