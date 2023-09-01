@@ -2189,7 +2189,6 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         grabbedEntity.components &&
         grabbedEntity.components['oacs-networked-entity']) {
       grabbedEntity.components['oacs-networked-entity'].play();
-      grabbedEntity.setAttribute('visible', true);
       grabbedEntity.dispatchEvent(this.grabEvent);
     }
   },
