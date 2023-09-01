@@ -9,39 +9,39 @@
  * would not change.
 */
 window.AFRAME.registerComponent('absolute-position-listener', {
-  tick: (function () {
-    const lastPosition = {'x': 0, 'y': 0, 'z': 0};
-    return function () {
-      const newValue = this._getAbsolutePosition();
-      if (lastPosition.x !== newValue.x ||
-          lastPosition.y !== newValue.y ||
-          lastPosition.z !== newValue.z) {
-        this.el.emit('absolutePositionChanged', newValue);
-        lastPosition.x = newValue.x;
-        lastPosition.y = newValue.y;
-        lastPosition.z = newValue.z;
-      }
-    };
-  })(),
-  _getAbsolutePosition: (function () {
-    const newValue = {'x': 0, 'y': 0, 'z': 0};
-    return function () {
-      // Note that we cannot use a getWorldPosition stunt here,
-      // because various compensations are applied only to the
-      // relative position depending on the device.
-      newValue.x = 0;
-      newValue.y = 0;
-      newValue.z = 0;
-      let el = this.el;
-      while (el && el.object3D && el !== this.el.sceneEl) {
-        newValue.x += el.object3D.position.x;
-        newValue.y += el.object3D.position.y;
-        newValue.z += el.object3D.position.z;
-        el = el.parentElement;
-      }
-      return newValue;
-    };
-  })()
+  init: function () {
+    this.oldValue = {'x': 0, 'y': 0, 'z': 0};
+    this.newValue = {'x': 0, 'y': 0, 'z': 0};
+  },
+
+  tick: function () {
+    this._getAbsolutePosition();
+    if (this.oldValue.x !== this.newValue.x ||
+        this.oldValue.y !== this.newValue.y ||
+        this.oldValue.z !== this.newValue.z) {
+      console.log(this.oldValue, this.newValue);
+      this.el.emit('absolutePositionChanged', this.newValue);
+      this.oldValue.x = this.newValue.x;
+      this.oldValue.y = this.newValue.y;
+      this.oldValue.z = this.newValue.z;
+    }
+  },
+
+  _getAbsolutePosition: function () {
+    // Note that we cannot use a getWorldPosition stunt here, because
+    // various compensations are applied only to the relative position
+    // depending on the device.
+    this.newValue.x = 0;
+    this.newValue.y = 0;
+    this.newValue.z = 0;
+    let el = this.el;
+    while (el && el.object3D && el !== this.el.sceneEl) {
+      this.newValue.x += el.object3D.position.x;
+      this.newValue.y += el.object3D.position.y;
+      this.newValue.z += el.object3D.position.z;
+      el = el.parentElement;
+    }
+  }
 });
 
 /**
@@ -55,42 +55,42 @@ window.AFRAME.registerComponent('absolute-position-listener', {
  * would not change.
 */
 window.AFRAME.registerComponent('absolute-rotation-listener', {
-  tick: (function () {
-    const lastRotation = {'x': 0, 'y': 0, 'z': 0};
-    return function () {
-      const newValue = this._getAbsoluteRotation();
-      if (lastRotation.x !== newValue.x ||
-          lastRotation.y !== newValue.y ||
-          lastRotation.z !== newValue.z) {
-        this.el.emit('absoluteRotationChanged', newValue);
-        lastRotation.x = newValue.x;
-        lastRotation.y = newValue.y;
-        lastRotation.z = newValue.z;
-      }
-    };
-  })(),
-  _getAbsoluteRotation: (function () {
-    const newValue = {'x': 0, 'y': 0, 'z': 0};
-    return function () {
-      // Note that we cannot use a getWorldQuaternion stunt here,
-      // because various compensations are applied only to the relative
-      // rotation depending on the device.
-      newValue.x = 0;
-      newValue.y = 0;
-      newValue.z = 0;
-      let el = this.el;
-      while (el && el.object3D && el !== this.el.sceneEl) {
-        newValue.x += el.object3D.rotation.x;
-        newValue.y += el.object3D.rotation.y;
-        newValue.z += el.object3D.rotation.z;
-        el = el.parentElement;
-      }
-      newValue.x = THREE.MathUtils.radToDeg(newValue.x);
-      newValue.y = THREE.MathUtils.radToDeg(newValue.y);
-      newValue.z = THREE.MathUtils.radToDeg(newValue.z);
-      return newValue;
-    };
-  })()
+  init: function () {
+    this.oldValue = {'x': 0, 'y': 0, 'z': 0};
+    this.newValue = {'x': 0, 'y': 0, 'z': 0};
+  },
+
+  tick: function () {
+    this._getAbsoluteRotation();
+    if (this.oldValue.x !== this.newValue.x ||
+        this.oldValue.y !== this.newValue.y ||
+        this.oldValue.z !== this.newValue.z) {
+      console.log(this.oldValue, this.newValue);
+      this.el.emit('absoluteRotationChanged', this.newValue);
+      this.oldValue.x = this.newValue.x;
+      this.oldValue.y = this.newValue.y;
+      this.oldValue.z = this.newValue.z;
+    }
+  },
+
+  _getAbsoluteRotation: function () {
+    // Note that we cannot use a getWorldQuaternion stunt here,
+    // because various compensations are applied only to the relative
+    // rotation depending on the device.
+    this.newValue.x = 0;
+    this.newValue.y = 0;
+    this.newValue.z = 0;
+    let el = this.el;
+    while (el && el.object3D && el !== this.el.sceneEl) {
+      this.newValue.x += el.object3D.rotation.x;
+      this.newValue.y += el.object3D.rotation.y;
+      this.newValue.z += el.object3D.rotation.z;
+      el = el.parentElement;
+    }
+    this.newValue.x = THREE.MathUtils.radToDeg(this.newValue.x);
+    this.newValue.y = THREE.MathUtils.radToDeg(this.newValue.y);
+    this.newValue.z = THREE.MathUtils.radToDeg(this.newValue.z);
+  }
 });
 
 /**
