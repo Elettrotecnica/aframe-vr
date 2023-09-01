@@ -58,7 +58,7 @@
             //
             const iframe = iframeElement.contentWindow.document;
             const camera = iframe.querySelector('a-camera');
-            const hands = iframe.querySelectorAll('a-entity[hand-controls]');
+            const hands = iframe.querySelectorAll('a-entity[local-hand-controls]');
             const audioTrack = stream.getAudioTracks()[0];
             const muteButton = document.querySelector('#mutebutton');
 
