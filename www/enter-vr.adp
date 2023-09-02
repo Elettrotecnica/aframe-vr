@@ -2,6 +2,10 @@
   <property name="doc(title)">Enter VR</property>
 
   <style>
+    #vr {
+       height: 480px;
+       margin-bottom: 2pt;
+    }
     #toolbar {
        display: flex;
        flex-wrap: nowrap;
@@ -17,13 +21,107 @@
        margin-bottom: 1pt;
     }
   </style>
-  <iframe
+  <div
     id="vr"
-    style="border:0px; width:100%; height:100%; min-height:480px;"
-    <if @webrtc_p;literal@ true>data-src="@room_url@"</if>
-    <else>src="@room_url@"</else>
     >
-  </iframe>
+    <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
+
+    <template id="vr-rig">
+      <if @avatar_p;literal@ true>
+        <!-- Avatar -->
+        <template id="avatar-template-@user_id;literal@">
+          <a-entity position="0 1.6 -3"
+                    readyplayerme-avatar="model: url(@avatar_url@); hands: false">
+            <a-text data-name="value"
+                    value=""
+                    material="color: white"
+                    geometry="primitive: plane; width: auto; height: auto"
+                    color="black"
+                    align="center"
+                    width="1"
+                    position="0 -0.4 -0.5"
+                    rotation="0 180 0">
+        </template>
+      </if>
+      <else>
+        <template id="avatar-template-@user_id;literal@">
+          <a-entity class="avatar" scale="0.5 0.5 0.5" shadow>
+            <a-sphere data-color
+                      class="head"
+                      color="#ffffff"
+                      scale="0.45 0.5 0.4">
+            </a-sphere>
+            <a-entity class="face"
+                      position="0 0.05 0">
+              <a-sphere class="eye"
+                        color="#efefef"
+                        position="0.16 0.1 -0.35"
+                        scale="0.12 0.12 0.12">
+                <a-sphere class="pupil"
+                          color="#000"
+                          position="0 0 -1"
+                          scale="0.2 0.2 0.2">
+                </a-sphere>
+              </a-sphere>
+              <a-sphere class="eye"
+                        color="#efefef"
+                        position="-0.16 0.1 -0.35"
+                        scale="0.12 0.12 0.12">
+                <a-sphere class="pupil"
+                          color="#000"
+                          position="0 0 -1"
+                          scale="0.2 0.2 0.2">
+                </a-sphere>
+              </a-sphere>
+              <a-text data-name="value"
+                      value=""
+                      material="color: white"
+                      geometry="primitive: plane; width: auto; height: auto"
+                      color="black"
+                      align="center"
+                      width="1"
+                      position="0 -0.4 -0.5"
+                      rotation="0 180 0">
+              </a-text>
+            </a-entity>
+          </a-entity>
+        </template>
+      </else>
+      <template id="avatar-left-hand-@user_id;literal@">
+        <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+      </template>
+      <template id="avatar-right-hand-@user_id;literal@">
+        <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+      </template>
+      <a-entity id="myCameraRig">
+        <!-- camera -->
+        <a-camera id="client-@user_id;literal@"
+                  simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
+                  oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
+                  <if @webrtc_p;literal@ true>
+                    janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
+                  </if>>
+        </a-camera>
+        <!-- hand controls -->
+        <a-entity id="client-@user_id;literal@-left-hand"
+                  blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+                  local-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc">
+        </a-entity>
+        <a-entity id="client-@user_id;literal@-right-hand"
+                  blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+                  local-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc">
+        </a-entity>
+      </a-entity>
+    </template>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+      const vrScene = document.querySelector('#vr a-scene');
+      vrScene.setAttribute('embedded', '');
+      vrScene.setAttribute('oacs-networked-scene', 'wsURI: @ws_uri@');
+      vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
+    </script>
+  </div>
   <div id="toolbar">
     <div>
       <button class="btn btn-default btn-danger" data-href=".">Exit</button>
@@ -49,16 +147,14 @@
         });
     }
     <if @webrtc_p;literal@ true>
-        const iframeElement = document.querySelector('#vr');
         function audioMeter(stream) {
             //
             // When the mute button is pressed, we silence our
             // WebRTC stream and also the local stream used to
             // generate the audio meter.
             //
-            const iframe = iframeElement.contentWindow.document;
-            const camera = iframe.querySelector('a-camera');
-            const hands = iframe.querySelectorAll('a-entity[local-hand-controls]');
+            const camera = document.querySelector('a-camera');
+            const hands = document.querySelectorAll('a-entity[local-hand-controls]');
             const audioTrack = stream.getAudioTracks()[0];
             const muteButton = document.querySelector('#mutebutton');
 
@@ -186,11 +282,7 @@
         }
         navigator.mediaDevices.getUserMedia({audio: true})
            .then((stream) => {
-               iframeElement.addEventListener('load', function () {
-                   audioMeter(stream);
-               });
-               iframeElement.setAttribute('src', iframeElement.getAttribute('data-src'));
-           })
-          .catch(handleError);
+               audioMeter(stream);
+           }).catch(handleError);
     </if>
   </script>

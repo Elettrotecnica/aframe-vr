@@ -1,0 +1,27 @@
+ad_page_contract {
+
+    This vuh enables environment developers to use relative URLs that
+    point to their environment folder.
+
+}
+
+set relative_part [string range [ns_conn url] [string length [ad_conn package_url]] end]
+if {$relative_part in {"" "index"}} {
+    ns_log warning [ns_conn url] redirects to index
+    rp_internal_redirect index
+}
+
+ad_try {
+    set environment [parameter::get -parameter environment -default default]
+    rp_internal_redirect ../environments/$environment/$relative_part
+} trap {AD EXCEPTION notfound} {result} {
+    ns_log warning [ns_conn url] redirects to $relative_part
+    rp_internal_redirect $relative_part
+}
+
+#
+# Local variables:
+#    mode: tcl
+#    tcl-indent-level: 4
+#    indent-tabs-mode: nil
+# End:

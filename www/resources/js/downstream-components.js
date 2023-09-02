@@ -19,7 +19,6 @@ window.AFRAME.registerComponent('absolute-position-listener', {
     if (this.oldValue.x !== this.newValue.x ||
         this.oldValue.y !== this.newValue.y ||
         this.oldValue.z !== this.newValue.z) {
-      console.log(this.oldValue, this.newValue);
       this.el.emit('absolutePositionChanged', this.newValue);
       this.oldValue.x = this.newValue.x;
       this.oldValue.y = this.newValue.y;
@@ -65,7 +64,6 @@ window.AFRAME.registerComponent('absolute-rotation-listener', {
     if (this.oldValue.x !== this.newValue.x ||
         this.oldValue.y !== this.newValue.y ||
         this.oldValue.z !== this.newValue.z) {
-      console.log(this.oldValue, this.newValue);
       this.el.emit('absoluteRotationChanged', this.newValue);
       this.oldValue.x = this.newValue.x;
       this.oldValue.y = this.newValue.y;
