@@ -81,9 +81,11 @@ if {$webrtc_p} {
 #
 
 security::csp::require connect-src $ws_host
-security::csp::require connect-src $webrtc_host
+if {[info exists webrtc_host]} {
+    security::csp::require connect-src $webrtc_host
+}
 security::csp::require script-src aframe.io
-security::csp::require script-src aframe.io
+security::csp::require img-src cdn.aframe.io
 security::csp::require connect-src cdn.aframe.io
 security::csp::require script-src cdn.jsdelivr.net
 security::csp::require script-src cdnjs.cloudflare.com
