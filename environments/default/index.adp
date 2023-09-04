@@ -22,7 +22,7 @@
     class="collision"></a-entity>
 
   <a-entity light="color: #ccccff; intensity: 1; type: ambient;" visible=""></a-entity>
-  <a-entity light="color: ffaaff; intensity: 1.5" position="5 5 5"></a-entity>
+  <a-entity light="color: #ffaaff; intensity: 1.5" position="5 5 5"></a-entity>
   <a-entity light="color: white; intensity: 0.5" position="-5 5 15"></a-entity>
   <a-entity light="color: white; type: ambient;"></a-entity>
 
