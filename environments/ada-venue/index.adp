@@ -9,14 +9,61 @@
 <script src="https://c-frame.github.io/aframe-physics-system/dist/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     window.addEventListener('load', function () {
+	const scene = document.querySelector('a-scene');
         //
-        // When the venue physics model has finished loading, generate
-        // a static body from its mesh.
+        // When objects requiring physics finish to load, attach physics to them
         //
-        document.querySelector('a-gltf-model[src="#venue-physics"]').addEventListener('model-loaded', function () {
-            this.setAttribute('ammo-body', 'type: static');
-            this.setAttribute('ammo-shape', 'type: mesh');
+	scene.addEventListener('model-loaded', function (e) {
+	    if (e.target.getAttribute('src') === '#venue-physics') {
+		//
+		// The static body modeling the room
+		//
+		e.target.setAttribute('ammo-body', 'type: static');
+		e.target.setAttribute('ammo-shape', 'type: mesh');
+	    } else if (e.target.hasAttribute('data-spawn')) {
+		//
+		// Objects spawned by peers
+		//
+		const spawn = e.target.getAttribute('data-spawn');
+		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
+		e.target.setAttribute('ammo-body', type);
+		e.target.setAttribute('ammo-shape', 'type: sphere');
+	    }
+	});
+
+	scene.addEventListener('collidestart', function (e) {
+            if (e.target.matches('#ball, [data-spawn]') && e.detail.targetEl.matches('a-camera, [local-hand-controls]')) {
+                e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
+            }
         });
+
+	//
+	// Switch entities physics when they are grabbed/released from
+	// dynamic (local) to kinematic (remote).
+	//
+	function switchBodyType(e, type) {
+	    const shape = e.getAttribute('ammo-shape');
+	    if (e.components['ammo-body'].addedToSystem) {
+		e.removeAttribute('ammo-shape');
+                e.removeAttribute('ammo-body');
+	    }
+            e.setAttribute('ammo-body', type);
+	    e.setAttribute('ammo-shape', shape);
+	}
+	scene.addEventListener('release', function (e) {
+	    if (e.target.components['ammo-body'] &&
+		e.target.components['ammo-shape'] &&
+		e.target.components['ammo-body'].data.type === 'dynamic') {
+		switchBodyType(e.target, 'type: kinematic; emitCollisionEvents: true');
+	    }
+	});
+	scene.addEventListener('grab', function (e) {
+	    if (e.target.components['ammo-body'] &&
+		e.target.components['ammo-shape'] &&
+		e.target.components['ammo-body'].data.type === 'kinematic') {
+		switchBodyType(e.target, 'type: dynamic');
+	    }
+	});
 
         //
         // Make our local avatar a kinematic body
@@ -34,29 +81,6 @@
                 this.setAttribute('ammo-shape', 'type: sphere');
             }, {once: true });
         }
-
-        const ball = document.querySelector('#ball');
-        ball.addEventListener('grab', function (e) {
-            if (this.components['ammo-body'].data.type === 'kinematic') {
-                this.removeAttribute('ammo-shape');
-                this.removeAttribute('ammo-body');
-                this.setAttribute('ammo-body', 'type: dynamic; emitCollisionEvents: false');
-                this.setAttribute('ammo-shape', 'type: sphere');
-            }
-        });
-        ball.addEventListener('release', function (e) {
-            if (this.components['ammo-body'].data.type === 'dynamic') {
-                this.removeAttribute('ammo-shape');
-                this.removeAttribute('ammo-body');
-                this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-                this.setAttribute('ammo-shape', 'type: sphere');
-            }
-        });
-        ball.addEventListener('collidestart', function (e) {
-            if (e.detail.targetEl.matches('a-camera, [local-hand-controls]')) {
-                e.target.components['oacs-networked-entity'].networkedScene.grab(this.id);
-            }
-        });
     });
 </script>
 <a-scene

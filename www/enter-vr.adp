@@ -138,8 +138,64 @@
         </label>
       </div>
     </div>
+    <if @spawn_objects_p;literal@ true>
+      <div>
+	<form id="spawn">
+          <div>
+            <label>
+              <input type="file" required name="model">
+            </label>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" name="permanent"> Permanent
+            </label>
+          </div>
+          <div>
+            <button>Spawn .glb model</button>
+          </div>
+	</form>
+      </div>
+    </if>
   </div>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    const camera = document.querySelector('a-camera');
+      <if @spawn_objects_p;literal@ true>
+	 document.querySelector('#spawn').addEventListener('submit', function (e) {
+	     e.preventDefault();
+	     const formData = new FormData(this);
+	     //
+	     // We let the new entity spawn where we are. We may be fancier
+	     // at some point and let it spawn e.g. "1 meter in front of
+	     // us".
+	     //
+	     const position = camera.components['absolute-position-listener'].oldValue;
+	     formData.append('position', position.x + ' ' + position.y + ' ' + position.z);
+	     const req = new XMLHttpRequest();
+	     req.addEventListener('load', function (e) {
+		 if (this.status === 200) {
+		     //
+		     // Add the template to the page
+		     //
+		     vrScene.insertAdjacentHTML('beforeend', this.response);
+		     //
+		     // Spawn the local entity from the template. This will
+		     // trigger remote creation as well.
+		     //
+		     const spawnedEntity = vrScene.lastElementChild.content.firstElementChild.cloneNode(true);
+		     spawnedEntity.setAttribute('data-spawn', 'mine');
+		     vrScene.appendChild(spawnedEntity);
+		     spawnedEntity.setAttribute('position', camera.getAttribute('position'));
+		     console.log(spawnedEntity);
+		 } else {
+		     alert('Cannot create this object: ' + this.response);
+		 }
+	     });
+	     req.open('POST', 'spawn-object');
+	     req.send(formData);
+	 });
+      </if>
+
     for (const b of document.querySelectorAll('#toolbar button[data-href]')) {
         b.addEventListener('click', function (e) {
             e.preventDefault();
@@ -153,7 +209,6 @@
             // WebRTC stream and also the local stream used to
             // generate the audio meter.
             //
-            const camera = document.querySelector('a-camera');
             const hands = document.querySelectorAll('a-entity[local-hand-controls]');
             const audioTrack = stream.getAudioTracks()[0];
             const muteButton = document.querySelector('#mutebutton');

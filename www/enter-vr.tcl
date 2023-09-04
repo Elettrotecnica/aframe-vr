@@ -15,6 +15,15 @@ set package_id [ad_conn package_id]
 set package_key [apm_package_key_from_id $package_id]
 
 #
+# See if the file-storage is available so spawn objects.
+#
+set fs_node_id [::site_node::get_children \
+                       -package_key file-storage \
+                       -element node_id \
+                       -node_id [ad_conn node_id]]
+set spawn_objects_p [expr {$fs_node_id ne ""}]
+
+#
 # User info
 #
 set username [person::name -person_id $user_id]
