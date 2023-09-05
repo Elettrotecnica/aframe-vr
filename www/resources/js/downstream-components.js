@@ -1660,30 +1660,6 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     return (proto === 'https:' ? 'wss:' : 'ws:') + '//' + host + '/aframe-vr/connect';
   },
 
-  _updateNestedProperty: function (el, property, value) {
-    // A property is by default set by its attribute name on the
-    // element. Optionally, one can specify a
-    // data-#property name# attribute on a child element in the
-    // template to say that this is the element where the
-    // property should be updated. The value of this attribute
-    // tells which is the real attribute we should change (by
-    // default, the attribute named after the property is
-    // changed).
-    let i = 0;
-    const elementsToUpdate = el.querySelectorAll('[data-' + property + ']');
-    for (const e of elementsToUpdate) {
-      let att = e.getAttribute('data-' + property);
-      if (att.length <= 0) {
-        att = property;
-      }
-      e.setAttribute(att, value);
-      i++;
-    }
-    if (i === 0) {
-      el.setAttribute(property, value);
-    }
-  },
-
   _create: function (data) {
     // Create an item locally
     let el = document.getElementById(data.id);
@@ -1711,16 +1687,45 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _update: function (el, data) {
-    // Update an item locally
-    for (const p in data) {
-      if (this._privateProperties.includes(p)) {
-        continue;
+    //
+    // Update an item locally.
+    //
+
+    //
+    // Get private properties out of the way
+    //
+    for (const p of this._privateProperties) {
+      delete data[p];
+    }
+    //
+    // The gesture property is applied on a special component.
+    //
+    if (data.gesture) {
+      el.setAttribute('remote-hand-controls', 'gesture', data.gesture);
+      delete data.gesture;
+    }
+    //
+    // A property is by default set by its attribute name on the
+    // element. Optionally, one can specify a data-#property name#
+    // attribute on a child element in the template to say that this
+    // is the element where the property should be updated. The value
+    // of this attribute tells which is the real attribute we should
+    // change.
+    //
+    for (const d of el.querySelectorAll('*')) {
+      for (const property in data) {
+        if (typeof d.dataset[property] !== 'undefined') {
+          const att = d.dataset[property] === '' ? property : d.dataset[property];
+          d.setAttribute(att, data[property]);
+          delete data[property];
+        }
       }
-      if (p === 'gesture') {
-        el.setAttribute('remote-hand-controls', 'gesture', data[p]);
-      } else {
-        this._updateNestedProperty(el, p, data[p]);
-      }
+    }
+    //
+    // All remaining properties are set on the entity directly.
+    //
+    for (const property in data) {
+      el.setAttribute(property, data[property]);
     }
   },
 
