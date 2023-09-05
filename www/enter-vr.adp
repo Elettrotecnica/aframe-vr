@@ -105,13 +105,13 @@
         <!-- hand controls -->
         <a-entity id="client-@user_id;literal@-left-hand"
                   blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
-                  local-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc">
+                  hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
         </a-entity>
         <a-entity id="client-@user_id;literal@-right-hand"
                   blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
-                  local-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc">
+                  hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+                  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
         </a-entity>
       </a-entity>
     </template>

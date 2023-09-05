@@ -32,7 +32,7 @@
 	});
 
 	scene.addEventListener('collidestart', function (e) {
-            if (e.target.matches('#ball, [data-spawn]') && e.detail.targetEl.matches('a-camera, [local-hand-controls]')) {
+            if (e.target.matches('#ball, [data-spawn]') && e.detail.targetEl.matches('a-camera, [hand-controls]')) {
                 e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
             }
         });
@@ -75,7 +75,7 @@
         //
         // Once controllers connect, make them a kinematic body.
         //
-        for (const hand of document.querySelectorAll('[local-hand-control]')) {
+        for (const hand of document.querySelectorAll('[hand-controls]')) {
             hand.addEventListener('controllerconnected', function () {
                 this.setAttribute('ammo-body', 'type: kinematic');
                 this.setAttribute('ammo-shape', 'type: sphere');
