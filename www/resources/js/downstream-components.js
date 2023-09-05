@@ -55,15 +55,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
           break;
         }
       }
-
-      if (typeof this.changedProperties[p] === 'object') {
-        //
-        // That we convert objects to string is not optimal, but to do
-        // without we would need to refactor the backend to handle
-        // "deep" JSON.
-        //
-        this.changedProperties[p] = JSON.stringify(this.changedProperties[p]);
-      }
     }
     if (changed) {
       this.el.emit('entityChanged', this.changedProperties);
@@ -1930,6 +1921,8 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this.messageQueue = [];
 
+    this._privateProperties = ['id', 'type'];
+
     this.grabEvent = new Event('grab', {bubbles: true});
     this.releaseEvent = new Event('release', {bubbles: true});
   },
@@ -2102,20 +2095,15 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _update: function (el, data) {
     // Update an item locally
-    if (data.position) {
-      this._updateNestedProperty(el, 'position', JSON.parse(data.position));
-    }
-    if (data.rotation) {
-      this._updateNestedProperty(el, 'rotation', JSON.parse(data.rotation));
-    }
-    if (data.color) {
-      this._updateNestedProperty(el, 'color', data.color);
-    }
-    if (data.name) {
-      this._updateNestedProperty(el, 'name', data.name);
-    }
-    if (data.gesture) {
-      el.setAttribute('remote-hand-controls', 'gesture', data.gesture);
+    for (const p in data) {
+      if (this._privateProperties.includes(p)) {
+        continue;
+      }
+      if (p === 'gesture') {
+        el.setAttribute('remote-hand-controls', 'gesture', data[p]);
+      } else {
+        this._updateNestedProperty(el, p, data[p]);
+      }
     }
   },
 
