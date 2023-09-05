@@ -1880,6 +1880,8 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
 
     this.properties = this.data.properties;
 
+    this.isAttached = false;
+
     //
     // Headsets and hands are attached reacting to their special
     // events by the scene. In regular cases, we can attach the entity
@@ -1902,7 +1904,9 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     //
     // Start event generation on changes
     //
-    this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+    if (this.isAttached) {
+      this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+    }
   },
 
   delete: function () {
@@ -1929,6 +1933,8 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
       msg.template = this.template;
     }
     this.networkedScene.send(msg);
+    this.isAttached = true;
+    this.play();
   }
 });
 
