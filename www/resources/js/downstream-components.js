@@ -62,9 +62,20 @@ window.AFRAME.registerComponent('oacs-change-listener', {
       case 'rotation':
         this._getAbsoluteRotation();
         break;
+      case 'gesture':
+        this._getGesture();
+        break;
       default:
         this.properties[property]['new'] = this.el.getAttribute(property);
       }
+  },
+
+  _getGesture: function () {
+    const newValue = this.properties['gesture']['new'];
+    const component = this.el.components['hand-controls'];
+    if (component && component.gesture) {
+      newValue = component.gesture;
+    }
   },
 
   _getAbsoluteRotation: function () {
