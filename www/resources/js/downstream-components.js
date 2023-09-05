@@ -1,73 +1,72 @@
 /**
- * A simple component to listen to absolute position changes and
- * trigger an event other components can listen and react to.
- *
- * The reason why we listen to the absolute position instead than the
- * default position property is that this enables the use case of
- * entities such as the camera enclosed inside a camera rig. If we
- * rotate the rig, the position property of the enclosed entity
- * would not change.
-*/
-window.AFRAME.registerComponent('absolute-position-listener', {
-  init: function () {
-    this.oldValue = {'x': 0, 'y': 0, 'z': 0};
-    this.newValue = {'x': 0, 'y': 0, 'z': 0};
+ * A component checking whether properties on an entity have
+ * changed. When this happens, an entityChanged is generated reporting
+ * which properties are now different. This is used to react to
+ * changes, for instance sending the new properties over the network.
+ */
+window.AFRAME.registerComponent('oacs-change-listener', {
+  schema: {
+    properties: { type: 'array', default: 'position, rotation' }
+  },
+
+  update: function () {
+    this.properties = {};
+    for (const p of this.data.properties) {
+      this.properties[p] = {};
+      this.properties[p]['old'] = {};
+      this.properties[p]['new'] = Object.assign({}, this.el.getAttribute(p));
+    }
+    this.changedProperties = {};
   },
 
   tick: function () {
-    this._getAbsolutePosition();
-    if (this.oldValue.x !== this.newValue.x ||
-        this.oldValue.y !== this.newValue.y ||
-        this.oldValue.z !== this.newValue.z) {
-      this.el.emit('absolutePositionChanged', this.newValue);
-      this.oldValue.x = this.newValue.x;
-      this.oldValue.y = this.newValue.y;
-      this.oldValue.z = this.newValue.z;
+    for (const p in this.changedProperties) {
+      delete this.changedProperties[p];
     }
-  },
+    let changed = false;
 
-  _getAbsolutePosition: function () {
-    // Note that we cannot use a getWorldPosition stunt here, because
-    // various compensations are applied only to the relative position
-    // depending on the device.
-    this.newValue.x = 0;
-    this.newValue.y = 0;
-    this.newValue.z = 0;
-    let el = this.el;
-    while (el && el.object3D && el !== this.el.sceneEl) {
-      this.newValue.x += el.object3D.position.x;
-      this.newValue.y += el.object3D.position.y;
-      this.newValue.z += el.object3D.position.z;
-      el = el.parentElement;
+    for (const p in this.properties) {
+      switch(p) {
+      case 'position':
+        this._getAbsolutePosition();
+        break;
+      case 'rotation':
+        this._getAbsoluteRotation();
+        break;
+      default:
+        this.properties[p]['new'] = this.el.getAttribute(p);
+      }
+
+      const oldProperties = this.properties[p]['old'];
+      const newProperties = this.properties[p]['new'];
+      for (const a in oldProperties) {
+        if (oldProperties[a] !== newProperties[a]) {
+          this.changedProperties[p] = newProperties;
+          Object.assign(oldProperties, newProperties);
+          changed = true;
+          break;
+        }
+      }
+      for (const a in newProperties) {
+        if (oldProperties[a] !== newProperties[a]) {
+          this.changedProperties[p] = newProperties;
+          Object.assign(oldProperties, newProperties);
+          changed = true;
+          break;
+        }
+      }
+
+      if (typeof this.changedProperties[p] === 'object') {
+        //
+        // That we convert objects to string is not optimal, but to do
+        // without we would need to refactor the backend to handle
+        // "deep" JSON.
+        //
+        this.changedProperties[p] = JSON.stringify(this.changedProperties[p]);
+      }
     }
-  }
-});
-
-/**
- * A simple component to listen to absolute rotation changes and
- * trigger an event other components can listen and react to.
- *
- * The reason why we listen to the absolute rotation instead than the
- * default rotation property is that this enables the use case of
- * entities such as the camera enclosed inside a camera rig. If we
- * rotate the rig, the rotation property of the enclosed entity
- * would not change.
-*/
-window.AFRAME.registerComponent('absolute-rotation-listener', {
-  init: function () {
-    this.oldValue = {'x': 0, 'y': 0, 'z': 0};
-    this.newValue = {'x': 0, 'y': 0, 'z': 0};
-  },
-
-  tick: function () {
-    this._getAbsoluteRotation();
-    if (this.oldValue.x !== this.newValue.x ||
-        this.oldValue.y !== this.newValue.y ||
-        this.oldValue.z !== this.newValue.z) {
-      this.el.emit('absoluteRotationChanged', this.newValue);
-      this.oldValue.x = this.newValue.x;
-      this.oldValue.y = this.newValue.y;
-      this.oldValue.z = this.newValue.z;
+    if (changed) {
+      this.el.emit('entityChanged', this.changedProperties);
     }
   },
 
@@ -75,19 +74,37 @@ window.AFRAME.registerComponent('absolute-rotation-listener', {
     // Note that we cannot use a getWorldQuaternion stunt here,
     // because various compensations are applied only to the relative
     // rotation depending on the device.
-    this.newValue.x = 0;
-    this.newValue.y = 0;
-    this.newValue.z = 0;
+    const newValue = this.properties['rotation']['new'];
+    newValue.x = 0;
+    newValue.y = 0;
+    newValue.z = 0;
     let el = this.el;
     while (el && el.object3D && el !== this.el.sceneEl) {
-      this.newValue.x += el.object3D.rotation.x;
-      this.newValue.y += el.object3D.rotation.y;
-      this.newValue.z += el.object3D.rotation.z;
+      newValue.x += el.object3D.rotation.x;
+      newValue.y += el.object3D.rotation.y;
+      newValue.z += el.object3D.rotation.z;
       el = el.parentElement;
     }
-    this.newValue.x = THREE.MathUtils.radToDeg(this.newValue.x);
-    this.newValue.y = THREE.MathUtils.radToDeg(this.newValue.y);
-    this.newValue.z = THREE.MathUtils.radToDeg(this.newValue.z);
+    newValue.x = THREE.MathUtils.radToDeg(newValue.x);
+    newValue.y = THREE.MathUtils.radToDeg(newValue.y);
+    newValue.z = THREE.MathUtils.radToDeg(newValue.z);
+  },
+
+  _getAbsolutePosition: function () {
+    // Note that we cannot use a getWorldPosition stunt here, because
+    // various compensations are applied only to the relative position
+    // depending on the device.
+    const newValue = this.properties['position']['new'];
+    newValue.x = 0;
+    newValue.y = 0;
+    newValue.z = 0;
+    let el = this.el;
+    while (el && el.object3D && el !== this.el.sceneEl) {
+      newValue.x += el.object3D.position.x;
+      newValue.y += el.object3D.position.y;
+      newValue.z += el.object3D.position.z;
+      el = el.parentElement;
+    }
   }
 });
 
@@ -559,12 +576,8 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
         idleAnimation.time = 0;
         idleAnimation.weight = 1;
 
-        this.setAttribute('absolute-position-listener', '');
-        this.addEventListener('absolutePositionChanged', function () {
-          self.idle = self.idleTimeout;
-        });
-        this.setAttribute('absolute-rotation-listener', '');
-        this.addEventListener('absoluteRotationChanged', function () {
+        this.setAttribute('oacs-change-listener', 'properties: position, rotation');
+        this.addEventListener('entityChanged', function () {
           self.idle = self.idleTimeout;
         });
 
@@ -1967,24 +1980,15 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _addDelegatedListeners: function () {
     const self = this;
-    window.addEventListener('absolutePositionChanged', function (e) {
+    window.addEventListener('entityChanged', function (e) {
       const component = e.target.components['oacs-networked-entity'];
       if (component) {
-        self.send({
+        const msg = {
           id: component.networkId,
-          type: 'update',
-          position: JSON.stringify(e.detail)
-        });
-      }
-    });
-    window.addEventListener('absoluteRotationChanged', function (e) {
-      const component = e.target.components['oacs-networked-entity'];
-      if (component) {
-        self.send({
-          id: component.networkId,
-          type: 'update',
-          rotation: JSON.stringify(e.detail)
-        });
+          type: 'update'
+        };
+        Object.assign(msg, e.detail);
+        self.send(msg);
       }
     });
 
@@ -2295,16 +2299,14 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     //
     // Shuts down event generation on changes
     //
-    this.el.removeAttribute('absolute-position-listener');
-    this.el.removeAttribute('absolute-rotation-listener');
+    this.el.removeAttribute('oacs-change-listener');
   },
 
   play: function () {
     //
     // Start event generation on changes
     //
-    this.el.setAttribute('absolute-position-listener', '');
-    this.el.setAttribute('absolute-rotation-listener', '');
+    this.el.setAttribute('oacs-change-listener', 'properties: position, rotation, color');
   },
 
   delete: function () {
