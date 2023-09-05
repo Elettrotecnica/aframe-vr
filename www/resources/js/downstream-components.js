@@ -12,9 +12,11 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   update: function () {
     this.properties = {};
     for (const p of this.data.properties) {
-      this.properties[p] = {};
-      this.properties[p]['old'] = {};
-      this.properties[p]['new'] = Object.assign({}, this.el.getAttribute(p));
+      this.properties[p] = {
+        "old": {},
+        "new": {}
+      };
+      this._fetchPropertyValue(p);
     }
     this.changedProperties = {};
   },
@@ -26,16 +28,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     let changed = false;
 
     for (const p in this.properties) {
-      switch(p) {
-      case 'position':
-        this._getAbsolutePosition();
-        break;
-      case 'rotation':
-        this._getAbsoluteRotation();
-        break;
-      default:
-        this.properties[p]['new'] = this.el.getAttribute(p);
-      }
+      this._fetchPropertyValue(p);
 
       const oldProperties = this.properties[p]['old'];
       const newProperties = this.properties[p]['new'];
@@ -59,6 +52,19 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     if (changed) {
       this.el.emit('entityChanged', this.changedProperties);
     }
+  },
+
+  _fetchPropertyValue: function (property) {
+      switch(property) {
+      case 'position':
+        this._getAbsolutePosition();
+        break;
+      case 'rotation':
+        this._getAbsoluteRotation();
+        break;
+      default:
+        this.properties[property]['new'] = this.el.getAttribute(property);
+      }
   },
 
   _getAbsoluteRotation: function () {
