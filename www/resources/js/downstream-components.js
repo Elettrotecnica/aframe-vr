@@ -1546,6 +1546,19 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     this.releaseEvent = new Event('release', {bubbles: true});
   },
 
+  msgObject: function () {
+    //
+    // Utility to reuse the single message object.
+    //
+    if (!this.message) {
+        this.message = {};
+    }
+    for (const k in this.message) {
+      delete this.message[k];
+    }
+    return this.message;
+  },
+
   remove: function () {
     if (this.websocket) {
       this.websocket.close();
@@ -1556,7 +1569,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     if (this.websocket && this.websocket.readyState === window.WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(data));
     } else {
-      this.messageQueue.push(data);
+      this.messageQueue.push(Object.assign({}, data));
     }
   },
 
@@ -1564,20 +1577,20 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     //
     // Attempt obtaining control over a networked entity.
     //
-    this.send({
-      id: id,
-      type: 'release'
-    });
+    const msg = this.msgObject();
+    msg.id = id;
+    msg.type = 'release';
+    this.send(msg);
   },
 
   release: function (id) {
     //
     // Attempt relinquishing control over a networked entity.
     //
-    this.send({
-      id: id,
-      type: 'grab'
-    });
+    const msg = this.msgObject();
+    msg.id = id;
+    msg.type = 'grab';
+    this.send(msg);
   },
 
   _clear: function () {
@@ -1595,10 +1608,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     window.addEventListener('entityChanged', function (e) {
       const component = e.target.components['oacs-networked-entity'];
       if (component) {
-        const msg = {
-          id: component.networkId,
-          type: 'update'
-        };
+        const msg = self.msgObject();
+        msg.id = component.networkId;
+        msg.type = 'update';
         const changedProperties = e.target.components['oacs-change-listener'].changedProperties;
         Object.assign(msg, changedProperties);
         self.send(msg);
@@ -1914,21 +1926,19 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     // Delete the entity only if we are currently in charge of it.
     //
     if (this.isPlaying) {
-      const data = {
-        id: this.networkId,
-        type: this.permanent ? 'grab' : 'delete'
-      };
-      this.networkedScene.send(data);
+      const msg = this.networkedScene.msgObject();
+      msg.id = this.networkId;
+      msg.type = this.permanent ? 'grab' : 'delete';
+      this.networkedScene.send(msg);
     }
   },
 
   attach: function () {
-    const msg = {
-      type: 'create',
-      id: this.networkId,
-      name: this.name,
-      color: this.color
-    }
+    const msg = this.networkedScene.msgObject();
+    msg.id = this.networkId;
+    msg.type = 'create';
+    msg.name = this.name;
+    msg.color = this.color
     if (this.template) {
       msg.template = this.template;
     }
