@@ -9,34 +9,34 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     properties: { type: 'array', default: 'position, rotation' }
   },
 
-  update: function () {
+  init: function () {
     this.properties = {};
-    for (const p of this.data.properties) {
-      this.properties[p] = {
-        'old': {},
-        'new': null
-      };
-      this._fetchPropertyValue(p);
-    }
     this.changedProperties = {};
     this.changeEvent = new Event('entityChanged', {bubbles: true});
   },
 
-  tick: function () {
-    for (const p in this.changedProperties) {
-      delete this.changedProperties[p];
+  update: function () {
+    for (const property of this.data.properties) {
+      if (!this.properties[property]) {
+        this._initPropertyValue(property);
+      }
+      this._fetchPropertyValue(property);
     }
+  },
+
+  tick: function () {
     let changed = false;
-    for (const p in this.properties) {
+    for (const property in this.properties) {
+      delete this.changedProperties[property];
       //
       // Get current property value
       //
-      this._fetchPropertyValue(p);
-      if (this._propertyChanged(p)) {
+      this._fetchPropertyValue(property);
+      if (this._propertyChanged(property)) {
         //
         // Collect all properties that changed
         //
-        this.changedProperties[p] = this.properties[p]['new'];
+        this.changedProperties[property] = this.properties[property]['new'];
         changed = true;
       }
     }
@@ -45,13 +45,13 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     }
   },
 
-  _propertyChanged: function (p) {
+  _propertyChanged: function (property) {
     //
     // Checks whether a property has changed and updates the currently
     // known value.
     //
-    let oldProperty = this.properties[p]['old'];
-    const newProperty = this.properties[p]['new'];
+    let oldProperty = this.properties[property]['old'];
+    const newProperty = this.properties[property]['new'];
     let changed = false;
     if (typeof newProperty === 'object') {
       //
@@ -61,21 +61,46 @@ window.AFRAME.registerComponent('oacs-change-listener', {
       // We assume new value is the relevant value and that the
       // overall structure of the property won't change over time.
       //
-      for (const a in newProperty) {
-        changed = changed || oldProperty[a] !== newProperty[a];
-        oldProperty[a] = newProperty[a];
+      for (const attribute in newProperty) {
+        changed = changed || oldProperty[attribute] !== newProperty[attribute];
+        oldProperty[attribute] = newProperty[attribute];
       }
     } else {
       //
       // Value properties are simply compared.
       //
       changed = oldProperty !== newProperty;
-      this.properties[p]['old'] = newProperty;
+      this.properties[property]['old'] = newProperty;
     }
     return changed;
   },
 
+  _initPropertyValue: function (property) {
+    //
+    // Instantiate objects holding old and new values. Some properties
+    // have special initialization.
+    //
+    this.properties[property] = {
+      'old': {},
+      'new': null
+    };
+    switch(property) {
+      case 'position':
+        this.properties['position']['new'] = new THREE.Vector3();
+        break;
+      case 'rotation':
+         this.absoluteRotationQuaternion = new THREE.Quaternion();
+         this.absoluteRotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+         this.properties['rotation']['new'] = {};
+        break;
+    }
+  },
+
   _fetchPropertyValue: function (property) {
+    //
+    // Fetch the current value for a property. Depending on the
+    // property this may have an own implementation.
+    //
     switch(property) {
       case 'position':
         this._getAbsolutePosition();
@@ -87,6 +112,10 @@ window.AFRAME.registerComponent('oacs-change-listener', {
         this._getGesture();
         break;
       default:
+        //
+        // By default, properties are retrieved by reading the
+        // attribute on the element.
+        //
         this.properties[property]['new'] = this.el.getAttribute(property);
     }
   },
@@ -99,11 +128,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   },
 
   _getAbsoluteRotation: function () {
-    if (!this.properties['rotation']['new']) {
-      this.absoluteRotationQuaternion = new THREE.Quaternion();
-      this.absoluteRotationEuler = new THREE.Euler();
-      this.properties['rotation']['new'] = {};
-    }
     const newValue = this.properties['rotation']['new'];
     this.el.object3D.getWorldQuaternion(this.absoluteRotationQuaternion);
     this.absoluteRotationEuler.setFromQuaternion(this.absoluteRotationQuaternion);
@@ -113,9 +137,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   },
 
   _getAbsolutePosition: function () {
-    if (!this.properties['position']['new']) {
-      this.properties['position']['new'] = new THREE.Vector3();
-    }
     const newValue = this.properties['position']['new'];
     this.el.object3D.getWorldPosition(newValue);
   }
