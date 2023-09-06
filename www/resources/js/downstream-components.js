@@ -27,32 +27,52 @@ window.AFRAME.registerComponent('oacs-change-listener', {
       delete this.changedProperties[p];
     }
     let changed = false;
-
     for (const p in this.properties) {
+      //
+      // Get current property value
+      //
       this._fetchPropertyValue(p);
-
-      const oldProperties = this.properties[p]['old'];
-      const newProperties = this.properties[p]['new'];
-      for (const a in oldProperties) {
-        if (oldProperties[a] !== newProperties[a]) {
-          this.changedProperties[p] = newProperties;
-          Object.assign(oldProperties, newProperties);
-          changed = true;
-          break;
-        }
-      }
-      for (const a in newProperties) {
-        if (oldProperties[a] !== newProperties[a]) {
-          this.changedProperties[p] = newProperties;
-          Object.assign(oldProperties, newProperties);
-          changed = true;
-          break;
-        }
+      if (this._propertyChanged(p)) {
+        //
+        // Collect all properties that changed
+        //
+        this.changedProperties[p] = this.properties[p]['new'];
+        changed = true;
       }
     }
     if (changed) {
       this.el.dispatchEvent(this.changeEvent);
     }
+  },
+
+  _propertyChanged: function (p) {
+    //
+    // Checks whether a property has changed and updates the currently
+    // known value.
+    //
+    let oldProperty = this.properties[p]['old'];
+    const newProperty = this.properties[p]['new'];
+    let changed = false;
+    if (typeof newProperty === 'object') {
+      //
+      // For object properties, check whether any of the attributes
+      // are different.
+      //
+      // We assume new value is the relevant value and that the
+      // overall structure of the property won't change over time.
+      //
+      for (const a in newProperty) {
+        changed = changed || oldProperty[a] !== newProperty[a];
+        oldProperty[a] = newProperty[a];
+      }
+    } else {
+      //
+      // Value properties are simply compared.
+      //
+      changed = oldProperty !== newProperty;
+      this.properties[p]['old'] = newProperty;
+    }
+    return changed;
   },
 
   _fetchPropertyValue: function (property) {
@@ -72,10 +92,9 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   },
 
   _getGesture: function () {
-    let newValue = this.properties['gesture']['new'];
     const component = this.el.components['hand-controls'];
-    if (component && component.gesture) {
-      newValue = component.gesture;
+    if (component && typeof component.gesture !== 'undefined') {
+      this.properties['gesture']['new'] = component.gesture;
     }
   },
 
@@ -1919,10 +1938,11 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
 
   play: function () {
     //
-    // Start event generation on changes
+    // We wait until the entity has been created before we listen to
+    // events.
     //
     if (this.isAttached) {
-      this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+      this._startListening();
     }
   },
 
@@ -1938,6 +1958,13 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     }
   },
 
+  _startListening: function () {
+    //
+    // Start event generation on changes
+    //
+    this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+  },
+
   attach: function () {
     const msg = this.networkedScene.msgObject();
     msg.id = this.networkId;
@@ -1949,7 +1976,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     }
     this.networkedScene.send(msg);
     this.isAttached = true;
-    this.play();
+    this._startListening();
   }
 });
 
