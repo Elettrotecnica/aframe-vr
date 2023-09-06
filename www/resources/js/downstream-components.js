@@ -682,13 +682,8 @@ window.AFRAME.registerComponent('remote-hand-controls', {
   },
 
   init: function () {
-    var el = this.el;
-    // Current pose.
-    this.gesture = this.data.gesture;
     this.loader = new THREE.GLTFLoader();
     this.loader.setCrossOrigin('anonymous');
-
-    el.object3D.visible = true;
   },
 
   tick: function (time, delta) {
@@ -704,12 +699,15 @@ window.AFRAME.registerComponent('remote-hand-controls', {
    * changes in the gesture property.
    */
   update: function (oldData) {
+    const lastGesture = oldData.gesture;
+    const gesture = this.data.gesture;
+
+    const previousHand = oldData.hand;
+    const hand = this.data.hand;
+
     var el = this.el;
-    var hand = this.data.hand;
-    var previousHand = oldData.hand;
     var handModelStyle = this.data.handModelStyle;
     var handColor = this.data.color;
-    var gesture = this.data.gesture;
     var self = this;
 
     // Set model.
@@ -717,19 +715,29 @@ window.AFRAME.registerComponent('remote-hand-controls', {
       var handmodelUrl = MODEL_URLS[handModelStyle + hand.charAt(0).toUpperCase() + hand.slice(1)];
       this.loader.load(handmodelUrl, function (gltf) {
         var mesh = gltf.scene.children[0];
-        var handModelOrientation = hand === 'left' ? Math.PI / 2 : -Math.PI / 2;
+        var handModelOrientationZ = hand === 'left' ? Math.PI / 2 : -Math.PI / 2;
+        //
+        // hand-controls enables this extra rotation only in VR and
+        // not on desktop, but these are remote hands and we should
+        // always assume them to be controlled by a VR device.
+        //
+        var handModelOrientationX = -Math.PI / 2;
         mesh.mixer = new THREE.AnimationMixer(mesh);
         self.clips = gltf.animations;
         el.setObject3D('mesh', mesh);
-
-        var handMaterial = mesh.children[1].material;
-        handMaterial.color = new THREE.Color(handColor);
+        mesh.traverse(function (object) {
+          if (!object.isMesh) { return; }
+          object.material.color = new THREE.Color(handColor);
+        });
         mesh.position.set(0, 0, 0);
-        mesh.rotation.set(0, 0, handModelOrientation);
+        mesh.rotation.set(handModelOrientationX, 0, handModelOrientationZ);
       });
     }
 
-    this.animateGesture(gesture);
+    //
+    // Animate gesture.
+    //
+    this.animateGesture(gesture, lastGesture);
   },
 
   remove: function () {
@@ -752,22 +760,27 @@ window.AFRAME.registerComponent('remote-hand-controls', {
   /**
    * Play gesture animation.
    *
-   * @param {string} gesture - Which pose to animate to.
+   * @param {string} gesture - Which pose to animate to. If absent, then animate to open.
+   * @param {string} lastGesture - Previous gesture, to reverse back to open if needed.
    */
-  animateGesture: function (gesture) {
-    if (gesture && gesture !== this.gesture) {
-      this.playAnimation(gesture, this.gesture);
-      this.gesture = gesture;
+  animateGesture: function (gesture, lastGesture) {
+    if (gesture) {
+      this.playAnimation(gesture || ANIMATIONS.open, lastGesture, false);
+      return;
     }
+
+    // If no gesture, then reverse the current gesture back to open pose.
+    this.playAnimation(lastGesture, lastGesture, true);
   },
 
   /**
-  * Play hand animation based on button state.
-  *
-  * @param {string} gesture - Name of the animation as specified by the model.
-  * @param {string} lastGesture - Previous pose.
-  */
-  playAnimation: function (gesture, lastGesture) {
+   * Play hand animation based on button state.
+   *
+   * @param {string} gesture - Name of the animation as specified by the model.
+   * @param {string} lastGesture - Previous pose.
+   * @param {boolean} reverse - Whether animation should play in reverse.
+   */
+  playAnimation: function (gesture, lastGesture, reverse) {
     var clip;
     var fromAction;
     var mesh = this.el.getObject3D('mesh');
@@ -775,25 +788,37 @@ window.AFRAME.registerComponent('remote-hand-controls', {
 
     if (!mesh) { return; }
 
-    // Stop all current animations.
-    mesh.mixer.stopAllAction();
-
     // Grab clip action.
     clip = this.getClip(gesture);
     toAction = mesh.mixer.clipAction(clip);
+
+    // Reverse from gesture to no gesture.
+    if (reverse) {
+      toAction.paused = false;
+      toAction.timeScale = -1;
+      return;
+    }
+
     toAction.clampWhenFinished = true;
-    toAction.loop = THREE.LoopRepeat;
+    toAction.loop = THREE.LoopOnce;
     toAction.repetitions = 0;
     toAction.timeScale = 1;
     toAction.time = 0;
     toAction.weight = 1;
 
+    // No gesture to gesture.
+    if (!lastGesture) {
+      // Play animation.
+      mesh.mixer.stopAllAction();
+      toAction.play();
+      return;
+    }
+
     // Animate or crossfade from gesture to gesture.
     clip = this.getClip(lastGesture);
-    fromAction = mesh.mixer.clipAction(clip);
-    fromAction.weight = 0.15;
-    fromAction.play();
+    toAction.reset();
     toAction.play();
+    fromAction = mesh.mixer.clipAction(clip);
     fromAction.crossFadeTo(toAction, 0.15, true);
   }
 });
