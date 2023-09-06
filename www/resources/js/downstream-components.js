@@ -13,8 +13,8 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     this.properties = {};
     for (const p of this.data.properties) {
       this.properties[p] = {
-        "old": {},
-        "new": {}
+        'old': {},
+        'new': null
       };
       this._fetchPropertyValue(p);
     }
@@ -76,7 +76,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   },
 
   _fetchPropertyValue: function (property) {
-      switch(property) {
+    switch(property) {
       case 'position':
         this._getAbsolutePosition();
         break;
@@ -88,7 +88,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
         break;
       default:
         this.properties[property]['new'] = this.el.getAttribute(property);
-      }
+    }
   },
 
   _getGesture: function () {
@@ -99,40 +99,25 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   },
 
   _getAbsoluteRotation: function () {
-    // Note that we cannot use a getWorldQuaternion stunt here,
-    // because various compensations are applied only to the relative
-    // rotation depending on the device.
-    const newValue = this.properties['rotation']['new'];
-    newValue.x = 0;
-    newValue.y = 0;
-    newValue.z = 0;
-    let el = this.el;
-    while (el && el.object3D && el !== this.el.sceneEl) {
-      newValue.x += el.object3D.rotation.x;
-      newValue.y += el.object3D.rotation.y;
-      newValue.z += el.object3D.rotation.z;
-      el = el.parentElement;
+    if (!this.properties['rotation']['new']) {
+      this.absoluteRotationQuaternion = new THREE.Quaternion();
+      this.absoluteRotationEuler = new THREE.Euler();
+      this.properties['rotation']['new'] = {};
     }
-    newValue.x = THREE.MathUtils.radToDeg(newValue.x);
-    newValue.y = THREE.MathUtils.radToDeg(newValue.y);
-    newValue.z = THREE.MathUtils.radToDeg(newValue.z);
+    const newValue = this.properties['rotation']['new'];
+    this.el.object3D.getWorldQuaternion(this.absoluteRotationQuaternion);
+    this.absoluteRotationEuler.setFromQuaternion(this.absoluteRotationQuaternion);
+    newValue.x = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.x);
+    newValue.y = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.y);
+    newValue.z = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.z);
   },
 
   _getAbsolutePosition: function () {
-    // Note that we cannot use a getWorldPosition stunt here, because
-    // various compensations are applied only to the relative position
-    // depending on the device.
-    const newValue = this.properties['position']['new'];
-    newValue.x = 0;
-    newValue.y = 0;
-    newValue.z = 0;
-    let el = this.el;
-    while (el && el.object3D && el !== this.el.sceneEl) {
-      newValue.x += el.object3D.position.x;
-      newValue.y += el.object3D.position.y;
-      newValue.z += el.object3D.position.z;
-      el = el.parentElement;
+    if (!this.properties['position']['new']) {
+      this.properties['position']['new'] = new THREE.Vector3();
     }
+    const newValue = this.properties['position']['new'];
+    this.el.object3D.getWorldPosition(newValue);
   }
 });
 
