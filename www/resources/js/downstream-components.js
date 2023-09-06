@@ -90,7 +90,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
         break;
       case 'rotation':
          this.absoluteRotationQuaternion = new THREE.Quaternion();
-         this.absoluteRotationEuler = new THREE.Euler(0, 0, 0, 'YXZ');
+         this.absoluteRotationEuler = new THREE.Euler();
          this.properties['rotation']['new'] = {};
         break;
     }
@@ -131,9 +131,9 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     const newValue = this.properties['rotation']['new'];
     this.el.object3D.getWorldQuaternion(this.absoluteRotationQuaternion);
     this.absoluteRotationEuler.setFromQuaternion(this.absoluteRotationQuaternion);
-    newValue.x = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.x);
-    newValue.y = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.y);
-    newValue.z = THREE.MathUtils.radToDeg(this.absoluteRotationEuler.z);
+    newValue.x = this.absoluteRotationEuler.x;
+    newValue.y = this.absoluteRotationEuler.y;
+    newValue.z = this.absoluteRotationEuler.z;
   },
 
   _getAbsolutePosition: function () {
@@ -1736,6 +1736,20 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     return el;
   },
 
+  _updateAttribute: function (el, attribute, value) {
+    if ((attribute === 'rotation' ||
+         attribute === 'position') &&
+        el.object3D) {
+      el.object3D[attribute].set(
+        value.x,
+        value.y,
+        value.z
+      );
+    } else {
+      el.setAttribute(attribute, value);
+    }
+  },
+
   _update: function (el, data) {
     //
     // Update an item locally.
@@ -1762,11 +1776,11 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // of this attribute tells which is the real attribute we should
     // change.
     //
-    for (const d of el.querySelectorAll('*')) {
+    for (const descendant of el.querySelectorAll('*')) {
       for (const property in data) {
-        if (typeof d.dataset[property] !== 'undefined') {
-          const att = d.dataset[property] === '' ? property : d.dataset[property];
-          d.setAttribute(att, data[property]);
+        if (typeof descendant.dataset[property] !== 'undefined') {
+          const attribute = descendant.dataset[property] === '' ? property : descendant.dataset[property];
+          this._updateAttribute(descendant, attribute, data[property]);
           delete data[property];
         }
       }
@@ -1775,7 +1789,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // All remaining properties are set on the entity directly.
     //
     for (const property in data) {
-      el.setAttribute(property, data[property]);
+      this._updateAttribute(el, property, data[property]);
     }
   },
 
