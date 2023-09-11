@@ -1935,7 +1935,9 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     //
     // Shuts down event generation on changes
     //
-    this.el.removeAttribute('oacs-change-listener');
+    if (this.el.components['oacs-change-listener']) {
+      this.el.components['oacs-change-listener'].pause();
+    }
   },
 
   play: function () {
@@ -1964,7 +1966,11 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     //
     // Start event generation on changes
     //
-    this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+    if (this.el.components['oacs-change-listener']) {
+      this.el.components['oacs-change-listener'].play();
+    } else {
+      this.el.setAttribute('oacs-change-listener', 'properties', this.properties);
+    }
   },
 
   attach: function () {
