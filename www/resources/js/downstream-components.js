@@ -1590,7 +1590,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this.messageQueue = [];
 
-    this._privateProperties = ['id', 'type'];
+    this._privateProperties = ['id', 'type', 'template'];
 
     this.grabEvent = new Event('grab', {bubbles: true});
     this.releaseEvent = new Event('release', {bubbles: true});
@@ -1721,33 +1721,16 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       const template = this.sceneEl.lastElementChild;
       el = template.content.firstElementChild.cloneNode(true);
       el.setAttribute('id', data.id);
-      //
-      // Ensure entity is visible only in its final, updated state
-      // by toggling visibility.
-      //
-      el.setAttribute('visible', false);
+      const self = this;
+      el.addEventListener('loaded', function () {
+        self._update(el, data);
+      });
       this.sceneEl.appendChild(el);
-      this._update(el, data);
-      el.setAttribute('visible', true);
       console.log('Element created', el, data);
     } else {
       console.log('No template for this element. Skipping.', data);
     }
     return el;
-  },
-
-  _updateAttribute: function (el, attribute, value) {
-    if ((attribute === 'rotation' ||
-         attribute === 'position') &&
-        el.object3D) {
-      el.object3D[attribute].set(
-        value.x,
-        value.y,
-        value.z
-      );
-    } else {
-      el.setAttribute(attribute, value);
-    }
   },
 
   _update: function (el, data) {
@@ -1758,39 +1741,13 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     //
     // Get private properties out of the way
     //
-    for (const p of this._privateProperties) {
-      delete data[p];
+    for (const property of this._privateProperties) {
+      delete data[property];
     }
-    //
-    // The gesture property is applied on a special component.
-    //
-    if (data.gesture) {
-      el.setAttribute('remote-hand-controls', 'gesture', data.gesture);
-      delete data.gesture;
+    if (!el.components['oacs-updated-entity']) {
+      el.setAttribute('oacs-updated-entity', '');
     }
-    //
-    // A property is by default set by its attribute name on the
-    // element. Optionally, one can specify a data-#property name#
-    // attribute on a child element in the template to say that this
-    // is the element where the property should be updated. The value
-    // of this attribute tells which is the real attribute we should
-    // change.
-    //
-    for (const descendant of el.querySelectorAll('*')) {
-      for (const property in data) {
-        if (typeof descendant.dataset[property] !== 'undefined') {
-          const attribute = descendant.dataset[property] === '' ? property : descendant.dataset[property];
-          this._updateAttribute(descendant, attribute, data[property]);
-          delete data[property];
-        }
-      }
-    }
-    //
-    // All remaining properties are set on the entity directly.
-    //
-    for (const property in data) {
-      this._updateAttribute(el, property, data[property]);
-    }
+    el.components['oacs-updated-entity'].doUpdate(data);
   },
 
   _delete: function (data) {
@@ -2023,6 +1980,110 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.isAttached = true;
     this._startListening();
   }
+});
+
+/**
+ * This component maps the property updates received from the network
+ * to the actual operation that will be applied on the entity. For
+ * instance, certain properties are applied on sub-entities and not on
+ * the entity itself. Other properties are not applied as-is, but need
+ * a translation to be applied first. This is the place where this
+ * translations happen and are cached.
+ */
+window.AFRAME.registerComponent('oacs-updated-entity', {
+  init: function () {
+    this._initPropertyElements();
+    this._propertySetters = {};
+  },
+
+  doUpdate: function (data) {
+    for (const property in data) {
+      this._setProperty(property, data[property]);
+    }
+  },
+
+  _requirePropertySetter: function (property) {
+    if (!this._propertySetters[property]) {
+      let el;
+      if (this.propertyElements[property]) {
+        el = this.propertyElements[property];
+      } else {
+        el = this.el;
+      }
+      this._propertySetters[property] =
+        this._getPropertySetter(el, property);
+    }
+    return this._propertySetters[property];
+  },
+
+  _setProperty: function (property, value) {
+    //
+    // Requires the right property setter for this property and uses
+    // it to set the value on this entity.
+    //
+    const setter = this._requirePropertySetter(property);
+    setter(value);
+  },
+
+  _getPropertySetter: function (el, property) {
+    //
+    // When present, the value of the dataset property tells which is
+    // the real attribute we should change.
+    //
+    if (typeof el.dataset[property] !== 'undefined' &&
+        el.dataset[property] !== '') {
+      property = el.dataset[property];
+    }
+
+    //
+    // Position and rotation are applied directly on the object3D.
+    //
+    if ((property === 'rotation' ||
+         property === 'position') &&
+        el.object3D) {
+      return function (value) {
+        el.object3D[property].set(
+          value.x, value.y, value.z
+        );
+      };
+    }
+
+    //
+    // The gesture is applied on the remote-hand-controls component.
+    //
+    if (property === 'gesture') {
+      return function (value) {
+        el.setAttribute('remote-hand-controls', 'gesture', value);
+      };
+    }
+
+    //
+    // In all other cases, we just set the attribute.
+    //
+    return function (value) {
+      el.setAttribute(property, value);
+    };
+  },
+
+  _initPropertyElements: function () {
+    this.propertyElements = {};
+
+    //
+    // A property is by default set by its attribute name on the
+    // element. Optionally, one can specify a data-#property name#
+    // attribute on a child element in the template to say that this
+    // is the element where the property should be updated.
+    //
+    for (const descendant of this.el.querySelectorAll('*')) {
+      for (const property in descendant.dataset) {
+        this.propertyElements[property] = descendant;
+      }
+    }
+    //
+    // All remaining properties are set on the entity directly.
+    //
+  },
+
 });
 
 //
