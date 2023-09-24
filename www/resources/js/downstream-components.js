@@ -2092,6 +2092,49 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
 
 });
 
+/**
+ * Cap the size of an object to a value. Size is modeled as the max
+ * between length, height and depth of the bounding box enclosing the
+ * entity.
+ */
+window.AFRAME.registerComponent('cap-size', {
+  schema: {
+    size: {default: 1.6}
+  },
+
+  init: function () {
+    this.size = this.data.size;
+    this.box = new THREE.Box3();
+    this.vec = new THREE.Vector3();
+
+    this._capSize();
+  },
+
+  _getSize: function () {
+    this.box.setFromObject(this.el.object3D, false);
+    this.box.getSize(this.vec);
+    return Math.max(this.vec.x, this.vec.y, this.vec.z);
+  },
+
+  _capSize: function () {
+    const size = this._getSize();
+
+    if (size === 0) {
+      //
+      // This is probably a gltf model, we need to wait for it to be
+      // loaded.
+      //
+      this.el.addEventListener('model-loaded', this._capSize.bind(this));
+      return;
+    }
+
+    if (size > this.size) {
+      const ratio = this.size / size;
+      this.el.object3D.scale.set(ratio, ratio, ratio);
+    }
+  }
+});
+
 //
 // Local variables:
 //    mode: javascript
