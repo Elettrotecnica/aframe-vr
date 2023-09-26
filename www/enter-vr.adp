@@ -169,8 +169,6 @@
 	     // at some point and let it spawn e.g. "1 meter in front of
 	     // us".
 	     //
-	     const position = camera.components['absolute-position-listener'].oldValue;
-	     formData.append('position', position.x + ' ' + position.y + ' ' + position.z);
 	     const req = new XMLHttpRequest();
 	     req.addEventListener('load', function (e) {
 		 if (this.status === 200) {
@@ -186,7 +184,6 @@
 		     spawnedEntity.setAttribute('data-spawn', 'mine');
 		     vrScene.appendChild(spawnedEntity);
 		     spawnedEntity.setAttribute('position', camera.getAttribute('position'));
-		     console.log(spawnedEntity);
 		 } else {
 		     alert('Cannot create this object: ' + this.response);
 		 }
