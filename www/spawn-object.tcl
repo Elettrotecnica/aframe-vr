@@ -71,6 +71,7 @@ ns_return 200 text/plain [subst -nocommands {
     <template id="$id-template">
       <a-gltf-model
          id="$id"
+         center
          clamp-size="maxSize: $spawn_max_size; minSize: $spawn_min_size"
          oacs-networked-entity="template: #$id-template; permanent: $permanent"
          data-spawn="theirs"

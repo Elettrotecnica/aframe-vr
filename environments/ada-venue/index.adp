@@ -7,22 +7,6 @@
 <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
 <script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-    const centerModel = (function () {
-	//
-	// Force that the objects contained by an entity are always
-	// centered inside the bounding box.
-	//
-	const b = new THREE.Box3();
-	return function (object) {
-	    b.setFromObject(object);
-	    for (child of object.children) {
-		b.getCenter(child.position).
-		    sub(object.position).
-		    divide(object.scale).
-		    negate();
-	    }
-	};
-    })();
     window.addEventListener('load', function () {
 
 	const scene = document.querySelector('a-scene');
@@ -44,7 +28,6 @@
 		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
 		e.target.setAttribute('ammo-body', type);
 	        e.target.setAttribute('ammo-shape', 'type: box; minHalfExtent: 0.1;');
-		centerModel(e.target.object3D);
 	    }
 	});
 

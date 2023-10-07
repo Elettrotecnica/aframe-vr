@@ -2143,6 +2143,31 @@ window.AFRAME.registerComponent('clamp-size', {
 });
 
 /**
+ * Center all direct children of the entity to the center of the
+ * entity's bounding box. Used to fix gltf models in the wild that may
+ * come with an origin different from the center.
+ */
+const _centerModel = (function () {
+  const b = new THREE.Box3();
+  return function (object) {
+    b.setFromObject(object);
+    for (child of object.children) {
+      b.getCenter(child.position).
+	sub(object.position).
+	divide(object.scale).
+	negate();
+    }
+  };
+})();
+window.AFRAME.registerComponent('center', {
+  init: function () {
+    this.el.addEventListener('model-loaded', e => {
+      _centerModel(this.el.object3D);
+    });
+  }
+});
+
+/**
  * Grab component
  *
  * A component to be put on entities running hand-controls (aka your
