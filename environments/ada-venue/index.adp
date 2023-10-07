@@ -90,12 +90,14 @@
         camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.0');
 
         //
-        // Once controllers connect, make them a kinematic body.
+        // Once controllers connect, make them a kinematic body and
+        // let them grab stuff.
         //
         for (const hand of document.querySelectorAll('[hand-controls]')) {
             hand.addEventListener('controllerconnected', function () {
                 this.setAttribute('ammo-body', 'type: kinematic');
                 this.setAttribute('ammo-shape', 'type: sphere');
+                this.setAttribute('grab', '');
             }, {once: true });
         }
     });
