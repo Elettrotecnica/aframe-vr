@@ -36,95 +36,66 @@ ad_form \
         #
         # Make sure the URL is correct.
         #
-        if {![regexp {^(https://api.readyplayer.me/v1/avatars/\w+\.glb)(\?.*)?$} \
-                  $avatar_api_url _ avatar_api_url settings]} {
+        if {![regexp {^(https://models.readyplayer.me/)(\w+)\.glb(\?.*)?$} \
+                  $avatar_api_url _ api_url avatar_id settings]} {
             ::template::element set_error avatar avatar_api_url "Invalid URL"
+	    break
         }
 
-        set avatar_api_url $avatar_api_url
+	set avatar_api_url ${api_url}${avatar_id}.glb
 
         #
         # Request the avatar's glb model.
         #
         set wfd [ad_opentmpfile tmpfile]
-        set response [ns_http run -method GET -spoolsize 0 \
-                          -outputchan $wfd \
-                          $avatar_api_url?useHands=false]
+
+	try {
+	    set response [ns_http run -method GET -spoolsize 0 \
+			      -outputchan $wfd \
+			      $avatar_api_url?useHands=false]
+	    set status [dict get $response status]
+	} on error {errmsg} {
+	    ad_log warning $errmsg
+	    set status 0
+	}
+
         close $wfd
 
-        set status [dict get $response status]
         if {$status != 200} {
-            ::template::element set_error avatar avatar_url \
-                "Error while contacting the ReadyPlayerMe server. Response was: $status"
-        }
-
-        if {![::template::form::is_valid avatar]} {
-            break
+            ::template::element set_error avatar avatar_api_url \
+                "Something went wrong retrieving the avatar model"
+	    break
         }
 
         file rename -force -- $tmpfile $avatar_file
 
+
         #
         # Request to generate the avatar's thumbnail.
         #
-        set render_api_url https://render.readyplayer.me/render
-        set render_api_request [subst -nocommands {
-            {
-                "model": "$avatar_api_url",
-                "scene": "halfbody-portrait-v1"
-            }
-        }]
-        set headers [ns_set create]
-        ns_set put $headers Content-type application/json
-        set response [ns_http run -method POST \
-                          -headers $headers \
-                          -body $render_api_request \
-                          $render_api_url]
+	set render_api_url ${api_url}${avatar_id}.png
 
-        set thumbnail_p false
-        set status [dict get $response status]
+	set wfd [ad_opentmpfile tmpfile]
+
+	try {
+	    set response [ns_http run -method GET \
+			      -spoolsize 0 \
+			      -outputchan $wfd \
+			      $render_api_url]
+	    set status [dict get $response status]
+	} on error {errmsg} {
+	    ad_log warning $errmsg
+	    set status 0
+	}
+
+	close $wfd
+
         if {$status == 200} {
-            try {
-
-                #
-                # We got the JSON response containing the avatar
-                # thumbnail URL, parse the response, request the image
-                # and store it.
-                #
-                if {[namespace which ::json::json2dict] eq ""} {
-                    package require json
-                }
-                set url [lindex \
-                             [dict get \
-                                  [::json::json2dict [dict get $response body]] \
-                                  renders] \
-                             0]
-
-                set wfd [ad_opentmpfile tmpfile]
-                set response [ns_http run -method GET -spoolsize 0 \
-                                  -outputfile $tmpfile \
-                                  $url]
-                close $wfd
-                set status [dict get $response status]
-                if {$status == 200} {
-                    file rename -force $tmpfile $avatar_image_file
-                    set thumbnail_p true
-                }
-
-            } on error {errmsg} {
-                ns_log warning "Impossible to retrieve the avatar portrait: $errmsg"
-            }
+	    file rename -force $tmpfile $avatar_image_file
+        } else {
+            ::template::element set_error avatar avatar_api_url \
+		"Something went wrong retrieving the avatar thumbnail. If avatar appearance and thumbnail do not correspond, please try again."
+	    break
         }
-
-        if {!$thumbnail_p} {
-            #
-            # Something went wrong retrieving the avatar thumbnail, so
-            # avatar appearance and thumbnail might not correspond
-            # anymore. Delete the image.
-            #
-            ad_file delete $avatar_image_file
-        }
-
 
     }
-
