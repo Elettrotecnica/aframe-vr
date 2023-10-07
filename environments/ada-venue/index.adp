@@ -8,11 +8,18 @@
 <script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const centerModel = (function () {
+	//
+	// Force that the objects contained by an entity are always
+	// centered inside the bounding box.
+	//
 	const b = new THREE.Box3();
 	return function (object) {
 	    b.setFromObject(object);
 	    for (child of object.children) {
-		b.getCenter(child.position).sub(object.position).negate();
+		b.getCenter(child.position).
+		    sub(object.position).
+		    divide(object.scale).
+		    negate();
 	    }
 	};
     })();
