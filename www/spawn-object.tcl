@@ -63,11 +63,14 @@ set model_url [site_node::get_url -node_id $fs_node_id]/view/[ad_urlencode_path 
 
 set permanent [expr {$permanent ? true : false}]
 
+set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
+
 set id spawn-$revision_id
 ns_return 200 text/plain [subst -nocommands {
     <template id="$id-template">
       <a-gltf-model
          id="$id"
+         cap-size="size: $spawn_max_size"
          oacs-networked-entity="template: #$id-template; permanent: $permanent"
          data-spawn="theirs"
          src="url($model_url)"
