@@ -134,7 +134,7 @@
       <div class="checkbox">
         <label>
           <input type="checkbox" id="pushtotalk">Use PushToTalk
-          <audio id="pushtotalk-audio" style="display: none;" src="audio/roger.mp3"></audio>
+          <audio id="pushtotalk-audio" style="display: none;" src="/aframe-vr/resources/audio/roger.mp3"></audio>
         </label>
       </div>
     </div>
