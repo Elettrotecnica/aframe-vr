@@ -27,6 +27,7 @@
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_room_pin"  description="The PIN required to access the Janus room. When not specified, a random one will be generated and stored as the value for this parameter. Unless you plan to use a custom Janus configuration for your room, there is no need to specify this parameter." section_name="Janus Settings"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_url"  description="URL of the Janus instance that will be used for the audio and video chat." section_name="Janus Settings"/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="spawn_max_size"  default="1.6" description="Maxmimum size for spawned objects expressed in meters" section_name="Environment Settings"/>
+            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="spawn_min_size"  default="0.3" description="Minimum size for spawned objects expressed in meters" section_name="Environment Settings"/>
         </parameters>
 
     </version>

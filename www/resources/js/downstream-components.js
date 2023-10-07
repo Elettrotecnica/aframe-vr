@@ -2093,21 +2093,23 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
 });
 
 /**
- * Cap the size of an object to a value. Size is modeled as the max
- * between length, height and depth of the bounding box enclosing the
- * entity.
+ * Clamp the size of between a min and a max values. Size is modeled
+ * as the max between length, height and depth of the bounding box
+ * enclosing the entity.
  */
-window.AFRAME.registerComponent('cap-size', {
+window.AFRAME.registerComponent('clamp-size', {
   schema: {
-    size: {default: 1.6}
+    minSize: {type: 'number', default: 0.2},
+    maxSize: {type: 'number', default: 1.6}
   },
 
   init: function () {
-    this.size = this.data.size;
+    this.minSize = this.data.minSize;
+    this.maxSize = this.data.maxSize;
     this.box = new THREE.Box3();
     this.vec = new THREE.Vector3();
 
-    this._capSize();
+    this._clampSize();
   },
 
   _getSize: function () {
@@ -2116,7 +2118,7 @@ window.AFRAME.registerComponent('cap-size', {
     return Math.max(this.vec.x, this.vec.y, this.vec.z);
   },
 
-  _capSize: function () {
+  _clampSize: function () {
     const size = this._getSize();
 
     if (size === 0) {
@@ -2124,12 +2126,17 @@ window.AFRAME.registerComponent('cap-size', {
       // This is probably a gltf model, we need to wait for it to be
       // loaded.
       //
-      this.el.addEventListener('model-loaded', this._capSize.bind(this));
+      this.el.addEventListener('model-loaded', this._clampSize.bind(this));
       return;
     }
 
-    if (size > this.size) {
-      const ratio = this.size / size;
+    let ratio;
+    if (size > this.maxSize) {
+      ratio = this.maxSize / size;
+    } else if (size < this.minSize) {
+      ratio = this.minSize / size;
+    }
+    if (typeof ratio !== 'undefined') {
       this.el.object3D.scale.set(ratio, ratio, ratio);
     }
   }
