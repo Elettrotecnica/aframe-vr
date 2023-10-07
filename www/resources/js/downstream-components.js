@@ -2142,6 +2142,143 @@ window.AFRAME.registerComponent('clamp-size', {
   }
 });
 
+/**
+ * Grab component
+ *
+ * A component to be put on entities running hand-controls (aka your
+ * hands) that enables grabbing physic objects. Depends on ammo.
+ *
+ * Requires: physics
+ *
+ * Lifted from https://github.com/c-frame/aframe-physics-system.
+ */
+window.AFRAME.registerComponent('grab', {
+  init: function () {
+    this.system = this.el.sceneEl.systems.physics;
+
+    this.GRABBED_STATE = 'grabbed';
+
+    this.grabbing = false;
+    this.hitEl =      /** @type {AFRAME.Element}    */ null;
+    this.physics =    /** @type {AFRAME.System}     */ this.el.sceneEl.systems.physics;
+    this.constraint = /** @type {Ammo.Constraint} */ null;
+
+    // Bind event handlers
+    this.onHitAmmo = this.onHitAmmo.bind(this);
+    this.onGripOpen = this.onGripOpen.bind(this);
+    this.onGripClose = this.onGripClose.bind(this);
+  },
+
+  play: function () {
+    const el = this.el;
+    el.addEventListener('collidestart', this.onHitAmmo);
+    el.addEventListener('gripdown', this.onGripClose);
+    el.addEventListener('gripup', this.onGripOpen);
+    el.addEventListener('trackpaddown', this.onGripClose);
+    el.addEventListener('trackpadup', this.onGripOpen);
+    el.addEventListener('triggerdown', this.onGripClose);
+    el.addEventListener('triggerup', this.onGripOpen);
+  },
+
+  pause: function () {
+    var el = this.el;
+    el.removeEventListener('collidestart', this.onHitAmmo);
+    el.removeEventListener('gripdown', this.onGripClose);
+    el.removeEventListener('gripup', this.onGripOpen);
+    el.removeEventListener('trackpaddown', this.onGripClose);
+    el.removeEventListener('trackpadup', this.onGripOpen);
+    el.removeEventListener('triggerdown', this.onGripClose);
+    el.removeEventListener('triggerup', this.onGripOpen);
+  },
+
+  onGripClose: function (evt) {
+    this.grabbing = true;
+  },
+
+  onGripOpen: function (evt) {
+    const hitEl = this.hitEl;
+    this.grabbing = false;
+    if (!hitEl) { return; }
+    hitEl.removeState(this.GRABBED_STATE);
+
+    this.hitEl.removeAttribute(`ammo-constraint__${this.el.id}`)
+
+    this.hitEl = undefined;
+
+  },
+
+  onHitAmmo: function (evt) {
+    const hitEl = evt.detail.targetEl;
+    // If the element is already grabbed (it could be grabbed by another controller).
+    // If the hand is not grabbing the element does not stick.
+    // If we're already grabbing something you can't grab again.
+    if (!hitEl || hitEl.is(this.GRABBED_STATE) || !this.grabbing || this.hitEl) { return; }
+    hitEl.addState(this.GRABBED_STATE);
+    this.hitEl = hitEl;
+    this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
+                            { target: `#${this.el.id}` })
+  }
+});
+
+/**
+ * Force Pushable component.
+ *
+ * Applies behavior to the current entity such that cursor clicks will
+ * apply a strong impulse, pushing the entity away from the viewer.
+ *
+ * Requires: physics
+ *
+ * Lifted from https://github.com/c-frame/aframe-physics-system.
+ */
+window.AFRAME.registerComponent('force-pushable', {
+  schema: {
+    force: { default: 10 }
+  },
+  init: function () {
+
+    this.pStart = new THREE.Vector3();
+    this.sourceEl = this.el.sceneEl.querySelector('[camera]');
+
+    this.el.addEventListener('click', this.forcePushAmmo.bind(this));
+
+    this.force = new THREE.Vector3();
+    this.pos = new THREE.Vector3();
+
+    this.el.addEventListener("body-loaded", e => {
+      this.impulseBtVector = new Ammo.btVector3();
+      this.posBtVector = new Ammo.btVector3();
+    });
+  },
+
+  forcePushAmmo: function (e) {
+
+    if (!this.impulseBtVector) return;
+
+    const el = this.el
+    const force = this.force
+    const impulseBt = this.impulseBtVector
+    const pusher = e.detail.cursorEl.object3D
+    force.copy(pusher.position)
+    pusher.localToWorld(force)
+    force.copy(el.object3D.position.sub(force))
+    force.normalize();
+
+    force.multiplyScalar(this.data.force);
+    impulseBt.setValue(force.x, force.y, force.z)
+
+    // use data from intersection to determine point at which to apply
+    // impulse.
+    const pos = this.pos
+    const posBt = this.posBtVector
+    pos.copy(e.detail.intersection.point)
+    el.object3D.worldToLocal(pos)
+    posBt.setValue(pos.x, pos.y, pos.z)
+
+    el.body.activate()
+    el.body.applyImpulse(impulseBt, posBt);
+  }
+});
+
 //
 // Local variables:
 //    mode: javascript
