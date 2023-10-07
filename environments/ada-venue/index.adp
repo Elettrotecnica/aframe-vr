@@ -1,14 +1,23 @@
 <%
-  security::csp::require script-src c-frame.github.io
   security::csp::require connect-src cdn.jsdelivr.net
 %>
 <script src="js/aframe-environment-component.min.js"></script>
 <script src="js/ar-shadow-helper.js"></script>
 <script src="js/model-utils.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
-<script src="https://c-frame.github.io/aframe-physics-system/dist/aframe-physics-system.js"></script>
+<script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    const centerModel = (function () {
+	const b = new THREE.Box3();
+	return function (object) {
+	    b.setFromObject(object);
+	    for (child of object.children) {
+		b.getCenter(child.position).sub(object.position).negate();
+	    }
+	};
+    })();
     window.addEventListener('load', function () {
+
 	const scene = document.querySelector('a-scene');
         //
         // When objects requiring physics finish to load, attach physics to them
@@ -27,7 +36,8 @@
 		const spawn = e.target.getAttribute('data-spawn');
 		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
 		e.target.setAttribute('ammo-body', type);
-		e.target.setAttribute('ammo-shape', 'type: sphere');
+	        e.target.setAttribute('ammo-shape', 'type: box; minHalfExtent: 0.1;');
+		centerModel(e.target.object3D);
 	    }
 	});
 
