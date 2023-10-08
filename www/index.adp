@@ -28,16 +28,16 @@
   <div id="menu" class="flex-container">
     <div class="flex-12">
       <if @admin_p;literal@ true>
-        <a class="btn btn-default" href="@settings_url@">Room Settings</a>
+        <a class="btn btn-primary" href="@settings_url@">Room Settings</a>
       </if>
-      <a class="btn btn-default" href="@avatar_url@">Manage Avatar</a>
+      <a class="btn btn-primary" href="@avatar_url@">Manage Avatar</a>
     </div>
     <div class="flex-12">
       <if @write_p;literal@ true>
-        <a class="btn btn-default" href="enter-vr">Enter VR</a>
+        <a class="btn btn-primary" href="enter-vr">Enter VR</a>
       </if>
       <if @write_p;literal@ true and @stream_url@ not nil>
-        <a class="btn btn-default" href="@stream_url@">Stream to Room</a>
+        <a class="btn btn-primary" href="@stream_url@">Stream to Room</a>
       </if>
     </div>
   </div>

@@ -124,11 +124,11 @@
   </div>
   <div id="toolbar">
     <div>
-      <button class="btn btn-default btn-danger" data-href=".">Exit</button>
+      <button class="btn btn-danger" data-href=".">Exit</button>
     </div>
     <div id="audiometer">
       <div>
-        <button id="mutebutton" class="btn btn-default btn-warning">Mute</button>
+        <button id="mutebutton" class="btn btn-warning">Mute</button>
       </div>
       <canvas width="25" height="150"></canvas>
       <div class="checkbox">

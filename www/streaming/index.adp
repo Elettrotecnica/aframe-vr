@@ -29,8 +29,8 @@
     <div class="flex-6">
       <div class="flex-12">
         <button class="btn btn-success" id="start">Start</button>
-        <button class="btn btn-default" id="stop" disabled>Stop</button>
-        <button class="btn btn-default" id="mute" disabled>Mute</button>
+        <button class="btn btn-secondary" id="stop" disabled>Stop</button>
+        <button class="btn btn-secondary" id="mute" disabled>Mute</button>
       </div>
       <div id="details" class="flex-12">
         This page will allow you to stream camera, desktop or both on one of the available surfaces in the VR space.
