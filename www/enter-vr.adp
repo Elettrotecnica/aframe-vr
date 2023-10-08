@@ -138,61 +138,41 @@
         </label>
       </div>
     </div>
-    <if @spawn_objects_p;literal@ true>
-      <div>
-	<form id="spawn">
-          <div>
-            <label>
-              <input type="file" required name="model">
-            </label>
-          </div>
-          <div>
-            <label>
-              <input type="checkbox" name="permanent"> Permanent
-            </label>
-          </div>
-          <div>
-            <button>Spawn .glb model</button>
-          </div>
-	</form>
-      </div>
-    </if>
   </div>
+  <if @spawn_objects_p;literal@ true>
+    <hr>
+    <div>
+      <form id="upload">
+        <div>
+          <label>
+            <input type="file" required name="model">
+          </label>
+        </div>
+        <div>
+          <button>Upload Model</button>
+          </div>
+      </form>
+      <iframe id="models" src="./models/" style="width: 100%; height: 100vh; border:none;"></iframe>
+    </div>
+  </if>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const camera = document.querySelector('a-camera');
       <if @spawn_objects_p;literal@ true>
-	 document.querySelector('#spawn').addEventListener('submit', function (e) {
+         const modelsIframe = document.querySelector('#models');
+         document.querySelector('#upload').addEventListener('submit', function (e) {
 	     e.preventDefault();
-	     const formData = new FormData(this);
-	     //
-	     // We let the new entity spawn where we are. We may be fancier
-	     // at some point and let it spawn e.g. "1 meter in front of
-	     // us".
-	     //
 	     const req = new XMLHttpRequest();
 	     req.addEventListener('load', function (e) {
 		 if (this.status === 200) {
-		     //
-		     // Add the template to the page
-		     //
-		     vrScene.insertAdjacentHTML('beforeend', this.response);
-		     //
-		     // Spawn the local entity from the template. This will
-		     // trigger remote creation as well.
-		     //
-		     const spawnedEntity = vrScene.lastElementChild.content.firstElementChild.cloneNode(true);
-		     spawnedEntity.setAttribute('data-spawn', 'mine');
-		     vrScene.appendChild(spawnedEntity);
-		     spawnedEntity.setAttribute('position', camera.getAttribute('position'));
+		     modelsIframe.contentWindow.location.reload();
 		 } else {
 		     alert('Cannot create this object: ' + this.response);
 		 }
 	     });
-	     req.open('POST', 'spawn-object');
-	     req.send(formData);
+	     req.open('POST', './models/upload');
+	     req.send(new FormData(this));
 	 });
       </if>
-
     for (const b of document.querySelectorAll('#toolbar button[data-href]')) {
         b.addEventListener('click', function (e) {
             e.preventDefault();

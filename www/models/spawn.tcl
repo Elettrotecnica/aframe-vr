@@ -1,20 +1,9 @@
 ad_page_contract {
     Spawn an object in the room
 } {
-    model:notnull
-    model.tmpfile:tmpfile
+    object_id:object_id,notnull
     {permanent:boolean false}
 }
-
-if {[ad_file extension $model] ne ".glb"} {
-    ns_return 401 text/plain "invalid file type"
-    ad_script_abort
-}
-
-# if {[exec file --mime-type $model] ne "model/gltf-binary"} {
-#     ns_return 401 text/plain "invalid file type"
-#     ad_script_abort
-# }
 
 set user_id [ad_conn user_id]
 set package_id [ad_conn package_id]
@@ -39,25 +28,11 @@ set fs_node [site_node::get -node_id $fs_node_id]
 set fs_package_id [dict get $fs_node object_id]
 set folder_id [::fs::get_root_folder -package_id $fs_package_id]
 
-# set item_id [fs::get_item_id -name $model -folder_id $folder_id]
-# if {$item_id ne ""} {
-#     ns_return 500 text/plain "file exists"
-#     ad_script_abort
-# }
-
-set revision_id [::fs::add_file \
-		     -item_id [::fs::get_item_id -name $model -folder_id $folder_id] \
-                     -name $model \
-                     -parent_id $folder_id \
-                     -tmp_filename ${model.tmpfile} \
-                     -creation_user $user_id \
-                     -creation_ip [ad_conn peeraddr] \
-                     -mime_type */* \
-                     -package_id $fs_package_id]
 db_1row get_info {
-    select item_id, name
+    select live_revision as revision_id, name
     from cr_items
-    where live_revision = :revision_id
+    where item_id = :object_id
+      and parent_id = :folder_id
 }
 set model_url [site_node::get_url -node_id $fs_node_id]/view/[ad_urlencode_path $name]
 
@@ -71,6 +46,8 @@ ns_return 200 text/plain [subst -nocommands {
     <template id="$id-template">
       <a-gltf-model
          id="$id"
+         data-item-id="$object_id"
+         data-revision-id="$revision_id"
          center
          clamp-size="maxSize: $spawn_max_size; minSize: $spawn_min_size"
          oacs-networked-entity="template: #$id-template; permanent: $permanent"
