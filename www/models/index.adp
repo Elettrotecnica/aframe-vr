@@ -17,6 +17,11 @@
 	    const spawnId = 'spawn-' + revisionId;
 	    const templateId = 'template-' + spawnId;
 
+	    if (window.parent.document.getElementById(spawnId)) {
+		alert('This model already exists on the scene.');
+		return;
+	    }
+
 	    const model = document.createElement('a-gltf-model');
 	    model.setAttribute('id', spawnId);
 	    model.setAttribute('data-item_id', itemId);
