@@ -1643,6 +1643,36 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     this.send(msg);
   },
 
+  deleteEntity: function (id) {
+    //
+    // Delete an object for us and for all peers.
+    //
+    // Returns success as true/false.
+    //
+    const el = document.getElementById(id);
+
+    //
+    // Check that only existing networked entities are deleted. Also
+    // prevent deleting ourselves.
+    //
+    if (!el ||
+        !el.components ||
+        !el.components['oacs-networked-entity'] ||
+        el.tagName === 'A-CAMERA' ||
+        el.components['local-hand-controls']) {
+      return false;
+    }
+
+    el.parentElement.removeChild(el);
+
+    const msg = this.msgObject();
+    msg.id = id;
+    msg.type = 'delete';
+    this.send(msg);
+
+    return true;
+  },
+
   _clear: function () {
     //
     // Cleanup all our networked entities. Invoked before leaving a VR

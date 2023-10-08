@@ -34,12 +34,18 @@ set elements {
     spawn_link {
         label ""
 	display_template {
-	  <a
-	     href="#"
-	     class="spawn"
-	     data-item_id="@models.object_id@"
-	     data-revision_id="@models.live_revision@"
-	     data-model_url="@models.download_url@">Spawn</a>
+	    <span class="spawn-controls"
+		  data-id="spawn-@models.live_revision@"
+		  data-model_url="@models.download_url@">
+	      <a
+		href="#"
+		class="spawn"
+		>Spawn</a>
+	      <a
+		href="#"
+		class="despawn"
+		>Despawn</a>
+	    </span>
 	}
     }
     name {

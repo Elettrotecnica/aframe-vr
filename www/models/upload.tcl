@@ -5,7 +5,7 @@ ad_page_contract {
     model.tmpfile:tmpfile
 }
 
-if {[ad_file extension $model] ne ".glb"} {
+if {[ad_file extension $model] ni {".glb" ".gltf"}} {
     ns_return 401 text/plain "invalid file type"
     ad_script_abort
 }
@@ -22,7 +22,7 @@ if {![::permission::permission_p \
           -object_id $package_id \
           -party_id $user_id \
           -privilege write]} {
-    ns_return 403 text/plain "no permission"
+    ns_return 403 text/plain "No permission"
     ad_script_abort
 }
 
@@ -38,11 +38,11 @@ set fs_node [site_node::get -node_id $fs_node_id]
 set fs_package_id [dict get $fs_node object_id]
 set folder_id [::fs::get_root_folder -package_id $fs_package_id]
 
-# set item_id [fs::get_item_id -name $model -folder_id $folder_id]
-# if {$item_id ne ""} {
-#     ns_return 500 text/plain "file exists"
-#     ad_script_abort
-# }
+set item_id [fs::get_item_id -name $model -folder_id $folder_id]
+if {$item_id ne ""} {
+    ns_return 500 text/plain "File exists"
+    ad_script_abort
+}
 
 set revision_id [::fs::add_file \
 		     -item_id [::fs::get_item_id -name $model -folder_id $folder_id] \
