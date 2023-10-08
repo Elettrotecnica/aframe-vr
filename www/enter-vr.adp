@@ -124,7 +124,7 @@
   </div>
   <div id="toolbar">
     <div>
-      <button class="btn btn-danger" data-href=".">Exit</button>
+      <button class="btn btn-danger" data-href="@package_url@">Exit</button>
     </div>
     <div id="audiometer">
       <div>
@@ -146,7 +146,7 @@
       <formtemplate id="upload"></formtemplate>
     </div>
     <br>
-    <iframe id="models" src="./models/" style="width: 100%; height: 100vh; border:none;"></iframe>
+    <iframe id="models" src="@package_url@models/" style="width: 100%; height: 100vh; border:none;"></iframe>
   </if>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const camera = document.querySelector('a-camera');
