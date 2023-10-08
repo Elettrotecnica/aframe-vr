@@ -27,6 +27,9 @@ set package_id [ad_conn package_id]
 set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
 set spawn_min_size [::parameter::get -package_id $package_id -parameter spawn_min_size]
 
+set user_id [ad_conn user_id]
+set delete_p [permission::permission_p -party_id $user_id -object_id $folder_id -privilege "delete"]
+
 set elements {
     spawn_link {
         label ""
@@ -55,11 +58,16 @@ set elements {
 	display_template "#file-storage.Download#"
         link_html { title "#file-storage.Download#" }
     }
-    delete_link {
-        label ""
-        link_url_col delete_url
-	display_template "#file-storage.Delete#"
-        link_html { title "#file-storage.Delete#" }
+}
+
+if {$delete_p} {
+    append elements {
+	delete_link {
+	    label ""
+	    link_url_col delete_url
+	    display_template "#file-storage.Delete#"
+	    link_html { title "#file-storage.Delete#" }
+	}
     }
 }
 
@@ -85,8 +93,6 @@ template::list::create \
     }
 
 set return_url [ad_return_url]
-
-set user_id [ad_conn user_id]
 
 db_multirow -extend {
     last_modified_pretty
