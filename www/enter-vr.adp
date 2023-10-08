@@ -143,17 +143,15 @@
     <hr>
     <div>
       <form id="upload">
-        <div>
-          <label>
-            <input type="file" required name="model">
-          </label>
-        </div>
-        <div>
-          <button>Upload Model</button>
-          </div>
+	<div class="mb-3">
+	  <label for="formFile" class="form-label">.gltf/.glb Model</label>
+	  <input class="form-control" type="file" name="model">
+	</div>
+	<button type="submit" class="btn btn-primary">Upload Model</button>
       </form>
-      <iframe id="models" src="./models/" style="width: 100%; height: 100vh; border:none;"></iframe>
     </div>
+    <br>
+    <iframe id="models" src="./models/" style="width: 100%; height: 100vh; border:none;"></iframe>
   </if>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const camera = document.querySelector('a-camera');
