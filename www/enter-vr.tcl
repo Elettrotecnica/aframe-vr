@@ -23,6 +23,15 @@ set fs_node_id [::site_node::get_children \
                        -node_id [ad_conn node_id]]
 set spawn_objects_p [expr {$fs_node_id ne ""}]
 
+if {$spawn_objects_p} {
+    ad_form -name upload -form {
+	{model:file(file)
+	    {label {.gltf/.glb Model}}
+	    {html {required ""}}
+	}
+    } -on_submit {}
+}
+
 #
 # User info
 #

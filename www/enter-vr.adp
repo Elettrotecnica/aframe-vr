@@ -142,13 +142,8 @@
   <if @spawn_objects_p;literal@ true>
     <hr>
     <div>
-      <form id="upload">
-	<div class="mb-3">
-	  <label for="formFile" class="form-label">.gltf/.glb Model</label>
-	  <input class="form-control" type="file" name="model">
-	</div>
-	<button type="submit" class="btn btn-primary">Upload Model</button>
-      </form>
+      <h3>Upload Model</h3>
+      <formtemplate id="upload"></formtemplate>
     </div>
     <br>
     <iframe id="models" src="./models/" style="width: 100%; height: 100vh; border:none;"></iframe>
