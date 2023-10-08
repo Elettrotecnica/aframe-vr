@@ -23,12 +23,21 @@ set like_filesystem_p [parameter::get -parameter BehaveLikeFilesystemP -package_
 
 set actions [list]
 
+set package_id [ad_conn package_id]
+set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
+set spawn_min_size [::parameter::get -package_id $package_id -parameter spawn_min_size]
+
 set elements {
     spawn_link {
         label ""
-        link_url_col spawn_url
-	display_template "Spawn"
-        link_html { title "Spawn" class spawn }
+	display_template {
+	  <a
+	     href="#"
+	     class="spawn"
+	     data-item_id="@models.object_id@"
+	     data-revision_id="@models.live_revision@"
+	     data-model_url="@models.download_url@">Spawn</a>
+	}
     }
     name {
         label #file-storage.Name#
@@ -84,10 +93,10 @@ db_multirow -extend {
     content_size_pretty
     download_url
     delete_url
-    spawn_url
 } models select_folder_contents [subst {
       select fs_objects.name,
              fs_objects.object_id,
+             fs_objects.live_revision,
              fs_objects.title,
              fs_objects.file_upload_name,
              to_char(fs_objects.last_modified, 'YYYY-MM-DD HH24:MI:SS') as last_modified_ansi,
@@ -113,8 +122,6 @@ db_multirow -extend {
     } else {
 	set download_url /file/$object_id/[ad_urlencode_path $name]
     }
-
-    set spawn_url spawn?object_id=$object_id
 
     set delete_url [export_vars -base ${fs_url}delete {object_id return_url {confirm_p 1}}]
 }
