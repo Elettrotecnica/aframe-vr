@@ -22,6 +22,8 @@ nsf::proc janus::request {
     #
     # @return the JSON response
     #
+    package require json
+    package require json::write
 
     if {![dict exists $request_dict transaction]} {
         set request_transaction [ad_generate_random_string]
@@ -121,6 +123,8 @@ nsf::proc janus::plugin::attach {
     # @return the janus plugin backend URL
     #
 
+    package require json::write
+
     if {![info exists session_url]} {
         set session_url [::janus::create_session]
     }
@@ -151,6 +155,7 @@ nsf::proc janus::plugin::request {
     #
     # @return the JSON response from the backend
     #
+    package require json::write
 
     set request_dict [::list \
                           janus \"message\" \
@@ -274,6 +279,7 @@ nsf::proc janus::videoroom::create {
     #
     # @return room
     #
+    package require json::write
 
     if {![info exists plugin_url]} {
         set plugin_url [::janus::videoroom::attach]
@@ -388,6 +394,8 @@ nsf::proc janus::videoroom::edit {
     # @param permanent whether changes should be persisted in the configuration file
     #
 
+    package require json::write
+
     if {![info exists plugin_url]} {
         set plugin_url [::janus::videoroom::attach]
     }
@@ -451,6 +459,7 @@ nsf::proc janus::videoroom::exists_p {
     #
     # @return boolean
     #
+    package require json::write
 
     if {![info exists plugin_url]} {
         set plugin_url [::janus::videoroom::attach]
@@ -484,6 +493,8 @@ nsf::proc janus::videoroom::destroy {
     # @param secret password (if required by room conf)
     # @permanent delete the room from the config file as well
     #
+
+    package require json::write
 
     if {![info exists plugin_url]} {
         set plugin_url [::janus::videoroom::attach]
