@@ -2182,8 +2182,7 @@ const _centerModel = (function () {
   return function (object) {
     b.setFromObject(object);
     for (child of object.children) {
-      b.getCenter(child.position).
-	sub(object.position).
+      object.worldToLocal(b.getCenter(child.position)).
 	divide(object.scale).
 	negate();
     }
