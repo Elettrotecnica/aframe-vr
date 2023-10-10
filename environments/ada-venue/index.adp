@@ -65,23 +65,25 @@
 	    }
 	});
 
-        //
-        // Make our local avatar a kinematic body
-        //
-        const camera = document.querySelector('a-camera');
-        camera.setAttribute('ammo-body', 'type: kinematic');
-        camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.0');
-
-        //
-        // Once controllers connect, make them a kinematic body and
-        // let them grab stuff.
-        //
-        for (const hand of document.querySelectorAll('[hand-controls]')) {
-            hand.addEventListener('controllerconnected', function () {
-                this.setAttribute('ammo-body', 'type: kinematic');
-                this.setAttribute('ammo-shape', 'type: sphere');
-                this.setAttribute('grab', '');
-            }, {once: true });
+        if (window.AFRAME.utils.device.checkHeadsetConnected()) {
+            //
+            // Once controllers connect, make them a kinematic body and
+            // let them grab stuff.
+            //
+            for (const hand of document.querySelectorAll('[hand-controls]')) {
+                hand.addEventListener('controllerconnected', function () {
+                    this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+                    this.setAttribute('ammo-shape', 'type: sphere');
+                    this.setAttribute('grab', '');
+                }, {once: true });
+            }
+        } else {
+            //
+            // Make our local avatar a kinematic body
+            //
+            const camera = document.querySelector('a-camera');
+            camera.setAttribute('ammo-body', 'type: kinematic');
+            camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.6');
         }
     });
 </script>
