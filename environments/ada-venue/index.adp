@@ -14,13 +14,7 @@
         // When objects requiring physics finish to load, attach physics to them
         //
 	scene.addEventListener('model-loaded', function (e) {
-	    if (e.target.getAttribute('src') === '#venue-physics') {
-		//
-		// The static body modeling the room
-		//
-		e.target.setAttribute('ammo-body', 'type: static');
-		e.target.setAttribute('ammo-shape', 'type: mesh');
-	    } else if (e.target.hasAttribute('data-spawn')) {
+	    if (e.target.hasAttribute('data-spawn')) {
 		//
 		// Objects spawned by peers
 		//
@@ -28,6 +22,7 @@
 		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
 		e.target.setAttribute('ammo-body', type);
 	        e.target.setAttribute('ammo-shape', 'type: box; minHalfExtent: 0.1;');
+		e.target.setAttribute('bound-to-entity', 'entity: #venue-model');
 	    }
 	});
 
@@ -111,6 +106,7 @@
     id="ball"
     position="-1 3 -1.5"
     radius="0.5"
+    bound-to-entity="entity: #venue-model"
     material="src: #ball-texture"
     ammo-body="type: dynamic"
     ammo-shape="type: sphere">
@@ -118,7 +114,9 @@
 
   <a-gltf-model
     src="#venue-physics"
-    visible="false">
+    visible="false"
+    ammo-body="type: static"
+    ammo-shape="type: mesh">
   </a-gltf-model>
 
   <a-gltf-model
@@ -128,6 +126,7 @@
   </a-gltf-model>
 
   <a-gltf-model
+    id="venue-model"
     src="#venue"
     lightmap="src:#bake;intensity: 1.5; filter:Window,Ceiling,floor;"
     depthwrite="true"
