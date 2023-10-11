@@ -2127,6 +2127,18 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
  * as the max between length, height and depth of the bounding box
  * enclosing the entity.
  */
+const _getBoundinBox = (function () {
+  const box = new THREE.Box3();
+  return function (object) {
+    return box.setFromObject(object, false);
+  };
+})();
+const _getBoundinBoxSize = (function () {
+  const vec = new THREE.Box3();
+  return function (object) {
+    return _getBoundinBox(object).getSize(vec);
+  };
+})();
 window.AFRAME.registerComponent('clamp-size', {
   schema: {
     minSize: {type: 'number', default: 0.2},
@@ -2136,16 +2148,13 @@ window.AFRAME.registerComponent('clamp-size', {
   init: function () {
     this.minSize = this.data.minSize;
     this.maxSize = this.data.maxSize;
-    this.box = new THREE.Box3();
-    this.vec = new THREE.Vector3();
 
     this._clampSize();
   },
 
   _getSize: function () {
-    this.box.setFromObject(this.el.object3D, false);
-    this.box.getSize(this.vec);
-    return Math.max(this.vec.x, this.vec.y, this.vec.z);
+    const vec = _getBoundinBoxSize(this.el.object3D);
+    return Math.max(vec.x, vec.y, vec.z);
   },
 
   _clampSize: function () {
@@ -2193,6 +2202,72 @@ window.AFRAME.registerComponent('center', {
     this.el.addEventListener('model-loaded', e => {
       _centerModel(this.el.object3D);
     });
+  }
+});
+
+/**
+ * Ensure an entity never leaves the bounding box of a particular
+ * item. When this happens, reposition it either to its starting
+ * position or a custom pre-defined one.
+ */
+window.AFRAME.registerComponent('bound-to-entity', {
+  schema: {
+    entity: {type: 'selector', default: 'a-scene'},
+    respawnPosition: {type: 'vec3', default: null}
+  },
+  init: function () {
+    //
+    // Default respawn position is the element's position right now.
+    //
+    this.respawnPosition = new THREE.Vector3();
+    if (this.data.respawnPosition.x) {
+      this.respawnPosition.copy(this.data.respawnPosition);
+    } else {
+      console.log('from object');
+      this.respawnPosition.copy(this.el.object3D.position);
+    }
+
+    this.entity = this.data.entity;
+
+    //
+    // We only check once per second to not weight too much on the
+    // system.
+    //
+    this.interval = 1000;
+
+    //
+    // Compute the bounding box of the entity as soon as it is ready.
+    //
+    if (this.entity.object3DMap.mesh) {
+      this.bounds = _getBoundinBox(this.entity.object3D).clone();
+    } else {
+      this.entity.addEventListener("object3dset", e => {
+	if (e.detail.type === "mesh") {
+          this.bounds = _getBoundinBox(this.entity.object3D).clone();
+	}
+      }, {once: true});
+    }
+  },
+  tick: function (time, delta) {
+    //
+    // Every interval, if the component entity is out of bounds,
+    // reposition it.
+    //
+    this.wait -= delta;
+    if (!this.wait || this.wait <= 0) {
+      if (this.bounds &&
+          !this.bounds.containsPoint(this.el.object3D.position)) {
+        this.el.object3D.position.copy(this.respawnPosition);
+        //
+        // On an entity that is physics-enabled, we also need to
+        // resync the body to the new position.
+        //
+        if (this.el.components['ammo-body']) {
+          this.el.components['ammo-body'].syncToPhysics();
+        }
+      }
+      this.wait = this.interval;
+    }
   }
 });
 

@@ -1944,10 +1944,7 @@ let AmmoBody = {
         this.rotation.setValue(q.x, q.y, q.z, q.w);
         this.msTransform.setRotation(this.rotation);
         this.motionState.setWorldTransform(this.msTransform);
-
-        if (this.data.type === TYPE.STATIC) {
-          this.body.setCenterOfMassTransform(this.msTransform);
-        }
+        this.body.setCenterOfMassTransform(this.msTransform);
       }
     };
   })(),
