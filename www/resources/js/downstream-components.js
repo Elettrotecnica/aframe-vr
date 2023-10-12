@@ -929,11 +929,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     if (this.pluginHandle) {
       const muted = this.pluginHandle.isAudioMuted();
       if (this.data.muted && !muted) {
-        window.Janus.log('Muting local stream...');
+        console.log('Muting local stream...');
         this.pluginHandle.muteAudio();
       }
       if (!this.data.muted && muted) {
-        window.Janus.log('Unmuting local stream...');
+        console.log('Unmuting local stream...');
         this.pluginHandle.unmuteAudio();
       }
     }
@@ -1019,7 +1019,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       return;
     }
 
-    window.Janus.debug(`Feed ${id} (${feed.display}) has left the room, detaching`);
+    console.debug(`Feed ${id} (${feed.display}) has left the room, detaching`);
 
     const htmlId = this._feedToHTMLId(feed);
     const element = document.getElementById(htmlId);
@@ -1060,8 +1060,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     this.pluginHandle.createOffer({
       tracks: tracks,
       success: function (jsep) {
-        window.Janus.debug('Got publisher SDP!');
-        window.Janus.debug(jsep);
+        console.debug('Got publisher SDP!');
+        console.debug(jsep);
         const publish = { request: 'configure', audio: true, video: false };
         // You can force a specific codec to use when publishing by using the
         // audiocodec and videocodec properties, for instance:
@@ -1082,7 +1082,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         self.pluginHandle.send({ message: publish, jsep: jsep });
       },
       error: function (error) {
-        window.Janus.error('WebRTC error:', error);
+        console.error('WebRTC error:', error);
       }
     });
   },
@@ -1109,16 +1109,16 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
           if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
              (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
-            window.Janus.warning(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
+            console.warn(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
             continue;
           }
           if (stream.disabled) {
-            window.Janus.log('Disabled stream:', stream);
+            console.log('Disabled stream:', stream);
             // TODO Skipping for now, we should unsubscribe
             continue;
           }
           if (this.subscriptions[stream.id] && this.subscriptions[stream.id][stream.mid]) {
-            window.Janus.log('Already subscribed to stream, skipping:', stream);
+            console.log('Already subscribed to stream, skipping:', stream);
             continue;
           }
           subscription.push({
@@ -1149,8 +1149,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       opaqueId: self.display,
       success: function (pluginHandle) {
         self.remoteFeed = pluginHandle;
-        window.Janus.log(`Plugin attached! (${self.remoteFeed.getPlugin()}, id=${self.remoteFeed.getId()})`);
-        window.Janus.log('  -- This is a multistream subscriber');
+        console.log(`Plugin attached! (${self.remoteFeed.getPlugin()}, id=${self.remoteFeed.getId()})`);
+        console.log('  -- This is a multistream subscriber');
         // Prepare the streams to subscribe to, as an array: we have the list of
         // streams the feed is publishing, so we can choose what to pick or skip
         const subscription = [];
@@ -1161,17 +1161,17 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
             if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
                (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
-              window.Janus.warning(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
+              console.warn(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
               continue;
             }
             if (stream.disabled) {
-              window.Janus.log('Disabled stream:', stream);
+              console.log('Disabled stream:', stream);
               // TODO Skipping for now, we should unsubscribe
               continue;
             }
-            window.Janus.log(`Subscribed to ${stream.id}/${stream.mid}?`, self.subscriptions);
+            console.log(`Subscribed to ${stream.id}/${stream.mid}?`, self.subscriptions);
             if (self.subscriptions[stream.id] && self.subscriptions[stream.id][stream.mid]) {
-              window.Janus.log('Already subscribed to stream, skipping:', stream);
+              console.log('Already subscribed to stream, skipping:', stream);
               continue;
             }
             subscription.push({
@@ -1197,28 +1197,28 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         self.remoteFeed.send({ message: subscribe });
       },
       error: function (error) {
-        window.Janus.error('  -- Error attaching plugin...', error);
+        console.error('  -- Error attaching plugin...', error);
       },
       iceState: function (state) {
-        window.Janus.log('ICE state (remote feed) changed to ', state);
+        console.log('ICE state (remote feed) changed to ', state);
       },
       webrtcState: function (on) {
-        window.Janus.log(`Janus says this WebRTC PeerConnection (remote feed) is ${on ? 'up' : 'down'} now`);
+        console.log(`Janus says this WebRTC PeerConnection (remote feed) is ${on ? 'up' : 'down'} now`);
       },
       slowLink: function (uplink, lost, mid) {
-        window.Janus.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
+        console.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
       },
       onmessage: function (msg, jsep) {
-        window.Janus.debug(' ::: Got a message (subscriber) :::', msg);
+        console.debug(' ::: Got a message (subscriber) :::', msg);
         const event = msg['videoroom'];
-        window.Janus.debug('Event:', event);
+        console.debug('Event:', event);
         if (msg['error']) {
-          window.Janus.error(msg['error']);
+          console.error(msg['error']);
         } else if (event) {
           if (event === 'attached') {
             // Now we have a working subscription, next requests will update this one
             self.creatingSubscription = false;
-            window.Janus.log('Successfully attached to feed in room', msg.room);
+            console.log('Successfully attached to feed in room', msg.room);
           } else if (event === 'event') {
             // Check if we got an event on a simulcast-related event from this publisher
             const mid = msg['mid'];
@@ -1236,23 +1236,23 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               // Check the substream
               const index = feed;
               if (substream === 0) {
-                window.Janus.log('Switched simulcast substream! (lower quality)', null, {timeOut: 2000});
+                console.log('Switched simulcast substream! (lower quality)', null, {timeOut: 2000});
               } else if (substream === 1) {
-                window.Janus.log('Switched simulcast substream! (normal quality)', null, {timeOut: 2000});
+                console.log('Switched simulcast substream! (normal quality)', null, {timeOut: 2000});
               } else if (substream === 2) {
-                window.Janus.log('Switched simulcast substream! (higher quality)', null, {timeOut: 2000});
+                console.log('Switched simulcast substream! (higher quality)', null, {timeOut: 2000});
               }
               // Check the temporal layer
               if (temporal === 0) {
-                window.Janus.log('Capped simulcast temporal layer! (lowest FPS)', null, {timeOut: 2000});
+                console.log('Capped simulcast temporal layer! (lowest FPS)', null, {timeOut: 2000});
               } else if (temporal === 1) {
-                window.Janus.log('Capped simulcast temporal layer! (medium FPS)', null, {timeOut: 2000});
+                console.log('Capped simulcast temporal layer! (medium FPS)', null, {timeOut: 2000});
               } else if (temporal === 2) {
-                window.Janus.log('Capped simulcast temporal layer! (highest FPS)', null, {timeOut: 2000});
+                console.log('Capped simulcast temporal layer! (highest FPS)', null, {timeOut: 2000});
               }
             }
           } else {
-            window.Janus.log('What has just happened?');
+            console.log('What has just happened?');
           }
         }
         if (msg['streams']) {
@@ -1263,7 +1263,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           }
         }
         if (jsep) {
-          window.Janus.debug('Handling SDP as well...', jsep);
+          console.debug('Handling SDP as well...', jsep);
           // Answer and attach
           self.remoteFeed.createAnswer({
             jsep: jsep,
@@ -1275,13 +1275,13 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               { type: 'data' }
             ],
             success: function (jsep) {
-              window.Janus.debug('Got SDP!');
-              window.Janus.debug(jsep);
+              console.debug('Got SDP!');
+              console.debug(jsep);
               const body = { request: 'start', room: self.room };
               self.remoteFeed.send({ message: body, jsep: jsep });
             },
             error: function (error) {
-              window.Janus.error('WebRTC error:', error);
+              console.error('WebRTC error:', error);
             }
           });
         }
@@ -1290,24 +1290,24 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         // The subscriber stream is recvonly, we don't expect anything here
       },
       onremotetrack: function (track, mid, on) {
-        window.Janus.debug(`Remote track (mid=${mid}) ${on ? 'added' : 'removed'}:`, track);
+        console.debug(`Remote track (mid=${mid}) ${on ? 'added' : 'removed'}:`, track);
         // Which publisher are we getting on this mid?
         const sub = self.subStreams[mid];
         const feed = self.feedStreams[sub.feed_id];
-        window.Janus.debug(` >> This track is coming from feed ${sub.feed_id}:`, feed);
+        console.debug(` >> This track is coming from feed ${sub.feed_id}:`, feed);
         if (on) {
           if (sub.feed_id == self.id) {
-            window.Janus.log('This is us, skipping...');
+            console.log('This is us, skipping...');
           }
 
-          window.Janus.log('We have a track!', sub, track);
+          console.log('We have a track!', sub, track);
 
           self._addTrack(feed, track);
         }
 
       },
       oncleanup: function () {
-        window.Janus.log(' ::: Got a cleanup notification (remote feed) :::');
+        console.log(' ::: Got a cleanup notification (remote feed) :::');
         for (const i in self.feeds) {
           if (self.bitrateTimer[i]) {
             clearInterval(self.bitrateTimer[i]);
@@ -1329,7 +1329,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       callback: function () {
         // Make sure the browser supports WebRTC
         if (!window.Janus.isWebrtcSupported()) {
-          window.Janus.error('No WebRTC support... ');
+          console.error('No WebRTC support... ');
           return;
         }
         // Create session
@@ -1349,8 +1349,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   opaqueId: self.display,
                   success: function (pluginHandle) {
                     self.pluginHandle = pluginHandle;
-                    window.Janus.log(`Plugin attached! (${self.pluginHandle.getPlugin()}, id=${self.pluginHandle.getId()})`);
-                    window.Janus.log('  -- This is a publisher/manager');
+                    console.log(`Plugin attached! (${self.pluginHandle.getPlugin()}, id=${self.pluginHandle.getId()})`);
+                    console.log('  -- This is a publisher/manager');
                     const register = {
                       request: 'join',
                       room: self.room,
@@ -1364,38 +1364,38 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     self.pluginHandle.send({ message: register });
                   },
                   error: function (error) {
-                    window.Janus.error('  -- Error attaching plugin...', error);
+                    console.error('  -- Error attaching plugin...', error);
                   },
                   consentDialog: function (on) {
-                    window.Janus.debug(`Consent dialog should be ${on ? 'on' : 'off'} now`);
+                    console.debug(`Consent dialog should be ${on ? 'on' : 'off'} now`);
                   },
                   iceState: function (state) {
-                    window.Janus.log(`ICE state changed to ${state}`);
+                    console.log(`ICE state changed to ${state}`);
                   },
                   mediaState: function (medium, on, mid) {
-                    window.Janus.log(`Janus ${on ? 'started' : 'stopped'} receiving our ${medium} (mid=${mid})`);
+                    console.log(`Janus ${on ? 'started' : 'stopped'} receiving our ${medium} (mid=${mid})`);
                   },
                   webrtcState: function (on) {
-                    window.Janus.log(`Janus says our WebRTC PeerConnection is ${on ? 'up' : 'down'} now`);
+                    console.log(`Janus says our WebRTC PeerConnection is ${on ? 'up' : 'down'} now`);
                   },
                   slowLink: function (uplink, lost, mid) {
-                    window.Janus.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
+                    console.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
                   },
                   onmessage: function (msg, jsep) {
-                    window.Janus.debug(' ::: Got a message (publisher) :::', msg);
+                    console.debug(' ::: Got a message (publisher) :::', msg);
                     const event = msg['videoroom'];
-                    window.Janus.debug('Event:', event);
+                    console.debug('Event:', event);
                     if (event != undefined && event != null) {
                       if (event === 'joined') {
                         // Publisher/manager created, negotiate WebRTC and attach to existing feeds, if any
                         self.id = msg['id'];
                         self.privateId = msg['private_id'];
-                        window.Janus.log(`Successfully joined room ${msg.room} with ID ${self.id}`);
+                        console.log(`Successfully joined room ${msg.room} with ID ${self.id}`);
                         self._publishOwnFeed();
                         // Any new feed to attach to?
                         if (msg['publishers']) {
                           const list = msg['publishers'];
-                          window.Janus.debug('Got a list of available publishers/feeds:', list);
+                          console.debug('Got a list of available publishers/feeds:', list);
                           const sources = [];
                           for (const f in list) {
                             if (list[f]['dummy']) {
@@ -1414,7 +1414,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               display: display,
                               streams: streams
                             }
-                            window.Janus.debug(`  >> [${id}] ${display}:`, streams);
+                            console.debug(`  >> [${id}] ${display}:`, streams);
                             sources.push(streams);
                           }
                           if (sources.length > 0) {
@@ -1423,7 +1423,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         }
                       } else if (event === 'destroyed') {
                         // The room has been destroyed
-                        window.Janus.warn('The room has been destroyed!');
+                        console.warn('The room has been destroyed!');
                         window.location.reload();
                       } else if (event === 'event') {
                         // Any info on our streams or a new feed to attach to?
@@ -1441,7 +1441,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                           }
                         } else if (msg['publishers']) {
                           const list = msg['publishers'];
-                          window.Janus.debug('Got a list of available publishers/feeds:', list);
+                          console.debug('Got a list of available publishers/feeds:', list);
                           const sources = [];
                           for (const f in list) {
                             if (list[f]['dummy']) {
@@ -1460,7 +1460,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               display: display,
                               streams: streams
                             }
-                            window.Janus.debug(`  >> [${id}] ${display}:`, streams);
+                            console.debug(`  >> [${id}] ${display}:`, streams);
                             sources.push(streams);
                           }
                           if (sources.length > 0) {
@@ -1469,12 +1469,12 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         } else if (msg['leaving']) {
                           // One of the publishers has gone away?
                           const leaving = msg['leaving'];
-                          window.Janus.log('Publisher left:', leaving);
+                          console.log('Publisher left:', leaving);
                           self._unsubscribeFrom(leaving);
                         } else if (msg['unpublished']) {
                           // One of the publishers has unpublished?
                           const unpublished = msg['unpublished'];
-                          window.Janus.log('Publisher left:', unpublished);
+                          console.log('Publisher left:', unpublished);
                           if (unpublished === 'ok') {
                             // That's us
                             self.pluginHandle.hangup();
@@ -1483,15 +1483,15 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                           self._unsubscribeFrom(unpublished);
                         } else if (msg['error']) {
                           if (msg['error_code'] === 426) {
-                            window.Janus.error('No such room!');
+                            console.error('No such room!');
                           } else {
-                            window.Janus.error(msg['error']);
+                            console.error(msg['error']);
                           }
                         }
                       }
                     }
                     if (jsep) {
-                      window.Janus.debug('Handling SDP as well...', jsep);
+                      console.debug('Handling SDP as well...', jsep);
                       self.pluginHandle.handleRemoteJsep({ jsep: jsep });
                       //
                       // We could tell here if your codec was rejected
@@ -1499,8 +1499,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     }
                   },
                   onlocaltrack: function (track, on) {
-                    window.Janus.debug(' ::: Got a local track event :::');
-                    window.Janus.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
+                    console.debug(' ::: Got a local track event :::');
+                    console.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
                     // When our local track is audio (in theory,
                     // always), we attach an audio listener to our
                     // element so that we can notify other entities
@@ -1514,13 +1514,13 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     // The publisher stream is sendonly, we don't expect anything here
                   },
                   oncleanup: function () {
-                    window.Janus.log(' ::: Got a cleanup notification: we are unpublished now :::');
+                    console.log(' ::: Got a cleanup notification: we are unpublished now :::');
                     delete self.feedStreams[self.id];
                   }
                 });
             },
             error: function (error) {
-              window.Janus.error(error);
+              console.error(error);
               window.location.reload();
             },
             destroyed: function () {
