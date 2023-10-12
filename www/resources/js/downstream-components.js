@@ -6,7 +6,7 @@
  */
 window.AFRAME.registerComponent('oacs-change-listener', {
   schema: {
-    properties: { type: 'array', default: 'position, rotation' }
+    properties: { type: 'array', default: ['position', 'rotation'] }
   },
 
   init: function () {
@@ -1913,7 +1913,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     color: {type: 'color', default: ''},
     randomColor: {type: 'boolean', default: false},
     permanent: {type: 'boolean', default: false},
-    properties: { type: 'array', default: 'position, rotation' },
+    properties: { type: 'array', default: ['position', 'rotation'] },
     name: {default: ''}
   },
 
