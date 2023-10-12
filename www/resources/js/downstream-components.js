@@ -2223,7 +2223,6 @@ window.AFRAME.registerComponent('bound-to-entity', {
     if (this.data.respawnPosition.x) {
       this.respawnPosition.copy(this.data.respawnPosition);
     } else {
-      console.log('from object');
       this.respawnPosition.copy(this.el.object3D.position);
     }
 
