@@ -443,7 +443,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       }
     }
 
-    const nodeTemplate = this.el.querySelector('template[data-name=\'' + node.name + '\'');
+    const nodeTemplate = this.el.querySelector(`template[data-name='${node.name}']`);
     if (node.name !== 'Scene' && !nodeTemplate && childrenEntities.length === 0) {
       // This node won't become an entity
       return;
@@ -941,9 +941,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
 
   _defaultURI: function () {
     if (window.location.protocol === 'http:') {
-      return 'http://' + window.location.hostname + ':8088/janus';
+      return `http://${window.location.hostname}:8088/janus`;
     } else {
-      return 'https://' + window.location.hostname + ':8089/janus';
+      return `https://${window.location.hostname}:8089/janus`;
     }
   },
 
@@ -966,7 +966,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         element.appendChild(v);
       }
       v.srcObject = stream;
-      element.setAttribute('material', 'src', '#' + v.id);
+      element.setAttribute('material', 'src', `#${v.id}`);
     } else if (track.kind === 'audio') {
       // Track is audio: we attach it to the element.
       // TODO: right now we assume audio to be positional.
@@ -1019,7 +1019,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       return;
     }
 
-    window.Janus.debug('Feed ' + id + ' (' + feed.display + ') has left the room, detaching');
+    window.Janus.debug(`Feed ${id} (${feed.display}) has left the room, detaching`);
 
     const htmlId = this._feedToHTMLId(feed);
     const element = document.getElementById(htmlId);
@@ -1109,8 +1109,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
           if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
              (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
-            window.Janus.warning('Publisher is using ' + stream.codec.toUpperCase +
-                                 ', but Safari does not support it: disabling video stream #' + stream.mindex);
+            window.Janus.warning(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
             continue;
           }
           if (stream.disabled) {
@@ -1150,7 +1149,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       opaqueId: self.display,
       success: function (pluginHandle) {
         self.remoteFeed = pluginHandle;
-        window.Janus.log('Plugin attached! (' + self.remoteFeed.getPlugin() + ', id=' + self.remoteFeed.getId() + ')');
+        window.Janus.log(`Plugin attached! (${self.remoteFeed.getPlugin()}, id=${self.remoteFeed.getId()})`);
         window.Janus.log('  -- This is a multistream subscriber');
         // Prepare the streams to subscribe to, as an array: we have the list of
         // streams the feed is publishing, so we can choose what to pick or skip
@@ -1162,8 +1161,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
             if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
                (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
-              window.Janus.warning('Publisher is using ' + stream.codec.toUpperCase +
-                            ', but Safari does not support it: disabling video stream #' + stream.mindex);
+              window.Janus.warning(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
               continue;
             }
             if (stream.disabled) {
@@ -1171,7 +1169,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               // TODO Skipping for now, we should unsubscribe
               continue;
             }
-            window.Janus.log('Subscribed to ' + stream.id + '/' + stream.mid + '?', self.subscriptions);
+            window.Janus.log(`Subscribed to ${stream.id}/${stream.mid}?`, self.subscriptions);
             if (self.subscriptions[stream.id] && self.subscriptions[stream.id][stream.mid]) {
               window.Janus.log('Already subscribed to stream, skipping:', stream);
               continue;
@@ -1202,26 +1200,25 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         window.Janus.error('  -- Error attaching plugin...', error);
       },
       iceState: function (state) {
-        window.Janus.log('ICE state (remote feed) changed to ' + state);
+        window.Janus.log('ICE state (remote feed) changed to ', state);
       },
       webrtcState: function (on) {
-        window.Janus.log('Janus says this WebRTC PeerConnection (remote feed) is ' + (on ? 'up' : 'down') + ' now');
+        window.Janus.log(`Janus says this WebRTC PeerConnection (remote feed) is ${on ? 'up' : 'down'} now`);
       },
       slowLink: function (uplink, lost, mid) {
-        window.Janus.warn('Janus reports problems ' + (uplink ? 'sending' : 'receiving') +
-                   ' packets on mid ' + mid + ' (' + lost + ' lost packets)');
+        window.Janus.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
       },
       onmessage: function (msg, jsep) {
         window.Janus.debug(' ::: Got a message (subscriber) :::', msg);
         const event = msg['videoroom'];
-        window.Janus.debug('Event: ' + event);
+        window.Janus.debug('Event:', event);
         if (msg['error']) {
           window.Janus.error(msg['error']);
         } else if (event) {
           if (event === 'attached') {
             // Now we have a working subscription, next requests will update this one
             self.creatingSubscription = false;
-            window.Janus.log('Successfully attached to feed in room ' + msg['room']);
+            window.Janus.log('Successfully attached to feed in room', msg.room);
           } else if (event === 'event') {
             // Check if we got an event on a simulcast-related event from this publisher
             const mid = msg['mid'];
@@ -1293,11 +1290,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         // The subscriber stream is recvonly, we don't expect anything here
       },
       onremotetrack: function (track, mid, on) {
-        window.Janus.debug('Remote track (mid=' + mid + ') ' + (on ? 'added' : 'removed') + ':', track);
+        window.Janus.debug(`Remote track (mid=${mid}) ${on ? 'added' : 'removed'}:`, track);
         // Which publisher are we getting on this mid?
         const sub = self.subStreams[mid];
         const feed = self.feedStreams[sub.feed_id];
-        window.Janus.debug(' >> This track is coming from feed ' + sub.feed_id + ':', feed);
+        window.Janus.debug(` >> This track is coming from feed ${sub.feed_id}:`, feed);
         if (on) {
           if (sub.feed_id == self.id) {
             window.Janus.log('This is us, skipping...');
@@ -1352,7 +1349,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   opaqueId: self.display,
                   success: function (pluginHandle) {
                     self.pluginHandle = pluginHandle;
-                    window.Janus.log('Plugin attached! (' + self.pluginHandle.getPlugin() + ', id=' + self.pluginHandle.getId() + ')');
+                    window.Janus.log(`Plugin attached! (${self.pluginHandle.getPlugin()}, id=${self.pluginHandle.getId()})`);
                     window.Janus.log('  -- This is a publisher/manager');
                     const register = {
                       request: 'join',
@@ -1370,31 +1367,30 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     window.Janus.error('  -- Error attaching plugin...', error);
                   },
                   consentDialog: function (on) {
-                    window.Janus.debug('Consent dialog should be ' + (on ? 'on' : 'off') + ' now');
+                    window.Janus.debug(`Consent dialog should be ${on ? 'on' : 'off'} now`);
                   },
                   iceState: function (state) {
-                    window.Janus.log('ICE state changed to ' + state);
+                    window.Janus.log(`ICE state changed to ${state}`);
                   },
                   mediaState: function (medium, on, mid) {
-                    window.Janus.log('Janus ' + (on ? 'started' : 'stopped') + ' receiving our ' + medium + ' (mid=' + mid + ')');
+                    window.Janus.log(`Janus ${on ? 'started' : 'stopped'} receiving our ${medium} (mid=${mid})`);
                   },
                   webrtcState: function (on) {
-                    window.Janus.log('Janus says our WebRTC PeerConnection is ' + (on ? 'up' : 'down') + ' now');
+                    window.Janus.log(`Janus says our WebRTC PeerConnection is ${on ? 'up' : 'down'} now`);
                   },
                   slowLink: function (uplink, lost, mid) {
-                    window.Janus.warn('Janus reports problems ' + (uplink ? 'sending' : 'receiving') +
-                                      ' packets on mid ' + mid + ' (' + lost + ' lost packets)');
+                    window.Janus.warn(`Janus reports problems ${uplink ? 'sending' : 'receiving'} packets on mid ${mid} (${lost} lost packets)`);
                   },
                   onmessage: function (msg, jsep) {
                     window.Janus.debug(' ::: Got a message (publisher) :::', msg);
                     const event = msg['videoroom'];
-                    window.Janus.debug('Event: ' + event);
+                    window.Janus.debug('Event:', event);
                     if (event != undefined && event != null) {
                       if (event === 'joined') {
                         // Publisher/manager created, negotiate WebRTC and attach to existing feeds, if any
                         self.id = msg['id'];
                         self.privateId = msg['private_id'];
-                        window.Janus.log('Successfully joined room ' + msg['room'] + ' with ID ' + self.id);
+                        window.Janus.log(`Successfully joined room ${msg.room} with ID ${self.id}`);
                         self._publishOwnFeed();
                         // Any new feed to attach to?
                         if (msg['publishers']) {
@@ -1418,7 +1414,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               display: display,
                               streams: streams
                             }
-                            window.Janus.debug('  >> [' + id + '] ' + display + ':', streams);
+                            window.Janus.debug(`  >> [${id}] ${display}:`, streams);
                             sources.push(streams);
                           }
                           if (sources.length > 0) {
@@ -1464,7 +1460,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                               display: display,
                               streams: streams
                             }
-                            window.Janus.debug('  >> [' + id + '] ' + display + ':', streams);
+                            window.Janus.debug(`  >> [${id}] ${display}:`, streams);
                             sources.push(streams);
                           }
                           if (sources.length > 0) {
@@ -1473,12 +1469,12 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                         } else if (msg['leaving']) {
                           // One of the publishers has gone away?
                           const leaving = msg['leaving'];
-                          window.Janus.log('Publisher left: ' + leaving);
+                          window.Janus.log('Publisher left:', leaving);
                           self._unsubscribeFrom(leaving);
                         } else if (msg['unpublished']) {
                           // One of the publishers has unpublished?
                           const unpublished = msg['unpublished'];
-                          window.Janus.log('Publisher left: ' + unpublished);
+                          window.Janus.log('Publisher left:', unpublished);
                           if (unpublished === 'ok') {
                             // That's us
                             self.pluginHandle.hangup();
@@ -1504,7 +1500,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   },
                   onlocaltrack: function (track, on) {
                     window.Janus.debug(' ::: Got a local track event :::');
-                    window.Janus.debug('Local track ' + (on ? 'added' : 'removed') + ':', track);
+                    window.Janus.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
                     // When our local track is audio (in theory,
                     // always), we attach an audio listener to our
                     // element so that we can notify other entities
@@ -1737,7 +1733,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   _defaultWsURI: function () {
     const proto = window.location.protocol;
     const host = window.location.host;
-    return (proto === 'https:' ? 'wss:' : 'ws:') + '//' + host + '/aframe-vr/connect';
+    return `${proto === 'https:' ? 'wss:' : 'ws:'}//${host}/aframe-vr/connect`;
   },
 
   _create: function (data) {
@@ -1810,7 +1806,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         this._onRemoteGrab(m);
         break;
       default:
-        console.error('Invalid message type: ' + m.type);
+        console.error('Invalid message type:', m.type);
     }
   },
 
@@ -1941,7 +1937,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.permanent = this.data.permanent;
 
     if (this.data.randomColor) {
-      this.color = '#' + Math.random().toString(16).substr(2, 6);
+      this.color = `#${Math.random().toString(16).substr(2, 6)}`;
     } else {
       this.color = this.data.color;
     }
