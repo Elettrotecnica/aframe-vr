@@ -10,8 +10,12 @@ namespace eval aframe_vr::room {}
 ad_proc -private aframe_vr::room::require {
     -package_id
     {-publishers 200}
+    {-force:boolean false}
 } {
-    Requires the Janus videoroom for specified package
+    Requires the Janus videoroom for specified package.
+
+    @param force when specified, will force the room to be destroyed
+                 and recreated if it already exists.
 } {
     if {![info exists package_id]} {
         set package_id [ad_conn package_id]
@@ -58,7 +62,14 @@ ad_proc -private aframe_vr::room::require {
             set room_exists_p [::janus::videoroom::exists_p \
                                    -plugin_url $plugin_url \
                                    -room $janus_room]
-            if {!$room_exists_p} {
+
+            if {$room_exists_p && $force_p} {
+                ::janus::videoroom::destroy \
+                    -plugin_url $plugin_url \
+                    -room $janus_room
+            }
+
+            if {$force_p || !$room_exists_p} {
                 set janus_room_pin [expr {rand() * 10000}]
                 set janus_room [::janus::videoroom::create \
                                     -plugin_url $plugin_url \
