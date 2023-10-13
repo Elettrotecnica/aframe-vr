@@ -4,6 +4,20 @@
  * which properties are now different. This is used to react to
  * changes, for instance sending the new properties over the network.
  */
+const OACS_CONSTANTS = {};
+
+OACS_CONSTANTS.ENTITY_CHANGED_EVENT = new Event('entityChanged', {bubbles: true});
+
+const _getAbsoluteRotationEuler = (function() {
+  const absoluteRotationQuaternion = new THREE.Quaternion();
+  const absoluteRotationEuler = new THREE.Euler();
+  return function (object) {
+    object.getWorldQuaternion(absoluteRotationQuaternion);
+    absoluteRotationEuler.setFromQuaternion(absoluteRotationQuaternion);
+    return absoluteRotationEuler;
+  };
+})();
+
 window.AFRAME.registerComponent('oacs-change-listener', {
   schema: {
     properties: { type: 'array', default: ['position', 'rotation'] }
@@ -12,7 +26,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   init: function () {
     this.properties = {};
     this.changedProperties = {};
-    this.changeEvent = new Event('entityChanged', {bubbles: true});
+    this.changeEvent = OACS_CONSTANTS.ENTITY_CHANGED_EVENT;
   },
 
   update: function () {
@@ -89,8 +103,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
         this.properties['position']['new'] = new THREE.Vector3();
         break;
       case 'rotation':
-         this.absoluteRotationQuaternion = new THREE.Quaternion();
-         this.absoluteRotationEuler = new THREE.Euler();
          this.properties['rotation']['new'] = {};
         break;
     }
@@ -129,11 +141,10 @@ window.AFRAME.registerComponent('oacs-change-listener', {
 
   _getAbsoluteRotation: function () {
     const newValue = this.properties['rotation']['new'];
-    this.el.object3D.getWorldQuaternion(this.absoluteRotationQuaternion);
-    this.absoluteRotationEuler.setFromQuaternion(this.absoluteRotationQuaternion);
-    newValue.x = this.absoluteRotationEuler.x;
-    newValue.y = this.absoluteRotationEuler.y;
-    newValue.z = this.absoluteRotationEuler.z;
+    const absoluteRotationEuler = _getAbsoluteRotationEuler(this.el.object3D);
+    newValue.x = absoluteRotationEuler.x;
+    newValue.y = absoluteRotationEuler.y;
+    newValue.z = absoluteRotationEuler.z;
   },
 
   _getAbsolutePosition: function () {
