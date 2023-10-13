@@ -4,9 +4,8 @@
  * which properties are now different. This is used to react to
  * changes, for instance sending the new properties over the network.
  */
-const OACS_CONSTANTS = {};
 
-OACS_CONSTANTS.ENTITY_CHANGED_EVENT = new Event('entityChanged', {bubbles: true});
+const ENTITY_CHANGED_EVENT = new Event('entityChanged', {bubbles: true});
 
 const _getAbsoluteRotationEuler = (function() {
   const absoluteRotationQuaternion = new THREE.Quaternion();
@@ -26,7 +25,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   init: function () {
     this.properties = {};
     this.changedProperties = {};
-    this.changeEvent = OACS_CONSTANTS.ENTITY_CHANGED_EVENT;
+    this.changeEvent = ENTITY_CHANGED_EVENT;
   },
 
   update: function () {
@@ -280,6 +279,10 @@ window.AFRAME.registerComponent('mediastream-sound', {
  * Its purpose is to implement reaction to noise in a scene.
  *
  */
+
+const MEDIASTREAM_LISTENER_LOUD_EVENT = new Event('mediastream-listener-loud', {bubbles: true});
+const MEDIASTREAM_LISTENER_SILENT_EVENT = new Event('mediastream-listener-silent', {bubbles: true});
+
 window.AFRAME.registerComponent('mediastream-listener', {
   init: function () {
     this.stream = null;
@@ -287,8 +290,8 @@ window.AFRAME.registerComponent('mediastream-listener', {
     this.analyser = null;
     this.isMakingNoise = false;
     this.loudness = 0;
-    this.loudEvent = new Event('mediastream-listener-loud', {bubbles: true});
-    this.silentEvent = new Event('mediastream-listener-silent', {bubbles: true});
+    this.loudEvent = MEDIASTREAM_LISTENER_LOUD_EVENT;
+    this.silentEvent = MEDIASTREAM_LISTENER_SILENT_EVENT;
 
     this.loudItems = {};
 
@@ -417,6 +420,14 @@ window.AFRAME.registerComponent('mediastream-listener', {
  * See https://docs.readyplayer.me/ready-player-me/avatars/avatar-creator/vr-avatar for a description of the avatar's structure.
  *
  */
+
+//
+// The identity quaternion is used to calculate the rotation angle of
+// our eyes when we are looking at objects.
+//
+const IDENTITY_QUATERNION = new THREE.Quaternion();
+IDENTITY_QUATERNION.identity();
+
 window.AFRAME.registerComponent('readyplayerme-avatar', {
   schema: {
     model: {type: 'model'},
@@ -432,10 +443,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.model = null;
     this.animations = null;
     this.isIdle = false;
-    // The identity quaternion is used to calculate the rotation angle
-    // of our eyes when we are looking at objects.
-    this.identityQuaternion = new THREE.Quaternion();
-    this.identityQuaternion.identity();
+    this.identityQuaternion = IDENTITY_QUATERNION;
   },
 
   _inflate: function (node) {
@@ -970,6 +978,10 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     return this.stringIds ? feed.id : feed.display;
   },
 
+  tick: function (time, delta) {
+    this.time = time;
+  },
+
   _attachTrack: function (element, track) {
     const stream = new MediaStream([track]);
     if (track.kind === 'video') {
@@ -981,7 +993,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         v.autoplay = true;
         // We create an element with a unique id so that aframe won't
         // try to reuse old video elements from the cache.
-        v.id = track.id + (new Date()).getTime();
+        v.id = `${track.id}-${this.time}`;
         element.appendChild(v);
       }
       v.srcObject = stream;
