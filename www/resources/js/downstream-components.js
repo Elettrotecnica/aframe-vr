@@ -280,19 +280,33 @@ window.AFRAME.registerComponent('mediastream-listener', {
     this.silentEvent = new Event('mediastream-listener-silent', {bubbles: true});
 
     this.loudItems = {};
-    const self = this;
-    this.el.sceneEl.addEventListener('mediastream-listener-loud', function (e) {
-      if (e.target !== self.el) {
-        self.loudItems[e.target] = [e.target, e.target.components['mediastream-listener'].loudness];
-        console.log(self.el, ' detects sound from ', e.target);
-      }
-    });
-    this.el.sceneEl.addEventListener('mediastream-listener-silent', function (e) {
-      if (e.target !== self.el) {
-        delete self.loudItems[e.target];
-        console.log(self.el, ' does not hear ', e.target);
-      }
-    });
+
+    this.onSound = this._onSound.bind(this);
+    this.onSilence = this._onSilence.bind(this);
+  },
+
+  _onSound: function (e) {
+    if (e.target !== this.el) {
+      this.loudItems[e.target] = [e.target, e.target.components['mediastream-listener'].loudness];
+      console.log(this.el, ' detects sound from ', e.target);
+    }
+  },
+
+  _onSilence: function (e) {
+    if (e.target !== this.el) {
+      delete this.loudItems[e.target];
+      console.log(this.el, ' does not hear ', e.target);
+    }
+  },
+
+  play: function () {
+    this.el.sceneEl.addEventListener('mediastream-listener-loud', this.onSound);
+    this.el.sceneEl.addEventListener('mediastream-listener-silent', this.onSilence);
+  },
+
+  pause: function () {
+    this.el.sceneEl.removeEventListener('mediastream-listener-loud', this.onSound);
+    this.el.sceneEl.removeEventListener('mediastream-listener-silent', this.onSilence);
   },
 
   tick: function () {
