@@ -658,12 +658,6 @@ const ANIMATIONS = {
   thumbUp: 'Thumb Up'
 };
 
-// Map animation to public events for the API.
-const EVENTS = {};
-EVENTS[ANIMATIONS.fist] = 'grip';
-EVENTS[ANIMATIONS.thumbUp] = 'pistol';
-EVENTS[ANIMATIONS.point] = 'pointing';
-
 /**
  * A component to animate a hand model by directly specifying the
  * gesture.
