@@ -38,7 +38,10 @@ ad_proc -private aframe_vr::room::require {
             # If we are here we were the first to try and create this
             # room. Proceed.
             #
-            set janus_room [parameter::get -package_id $package_id -parameter janus_room -default $package_id]
+            set janus_room [parameter::get \
+                                -package_id $package_id \
+                                -parameter janus_room \
+                                -default $package_id]
 
             set session_url [::janus::create_session -package_id $package_id]
             if {$session_url eq ""} {
