@@ -2159,7 +2159,7 @@ const _getBoundinBox = (function () {
   };
 })();
 const _getBoundinBoxSize = (function () {
-  const vec = new THREE.Box3();
+  const vec = new THREE.Vector3();
   return function (object) {
     return _getBoundinBox(object).getSize(vec);
   };
