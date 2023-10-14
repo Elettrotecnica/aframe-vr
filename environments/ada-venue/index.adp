@@ -21,7 +21,7 @@
 		const spawn = e.target.getAttribute('data-spawn');
 		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
 		e.target.setAttribute('ammo-body', type);
-	        e.target.setAttribute('ammo-shape', 'type: box; minHalfExtent: 0.1;');
+	        e.target.setAttribute('ammo-shape', 'type: hull');
 		e.target.setAttribute('bound-to-entity', 'entity: #venue-model');
 	    }
 	});
