@@ -180,7 +180,6 @@
             // generate the audio meter.
             //
             const hands = document.querySelectorAll('a-entity[local-hand-controls]');
-            const audioTrack = stream.getAudioTracks()[0];
             const muteButton = document.querySelector('#mutebutton');
 
             function isMuted() {
@@ -189,14 +188,12 @@
 
             function mute() {
                 camera.setAttribute('janus-videoroom-entity', 'muted', true);
-                audioTrack.enabled = false;
                 muteButton.classList.add('btn-primary');
                 muteButton.classList.remove('btn-warning');
                 muteButton.textContent = 'Unmute';
             }
             function unMute() {
                 camera.setAttribute('janus-videoroom-entity', 'muted', false);
-                audioTrack.enabled = true;
                 muteButton.classList.add('btn-warning');
                 muteButton.classList.remove('btn-primary');
                 muteButton.textContent = 'Mute';
@@ -212,8 +209,13 @@
                 }
             });
 
+            const pushToTalkCheckBox = document.querySelector('#pushtotalk');
             const pushToTalkAudio = document.querySelector('#pushtotalk-audio');
             function pushToTalkHandler(e) {
+		if (!pushToTalkCheckBox.checked) {
+		    return;
+		}
+
                 const muted = isMuted();
                 if (muted &&
                     (e.type === 'abuttondown' ||
@@ -227,29 +229,23 @@
                     mute();
                 }
             }
-            document.querySelector('#pushtotalk').addEventListener('click', function (e) {
+
+	    document.body.addEventListener('keydown', pushToTalkHandler);
+            document.body.addEventListener('keyup', pushToTalkHandler);
+            for (const hand of hands) {
+                hand.addEventListener('abuttondown', pushToTalkHandler);
+                hand.addEventListener('xbuttondown', pushToTalkHandler);
+                hand.addEventListener('xbuttonup', pushToTalkHandler);
+                hand.addEventListener('abuttonup', pushToTalkHandler);
+            }
+
+            pushToTalkCheckBox.addEventListener('click', function (e) {
                 if (this.checked) {
                     mute();
                     mutebutton.setAttribute('disabled', '');
-                    document.body.addEventListener('keydown', pushToTalkHandler);
-                    document.body.addEventListener('keyup', pushToTalkHandler);
-                    for (const hand of hands) {
-                        hand.addEventListener('abuttondown', pushToTalkHandler);
-                        hand.addEventListener('xbuttondown', pushToTalkHandler);
-                        hand.addEventListener('xbuttonup', pushToTalkHandler);
-                        hand.addEventListener('abuttonup', pushToTalkHandler);
-                    }
                 } else {
                     unMute();
                     mutebutton.removeAttribute('disabled');
-                    document.body.removeEventListener('keydown', pushToTalkHandler);
-                    document.body.removeEventListener('keyup', pushToTalkHandler);
-                    for (const hand of hands) {
-                        hand.removeEventListener('abuttondown', pushToTalkHandler);
-                        hand.removeEventListener('xbuttondown', pushToTalkHandler);
-                        hand.removeEventListener('xbuttonup', pushToTalkHandler);
-                        hand.removeEventListener('abuttonup', pushToTalkHandler);
-                    }
                 }
             });
 
@@ -297,17 +293,9 @@
             document.querySelector('#audiometer').style.display = 'block';
             draw();
         }
-        function handleError(err) {
-            if (err.name === 'NotAllowedError') {
-                alert('You have denied access to your microphone. You will not be able to speak. If you want to do so, please grant access to your microphone for this website in the browser settings.');
-            } else {
-                alert('We encountered an error while trying to access your microphone. You will not be able to speak. The browser reported: ' + err.message);
-                console.error(err);
-            }
-        }
-        navigator.mediaDevices.getUserMedia({audio: true})
-           .then((stream) => {
-               audioMeter(stream);
-           }).catch(handleError);
+
+        camera.addEventListener('localstream', function (e) {
+	    audioMeter(e.detail.stream);
+	});
     </if>
   </script>

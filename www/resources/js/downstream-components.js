@@ -949,20 +949,21 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
   },
 
   update: function (oldData) {
-    this._toggleMute();
+    const stream = this._getLocalStream();
+    if (stream) {
+      for (const track of stream.getAudioTracks()) {
+        track.enabled = !this.data.muted;
+        console.log(`Local stream: enabled=${track.enabled}`);
+      }
+    }
   },
 
-  _toggleMute: function () {
-    if (this.pluginHandle) {
-      const muted = this.pluginHandle.isAudioMuted();
-      if (this.data.muted && !muted) {
-        console.log('Muting local stream...');
-        this.pluginHandle.muteAudio();
-      }
-      if (!this.data.muted && muted) {
-        console.log('Unmuting local stream...');
-        this.pluginHandle.unmuteAudio();
-      }
+  _getLocalStream: function () {
+    if (this.pluginHandle &&
+        this.pluginHandle.webrtcStuff) {
+      return this.pluginHandle.webrtcStuff.myStream;
+    } else {
+      return null;
     }
   },
 
@@ -1532,14 +1533,25 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   onlocaltrack: function (track, on) {
                     console.debug(' ::: Got a local track event :::');
                     console.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
+
+                    const stream = self._getLocalStream();
+
                     // When our local track is audio (in theory,
                     // always), we attach an audio listener to our
                     // element so that we can notify other entities
                     // about our own noise.
                     if (track.kind === 'audio') {
                       self.el.setAttribute('mediastream-listener', '');
-                      self.el.components['mediastream-listener'].setMediaStream(new MediaStream([track]));
+                      self.el.components['mediastream-listener'].setMediaStream(stream);
                     }
+
+                    self.el.dispatchEvent(
+                      new CustomEvent('localstream', {
+                        detail: {
+                          stream: stream
+                        }
+                      })
+                    );
                   },
                   onremotetrack: function (track, mid, on) {
                     // The publisher stream is sendonly, we don't expect anything here
