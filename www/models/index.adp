@@ -25,22 +25,28 @@
 
 	    const templateId = 'template-' + spawnId;
 
-	    const model = document.createElement('a-gltf-model');
-	    model.setAttribute('id', spawnId);
-	    model.setAttribute('center', '');
-	    model.setAttribute('clamp-size', 'maxSize: @spawn_max_size;literal@; minSize: @spawn_min_size;literal@');
-	    model.setAttribute('oacs-networked-entity', 'permanent: true; template: #' + templateId);
-	    model.setAttribute('data-spawn', 'theirs');
-	    model.setAttribute('src', 'url(' + modelURL + ')');
-
-	    const template = document.createElement('template');
-	    template.setAttribute('id', templateId);
-	    template.content.appendChild(model);
-
 	    //
-	    // Add the template to the page
+	    // Template might already exist on the page...
 	    //
-	    vrScene.appendChild(template)
+	    let template = document.getElementById(templateId);
+	    if (!template) {
+		//
+		// ...it doesn't, create and add to the scene.
+		//
+		const model = document.createElement('a-gltf-model');
+		model.setAttribute('id', spawnId);
+		model.setAttribute('center', '');
+		model.setAttribute('clamp-size', 'maxSize: @spawn_max_size;literal@; minSize: @spawn_min_size;literal@');
+		model.setAttribute('oacs-networked-entity', 'permanent: true; template: #' + templateId);
+		model.setAttribute('data-spawn', 'theirs');
+		model.setAttribute('src', 'url(' + modelURL + ')');
+
+		template = document.createElement('template');
+		template.setAttribute('id', templateId);
+		template.content.appendChild(model);
+
+		vrScene.appendChild(template);
+	    }
 
 	    //
 	    // Spawn the local entity from the template. This will
