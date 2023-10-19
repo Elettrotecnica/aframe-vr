@@ -271,126 +271,6 @@ window.AFRAME.registerComponent('mediastream-sound', {
 });
 
 /**
- * A component that "listens" to a stream and maintains a list of
- * "loud items" corrently on the scene. It also provides a method to
- * obtain the currently loudest item from the perspective of a
- * particular entity.
- *
- * Its purpose is to implement reaction to noise in a scene.
- *
- */
-
-const MEDIASTREAM_LISTENER_LOUD_EVENT = new Event('mediastream-listener-loud', {bubbles: true});
-const MEDIASTREAM_LISTENER_SILENT_EVENT = new Event('mediastream-listener-silent', {bubbles: true});
-
-window.AFRAME.registerComponent('mediastream-listener', {
-  init: function () {
-    this.stream = null;
-    this.dataArray = null;
-    this.analyser = null;
-    this.isMakingNoise = false;
-    this.loudness = 0;
-    this.loudEvent = MEDIASTREAM_LISTENER_LOUD_EVENT;
-    this.silentEvent = MEDIASTREAM_LISTENER_SILENT_EVENT;
-
-    this.loudItems = {};
-
-    this.onSound = this._onSound.bind(this);
-    this.onSilence = this._onSilence.bind(this);
-  },
-
-  _onSound: function (e) {
-    if (e.target !== this.el) {
-      this.loudItems[e.target] = [e.target, e.target.components['mediastream-listener'].loudness];
-      console.log(this.el, ' detects sound from ', e.target);
-    }
-  },
-
-  _onSilence: function (e) {
-    if (e.target !== this.el) {
-      delete this.loudItems[e.target];
-      console.log(this.el, ' does not hear ', e.target);
-    }
-  },
-
-  play: function () {
-    this.el.sceneEl.addEventListener('mediastream-listener-loud', this.onSound);
-    this.el.sceneEl.addEventListener('mediastream-listener-silent', this.onSilence);
-  },
-
-  pause: function () {
-    this.el.sceneEl.removeEventListener('mediastream-listener-loud', this.onSound);
-    this.el.sceneEl.removeEventListener('mediastream-listener-silent', this.onSilence);
-  },
-
-  tick: function () {
-    if (!this.stream) return;
-    this.loudness = this._getLoudness();
-    if (this.loudness > 127) {
-      if (!this.isMakingNoise) {
-        this.el.dispatchEvent(this.loudEvent);
-        this.isMakingNoise = true;
-      }
-    } else if (this.isMakingNoise) {
-      this.el.dispatchEvent(this.silentEvent);
-      this.isMakingNoise = false;
-    }
-  },
-
-  // Returns the "loudest" sound from the perspective of this element.
-  listen: function () {
-    let maxNoise = 0;
-    let maxItem = null;
-
-    const myPosition = this.el.object3D.position;
-
-    for (const e in this.loudItems) {
-      const el = this.loudItems[e][0];
-      const loudness = this.loudItems[e][1];
-      const soundPosition = el.object3D.position;
-      const distance = myPosition.distanceTo(soundPosition);
-      // We use an inverse quadratic attenuation based on the
-      // distance.
-      const noise = loudness / distance ** 2;
-      if (noise > 0 && noise > maxNoise) {
-        maxNoise = noise;
-        maxItem = el;
-      }
-    }
-
-    return maxItem;
-  },
-
-  // Returns our loudness as a number between 0 and 255
-  _getLoudness: function () {
-    let maxByteFrequencyData = 0;
-    this.analyser.getByteFrequencyData(this.dataArray);
-    for (const d of this.dataArray) {
-      if (d > maxByteFrequencyData) {
-        maxByteFrequencyData = d;
-      }
-    }
-    return maxByteFrequencyData;
-  },
-
-  setMediaStream: function (stream) {
-    const audioContext = new window.AudioContext();
-    const soundSource = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
-    // We only want to detect sound, use a very low frequency
-    // resolution for the analyzer.
-    analyser.minDecibels = -100;
-    analyser.maxDecibels = 0;
-    analyser.fftSize = 32;
-    soundSource.connect(analyser);
-    this.analyser = analyser;
-    this.dataArray = new Uint8Array(analyser.frequencyBinCount);
-    this.stream = stream;
-  }
-
-});
-
-/**
  * A component providing a bit of facility to VR halfbody avatars from
  * https://readyplayer.me/
  *
@@ -407,9 +287,9 @@ window.AFRAME.registerComponent('mediastream-listener', {
  *   needed.
  * - idle eyes animation triggers after a configurable number of
  *   seconds of inactivity.
- * - model will look either at a specific entity, or to entities that
- *   are making noise (via the downstream mediastream-listener
- *   component)
+ * - model can be set to pay attention to a set of entities defines by
+ *   a querySelector. When one such entity is in the model line of
+ *   sight, the eyes will look in its direction.
  *
  * Model is automatically rotated 180° (default would face the user)
  * and offset 65cm, so that head is at 0 level with respect to its
@@ -435,8 +315,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     shirt: {type: 'boolean', default: true},
     head: {type: 'boolean', default: true},
     idleTimeout: {type: 'int', default: 10},
-    lookAt: {type: 'selector'},
-    listen: {type: 'boolean', default: true}
+    lookAt: {type: 'string'}
   },
 
   init: function () {
@@ -444,6 +323,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.animations = null;
     this.isIdle = false;
     this.identityQuaternion = IDENTITY_QUATERNION;
+    this.eyes = [];
   },
 
   _inflate: function (node) {
@@ -458,10 +338,8 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
         default:
           node.visible = this.data.head;
       }
-    } else if (node.name === 'RightEye') {
-      this.rightEye = node;
-    } else if (node.name === 'LeftEye') {
-      this.leftEye = node;
+    } else if (node.name === 'RightEye' || node.name === 'LeftEye') {
+      this.eyes.push(node);
     }
 
     // inflate subtrees first so that we can determine whether or not this node needs to be inflated
@@ -503,10 +381,6 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       el.appendChild(childEntity);
     }
 
-    // Remove invalid CSS class name characters.
-    const className = (node.name || node.uuid).replace(/[^\w-]/g, '');
-    el.classList.add(className);
-
     // AFRAME rotation component expects rotations in YXZ, convert it
     if (node.rotation.order !== 'YXZ') {
       node.rotation.setFromQuaternion(node.quaternion, 'YXZ');
@@ -539,41 +413,41 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   },
 
   _look: function () {
-    if (this.isIdle || !this.leftEye || !this.rightEye) {
+    if (this.isIdle || this.eyes.length == 0 || !this.lookAt) {
       return;
     }
 
-    let lookAt;
-    if (this.listen) {
-      let listener = this.el.components['mediastream-listener'];
-      if (listener) {
-        lookAt = listener.listen();
-      }
-    }
-
-    if (lookAt) {
-      this.lookAt = lookAt;
-    } else {
-      lookAt = this.lookAt;
-    }
-
-    if (lookAt) {
-      for (let eye of [this.leftEye, this.rightEye]) {
+    //
+    // Loop through the entities that we want to look at. The first
+    // one in our line of sight will be the one we actually look at.
+    //
+    for (const lookAt of document.querySelectorAll(this.lookAt)) {
+      let inLineOfSight = true;
+      for (let eye of this.eyes) {
+        if (!inLineOfSight) {
+          break;
+        }
+        //
         // Look at the object, but constrain the eyes rotation to 0.8
-        // radians. When the angle is bigger, just look forward.
+        // radians. When the angle is bigger, the entity is not in our
+        // line of sight.
+        //
         eye.lookAt(lookAt.object3D.position);
-        if (eye.quaternion.angleTo(this.identityQuaternion) > 0.8) {
+        inLineOfSight&&= eye.quaternion.angleTo(this.identityQuaternion) <= 0.8;
+        if (!inLineOfSight) {
           eye.quaternion.copy(this.identityQuaternion);
         }
         // Compensate a PI/2 offset in the X rotation.
         eye.rotateX(Math.PI / 2);
+      }
+      if (inLineOfSight) {
+        break;
       }
     }
   },
 
   _startIdle: function () {
     // Forget what we were looking at as we become idle.
-    this.lookAt = this.defaultLookAt;
     this.isIdle = true;
     this.idleAnimation.play();
   },
@@ -583,13 +457,33 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.idleMixer.stopAllAction();
   },
 
+  _weAreMoving: (function () {
+    const position = new THREE.Vector3();
+    const rotation = new THREE.Quaternion();
+    return function () {
+      if (!position.equals(this.el.object3D.position) ||
+          !rotation.equals(this.el.object3D.quaternion)) {
+        position.copy(this.el.object3D.position);
+        rotation.copy(this.el.object3D.quaternion);
+        return true;
+      } else {
+        return false;
+      }
+    };
+  })(),
+
   tick: function (time, delta) {
     if (!this.idleMixer) {
       // Model is not initialized yet.
       return;
     }
 
-    this._look();
+    //
+    // When we move, reset the idle timeout.
+    //
+    if (this._weAreMoving()) {
+      this.idle = this.idleTimeout;
+    }
 
     this.idle -= delta;
     if (this.idle <= 0 && !this.isIdle) {
@@ -600,6 +494,8 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
 
     if (this.isIdle) {
       this.idleMixer.update(delta / 1000);
+    } else {
+      this._look();
     }
   },
 
@@ -607,13 +503,8 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     const self = this;
     const el = this.el;
 
-    if (this.data.lookAt) {
+   if (this.data.lookAt) {
       this.lookAt = this.data.lookAt;
-      this.defaultLookAt = this.lookAt;
-    }
-
-    if (this.data.listen !== undefined) {
-      this.listen = this.data.listen;
     }
 
     if (this.data.idleTimeout) {
@@ -642,11 +533,6 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
         idleAnimation.timeScale = 0.5;
         idleAnimation.time = 0;
         idleAnimation.weight = 1;
-
-        this.setAttribute('oacs-change-listener', 'properties: position, rotation');
-        this.addEventListener('entityChanged', function () {
-          self.idle = self.idleTimeout;
-        });
 
         self.idleAnimation = idleAnimation;
         self.idleMixer = idleMixer;
@@ -1004,10 +890,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       // TODO: right now we assume audio to be positional.
       element.setAttribute('mediastream-sound', '');
       element.components['mediastream-sound'].setMediaStream(stream);
-      // We also attach the listener component to track sound on
-      // this entity and be able to react to sound.
-      element.setAttribute('mediastream-listener', '');
-      element.components['mediastream-listener'].setMediaStream(stream);
     }
   },
 
@@ -1040,7 +922,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       }
     } else {
       element.removeAttribute('mediastream-sound');
-      element.removeAttribute('mediastream-listener');
     }
   },
 
@@ -1535,16 +1416,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     console.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
 
                     const stream = self._getLocalStream();
-
-                    // When our local track is audio (in theory,
-                    // always), we attach an audio listener to our
-                    // element so that we can notify other entities
-                    // about our own noise.
-                    if (track.kind === 'audio') {
-                      self.el.setAttribute('mediastream-listener', '');
-                      self.el.components['mediastream-listener'].setMediaStream(stream);
-                    }
-
                     self.el.dispatchEvent(
                       new CustomEvent('localstream', {
                         detail: {

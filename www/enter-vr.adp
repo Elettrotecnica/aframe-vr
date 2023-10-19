@@ -31,7 +31,8 @@
         <!-- Avatar -->
         <template id="avatar-template-@user_id;literal@">
           <a-entity position="0 1.6 -3"
-                    readyplayerme-avatar="model: url(@avatar_url@); hands: false">
+                    class="avatar"
+                    readyplayerme-avatar="model: url(@avatar_url@); hands: false; lookAt: .avatar, [oacs-networked-entity]">
             <a-text data-name="value"
                     value=""
                     material="color: white"
