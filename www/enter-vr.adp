@@ -41,7 +41,8 @@
                     align="center"
                     width="1"
                     position="0 -0.4 -0.5"
-                    rotation="0 180 0">
+                    rotation="0 180 0"></a-text>
+	  </a-entity>
         </template>
       </if>
       <else>
