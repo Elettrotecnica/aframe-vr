@@ -412,7 +412,37 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     return el;
   },
 
-  _look: function () {
+  _compareDistance: function (a, b) {
+    const aDistance = a.object3D.position.distanceTo(this.el.object3D.position);
+    const bDistance = b.object3D.position.distanceTo(this.el.object3D.position);
+    return aDistance - bDistance;
+  },
+
+  _lookAtEntities: (function () {
+    //
+    // Sort the lookable entities by distance from this entity, so
+    // that the closest entities have the precedence when deciding
+    // what to look at.
+    //
+    // Throttle this operation to max 1/300ms.
+    //
+    const lookArray = [];
+    let fixation = 0;
+    return function (delta) {
+      if (fixation <= 0) {
+        lookArray.length = 0;
+        for (const e of document.querySelectorAll(this.lookAt)) {
+          lookArray.push(e);
+        }
+        lookArray.sort(this._compareDistance.bind(this));
+        fixation = 300;
+      }
+      fixation -= delta;
+      return lookArray;
+    };
+  })(),
+
+  _look: function (delta) {
     if (this.isIdle || this.eyes.length == 0 || !this.lookAt) {
       return;
     }
@@ -421,7 +451,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     // Loop through the entities that we want to look at. The first
     // one in our line of sight will be the one we actually look at.
     //
-    for (const lookAt of document.querySelectorAll(this.lookAt)) {
+    for (const lookAt of this._lookAtEntities(delta)) {
       let inLineOfSight = true;
       for (let eye of this.eyes) {
         if (!inLineOfSight) {
@@ -495,7 +525,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     if (this.isIdle) {
       this.idleMixer.update(delta / 1000);
     } else {
-      this._look();
+      this._look(delta);
     }
   },
 
