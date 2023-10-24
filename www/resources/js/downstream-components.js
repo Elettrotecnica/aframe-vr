@@ -277,14 +277,8 @@ window.AFRAME.registerComponent('mediastream-sound', {
  * Features:
  * - generate separate entities from each node in the model tree, so
  *   that e.g. hands can be moved or rotated separately from the rest
- *   of the body. This works by specifying sub-templates to the entity
- *   named after the nodes we want to expand.
- * - allow to hide certain parts of the model, so that e.g. one can
- *   use only the head and no hands. This works only on those
- *   ReadyPlayerMe models that use separate meshes for different parts
- *   of the body. Later model seem to use one single mesh, but it is
- *   possible to generate one that has no hands, when these are not
- *   needed.
+ *   of the body. This works by specifying sub-entities named after
+ *   the nodes we want to expand.
  * - idle eyes animation triggers after a configurable number of
  *   seconds of inactivity.
  * - model can be set to pay attention to a set of entities defines by
@@ -311,9 +305,6 @@ IDENTITY_QUATERNION.identity();
 window.AFRAME.registerComponent('readyplayerme-avatar', {
   schema: {
     model: {type: 'model'},
-    hands: {type: 'boolean', default: true},
-    shirt: {type: 'boolean', default: true},
-    head: {type: 'boolean', default: true},
     idleTimeout: {type: 'int', default: 10},
     lookAt: {type: 'string'}
   },
@@ -327,18 +318,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   },
 
   _inflate: function (node) {
-    if (node.type === 'SkinnedMesh') {
-      switch (node.name) {
-        case 'Wolf3D_Hands':
-          node.visible = this.data.hands;
-          break;
-        case 'Wolf3D_Shirt':
-          node.visible = this.data.shirt;
-          break;
-        default:
-          node.visible = this.data.head;
-      }
-    } else if (node.name === 'RightEye' || node.name === 'LeftEye') {
+    if (node.name === 'RightEye' || node.name === 'LeftEye') {
       this.eyes.push(node);
     }
 
@@ -354,20 +334,19 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       }
     }
 
-    const nodeTemplate = this.el.querySelector(`template[data-name='${node.name}']`);
-    if (node.name !== 'Scene' && !nodeTemplate && childrenEntities.length === 0) {
+    const inflatedNode = this.el.querySelector(`[name='${node.name}']`);
+    if (node.name !== 'Scene' && !inflatedNode && childrenEntities.length === 0) {
       // This node won't become an entity
       return;
     }
 
-    // If the user supplied a custom template for this node we will
-    // use it, otherwise we default to an a-entity.
-    let el;
-    if (nodeTemplate && nodeTemplate.content.firstElementChild) {
-      el = nodeTemplate.content.firstElementChild.cloneNode(true);
-    } else {
-      el = document.createElement('a-entity');
-    }
+    //
+    // If the user supplied a custom entity for this node we will use
+    // it, otherwise we default to an a-entity.
+    //
+    const el = inflatedNode ? inflatedNode : document.createElement('a-entity');
+
+    el.setAttribute('name', node.name);
 
     if (node.name === 'Scene') {
       // Compensate that the model is turned the other way around and
