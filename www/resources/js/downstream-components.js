@@ -322,11 +322,16 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       this.eyes.push(node);
     }
 
-    // inflate subtrees first so that we can determine whether or not this node needs to be inflated
+    //
+    // Inflate subtrees first so that we can determine whether or not
+    // this node needs to be inflated.
+    //
     const childrenEntities = [];
+    //
     // setObject3D mutates the node's parent, so we have to use a copy
     // of the children as they are now (children is a live
     // collection).
+    //
     for (const child of node.children.slice(0)) {
       const childEntity = this._inflate(child);
       if (childEntity) {
@@ -334,9 +339,15 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       }
     }
 
+    //
+    // Nodes will become an entity if any of this is true:
+    // - it is the 'Scene' node (root of the model)
+    // - it is explicitly set to be inflated by the user (we have a
+    //   sub-entity with the corresponding name)
+    // - it is an ancestor of a node that has been inflated
+    //
     const inflatedNode = this.el.querySelector(`[name='${node.name}']`);
     if (node.name !== 'Scene' && !inflatedNode && childrenEntities.length === 0) {
-      // This node won't become an entity
       return;
     }
 
@@ -349,9 +360,11 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     el.setAttribute('name', node.name);
 
     if (node.name === 'Scene') {
+      //
       // Compensate that the model is turned the other way around and
       // offset from the ground around 65cm, by countering this on the
       // scene element.
+      //
       el.setAttribute('position', '0 -0.65 0');
       el.setAttribute('rotation', '0 180 0');
     }
@@ -360,13 +373,18 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       el.appendChild(childEntity);
     }
 
+    //
     // AFRAME rotation component expects rotations in YXZ, convert it
+    //
     if (node.rotation.order !== 'YXZ') {
       node.rotation.setFromQuaternion(node.quaternion, 'YXZ');
     }
 
-    // Copy over the object's transform to the THREE.Group and reset the actual transform of the Object3D
-    // all updates to the object should be done through the THREE.Group wrapper
+    //
+    // Copy over the object's transform to the THREE.Group and reset
+    // the actual transform of the Object3D all updates to the object
+    // should be done through the THREE.Group wrapper
+    //
     el.object3D.position.copy(node.position);
     el.object3D.rotation.copy(node.rotation);
     el.object3D.matrixNeedsUpdate = true;
@@ -377,14 +395,19 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
 
     el.setObject3D(node.type.toLowerCase(), node);
 
-    // Set the name of the `THREE.Group` to match the name of the node,
-    // so that templates can be attached to the correct AFrame entity.
+    //
+    // Set the name of the `THREE.Group` to match the name of the
+    // node, so that templates can be attached to the correct AFrame
+    // entity.
+    //
     el.object3D.name = node.name;
 
-    // Set the uuid of the `THREE.Group` to match the uuid of the node,
-    // so that `THREE.PropertyBinding` will find (and later animate)
-    // the group. See `PropertyBinding.findNode`:
+    //
+    // Set the uuid of the `THREE.Group` to match the uuid of the
+    // node, so that `THREE.PropertyBinding` will find (and later
+    // animate) the group. See `PropertyBinding.findNode`:
     // https://github.com/mrdoob/three.js/blob/dev/src/animation/PropertyBinding.js#L211
+    //
     el.object3D.uuid = node.uuid;
     node.uuid = THREE.MathUtils.generateUUID();
 
