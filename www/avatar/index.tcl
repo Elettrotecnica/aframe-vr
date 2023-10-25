@@ -47,19 +47,15 @@ ad_form \
         #
         # Request the avatar's glb model.
         #
-        set wfd [ad_opentmpfile tmpfile]
-
 	try {
-	    set response [ns_http run -method GET -spoolsize 0 \
-			      -outputchan $wfd \
-			      $avatar_api_url?useHands=false]
+	    set response [util::http::get \
+                              -spool \
+			      -url $avatar_api_url?useHands=false]
 	    set status [dict get $response status]
 	} on error {errmsg} {
 	    ad_log warning $errmsg
 	    set status 0
 	}
-
-        close $wfd
 
         if {$status != 200} {
             ::template::element set_error avatar avatar_api_url \
@@ -67,7 +63,7 @@ ad_form \
 	    break
         }
 
-        file rename -force -- $tmpfile $avatar_file
+        file rename -force -- [dict get $response file] $avatar_file
 
 
         #
@@ -75,23 +71,18 @@ ad_form \
         #
 	set render_api_url ${api_url}${avatar_id}.png
 
-	set wfd [ad_opentmpfile tmpfile]
-
 	try {
-	    set response [ns_http run -method GET \
-			      -spoolsize 0 \
-			      -outputchan $wfd \
-			      $render_api_url]
+	    set response [util::http::get \
+                              -spool \
+			      -url $render_api_url]
 	    set status [dict get $response status]
 	} on error {errmsg} {
 	    ad_log warning $errmsg
 	    set status 0
 	}
 
-	close $wfd
-
         if {$status == 200} {
-	    file rename -force $tmpfile $avatar_image_file
+	    file rename -force [dict get $response file] $avatar_image_file
         } else {
             ::template::element set_error avatar avatar_api_url \
 		"Something went wrong retrieving the avatar thumbnail. If avatar appearance and thumbnail do not correspond, please try again."
