@@ -327,6 +327,17 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   },
 
   _inflate: function (node) {
+    //
+    // Models used to provide separate meshes for different body
+    // parts. This is not the case anymore, but as we currently assume
+    // models without hands, keep supporting old models by always
+    // making them invisible.
+    //
+    if (node.type === 'SkinnedMesh' &&
+        node.name === 'Wolf3D_Hands') {
+      node.visible = false;
+    }
+
     if (node.name === 'RightEye' || node.name === 'LeftEye') {
       this.eyes.push(node);
     }
