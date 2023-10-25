@@ -487,17 +487,6 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     }
   },
 
-  _startIdle: function () {
-    // Forget what we were looking at as we become idle.
-    this.isIdle = true;
-    this.idleAnimation.play();
-  },
-
-  _stopIdle: function () {
-    this.isIdle = false;
-    this.idleMixer.stopAllAction();
-  },
-
   _weAreMoving: (function () {
     const position = new THREE.Vector3();
     const rotation = new THREE.Quaternion();
@@ -514,7 +503,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   })(),
 
   tick: function (time, delta) {
-    if (!this.idleMixer) {
+    if (!this.mixer) {
       // Model is not initialized yet.
       return;
     }
@@ -528,16 +517,41 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
 
     this.idle -= delta;
     if (this.idle <= 0 && !this.isIdle) {
-      this._startIdle();
+      this.isIdle = true;
+      this._playAnimation('idle_eyes_2');
     } else if (this.idle > 0 && this.isIdle) {
-      this._stopIdle();
+      this.isIdle = false;
+      this._stopAnimation('idle_eyes_2');
     }
 
     if (this.isIdle) {
-      this.idleMixer.update(delta / 1000);
+      this.mixer.update(delta / 1000);
     } else {
       this._look(delta);
     }
+  },
+
+  _getClipAction: function (name) {
+    //
+    // Returns a handle to the AnimationAction bound to supplied
+    // animation name.
+    //
+    const clip = THREE.AnimationClip.findByName(this.animations, name);
+    return this.mixer.clipAction(clip);
+  },
+
+  _playAnimation: function (name) {
+    //
+    // Play a specific animation
+    //
+    this._getClipAction(name).play();
+  },
+
+  _stopAnimation: function (name) {
+    //
+    // Stop a specific animation
+    //
+    this._getClipAction(name).stop();
   },
 
   update: function () {
@@ -561,23 +575,12 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.el.addEventListener('model-loaded', function (e) {
       const mesh = e.detail.model;
 
-      // When the model comes with animations, get the idle_eyes_2 one
-      // (the 5th one) and set it up so that whenever the model is
-      // still for more than idleTimeout seconds, the animation will
-      // start.
-      if (mesh.animations && mesh.animations[4]) {
-        const idleMixer = new THREE.AnimationMixer(mesh);
-        const idleAnimation = idleMixer.clipAction(mesh.animations[4]);
-        idleAnimation.clampWhenFinished = true;
-        idleAnimation.loop = THREE.LoopPingPong;
-        idleAnimation.repetitions = Infinity;
-        idleAnimation.timeScale = 0.5;
-        idleAnimation.time = 0;
-        idleAnimation.weight = 1;
-
-        self.idleAnimation = idleAnimation;
-        self.idleMixer = idleMixer;
-      }
+      //
+      // Create an AnimationMixer, and get the list of AnimationClip
+      // instances
+      //
+      self.mixer = new THREE.AnimationMixer(mesh);
+      self.animations = mesh.animations;
 
       const inflated = self._inflate(mesh);
       if (inflated) {
