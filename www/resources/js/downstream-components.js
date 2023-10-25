@@ -540,6 +540,14 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     return this.mixer.clipAction(clip);
   },
 
+  _setMorphTargetValue: function(name, value){
+    if (this.morphTargets) {
+      const morphTargets = this.morphTargets[name][0];
+      const morphTargetPos = this.morphTargets[name][1];
+      morphTargets[morphTargetPos] = value;
+    }
+  },
+
   _playAnimation: function (name) {
     //
     // Play a specific animation
@@ -573,16 +581,38 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.remove();
 
     this.el.addEventListener('model-loaded', function (e) {
-      const mesh = e.detail.model;
+      self.mesh = e.detail.model;
 
       //
       // Create an AnimationMixer, and get the list of AnimationClip
       // instances
       //
-      self.mixer = new THREE.AnimationMixer(mesh);
-      self.animations = mesh.animations;
+      self.mixer = new THREE.AnimationMixer(self.mesh);
+      self.animations = self.mesh.animations;
 
-      const inflated = self._inflate(mesh);
+      //
+      // Traverse the mesh looking for morph targets and target names.
+      //
+      self.morphTargets = {};
+      self.mesh.traverse((o) => {
+        if ( o.morphTargetInfluences && o.userData.targetNames ) {
+          //
+          // When morph targets are defines for this node, collect
+          // them, together with a quick mapping from name to
+          // position.
+          //
+          for (let i = 0; i < o.userData.targetNames.length; i++) {
+            const targetName = o.userData.targetNames[i];
+            //
+            // Note, we assume that only one node defines a
+            // morphTarget for any given name on a model.
+            //
+            self.morphTargets[targetName] = [o.morphTargetInfluences, i];
+          }
+        }
+      });
+
+      const inflated = self._inflate(self.mesh);
       if (inflated) {
         el.appendChild(inflated);
       }
