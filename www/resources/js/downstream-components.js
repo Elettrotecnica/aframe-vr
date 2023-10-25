@@ -289,9 +289,18 @@ window.AFRAME.registerComponent('mediastream-sound', {
  * and offset 65cm, so that head is at 0 level with respect to its
  * containing entity.
  *
+ * Note that default ReadyPlayerMe models include hands. In the past,
+ * hands and other body parts were provided as separate meshes, so one
+ * could hide them programmatically. Now, only one mesh is provided
+ * that includes every body part. A model without hands can be
+ * obtained by providing the proper parameters to the web API.
+ *
  * Inspired by the "inflation" approach used in Mozilla Hubs
  *
- * See https://docs.readyplayer.me/ready-player-me/avatars/avatar-creator/vr-avatar for a description of the avatar's structure.
+ * See
+ * https://docs.readyplayer.me/ready-player-me/avatars/avatar-creator/vr-avatar
+ * for a description of the avatar's structure and for web API
+ * documentation.
  *
  */
 
