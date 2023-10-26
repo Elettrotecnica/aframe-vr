@@ -337,6 +337,9 @@ window.AFRAME.registerComponent('mediastream-sound', {
  * - model can be set to pay attention to a set of entities defines by
  *   a querySelector. When one such entity is in the model line of
  *   sight, the eyes will look in its direction.
+ * - model will listen to events emitted by a mediastream-sound
+ *   component active on the same entity and open/close its mouth
+ *   according to the detected sound level.
  *
  * Model is automatically rotated 180° (default would face the user)
  * and offset 65cm, so that head is at 0 level with respect to its
