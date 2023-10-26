@@ -608,7 +608,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     return this.mixer.clipAction(clip);
   },
 
-  _setMorphTargetValue: function(name, value){
+  _setMorphTargetValue: function (name, value) {
     if (this.morphTargets) {
       const morphTargets = this.morphTargets[name][0];
       const morphTargetPos = this.morphTargets[name][1];
@@ -634,7 +634,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     const self = this;
     const el = this.el;
 
-   if (this.data.lookAt) {
+    if (this.data.lookAt) {
       this.lookAt = this.data.lookAt;
     }
 
