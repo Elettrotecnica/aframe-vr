@@ -24,7 +24,7 @@ stuff for multimedia. This VR you can definitely host on premise! ;-)
 
 ## Future (?) improvements
 * richer model interaction (e.g. dynamical resize)
-* better avatar integration (move mouth when speaking, use native model hands, support full body avatars, follow sound with eyes...)
+* better avatar integration (use native model hands, support full body avatars, follow sound with eyes...)
 * "application based" server-side validation of the networked actions. This makes it currently unsuitable for "low trust" scenarios such as competitive games
 * hybrid participation support (e.g. chat)
 * in-vr UI for spawning, volume control, see participants...
