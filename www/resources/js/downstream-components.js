@@ -287,8 +287,8 @@ window.AFRAME.registerComponent('mediastream-sound', {
     //
     const audioContext = new window.AudioContext();
     this.analyser = audioContext.createAnalyser();
-    this.analyser.minDecibels = -100;
-    this.analyser.maxDecibels = 0;
+    this.analyser.minDecibels = -80;
+    this.analyser.maxDecibels = -20;
     this.analyser.fftSize = 32;
     const source = audioContext.createMediaStreamSource(this.stream);
     source.connect(this.analyser);
@@ -309,6 +309,9 @@ window.AFRAME.registerComponent('mediastream-sound', {
     for (const d of this.dataArray) {
       if (d > maxByteFrequencyData) {
         maxByteFrequencyData = d;
+        if (maxByteFrequencyData === 255) {
+          break;
+        }
       }
     }
     const ratio = maxByteFrequencyData / 255;
