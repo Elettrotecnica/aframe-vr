@@ -165,6 +165,9 @@ window.AFRAME.registerComponent('oacs-change-listener', {
  * https://github.com/networked-aframe/networked-aframe/blob/master/src/components/networked-audio-source.js
  * without dependencies on networked-aframe.
  */
+
+const SOUND_EVENT = new Event('mediastream-loud');
+
 window.AFRAME.registerComponent('mediastream-sound', {
   schema: {
     streamName: { default: 'audio' },
@@ -175,7 +178,8 @@ window.AFRAME.registerComponent('mediastream-sound', {
     },
     maxDistance: { default: 10000 },
     refDistance: { default: 1 },
-    rolloffFactor: { default: 1 }
+    rolloffFactor: { default: 1 },
+    emitSoundEvents: {type: 'boolean', default: true}
   },
 
   init: function () {
@@ -186,6 +190,8 @@ window.AFRAME.registerComponent('mediastream-sound', {
   },
 
   update (oldData) {
+    this.emitSoundEvents = this.data.emitSoundEvents;
+
     if (!this.sound) {
       return;
     }
@@ -266,7 +272,54 @@ window.AFRAME.registerComponent('mediastream-sound', {
     this.soundSource = this.sound.context.createMediaStreamSource(newStream);
     this.sound.setNodeSource(this.soundSource);
     // this.el.emit('sound-source-set', { soundSource: this.soundSource });
+
     this.stream = newStream;
+
+    if (this.emitSoundEvents) {
+      this._setupListener();
+    }
+  },
+
+  _setupListener() {
+    //
+    // Create a low-resolution analyser that will report about the
+    // volume of our stream.
+    //
+    const audioContext = new window.AudioContext();
+    this.analyser = audioContext.createAnalyser();
+    this.analyser.minDecibels = -100;
+    this.analyser.maxDecibels = 0;
+    this.analyser.fftSize = 32;
+    const source = audioContext.createMediaStreamSource(this.stream);
+    source.connect(this.analyser);
+    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    this.ratio = 0;
+  },
+
+  tick: function (time, delta) {
+    if (!this.emitSoundEvents) {
+      return;
+    }
+
+    //
+    // Get the current volume as a number between 0 and 1.
+    //
+    let maxByteFrequencyData = 0;
+    this.analyser.getByteFrequencyData(this.dataArray);
+    for (const d of this.dataArray) {
+      if (d > maxByteFrequencyData) {
+        maxByteFrequencyData = d;
+      }
+    }
+    const ratio = maxByteFrequencyData / 255;
+    //
+    // If the volume changed significantly, emit an event.
+    //
+    if (ratio < this.ratio - 0.1 ||
+        ratio > this.ratio + 0.1) {
+      this.ratio = ratio;
+      this.el.dispatchEvent(SOUND_EVENT);
+    }
   }
 });
 
@@ -324,6 +377,10 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.isIdle = false;
     this.identityQuaternion = IDENTITY_QUATERNION;
     this.eyes = [];
+
+    this.el.addEventListener('mediastream-loud', e => {
+      this._setMorphTargetValue('mouthOpen', e.target.components['mediastream-sound'].ratio);
+    });
   },
 
   _inflate: function (node) {
