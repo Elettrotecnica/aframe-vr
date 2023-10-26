@@ -17,12 +17,10 @@ ad_page_contract {
 
 set avatar_path avatars/[ad_conn user_id].glb
 set avatar_file [acs_package_root_dir [ad_conn package_key]]/www/$avatar_path
-set avatar_exists_p [ad_file exists $avatar_file]
 set avatar_url [ad_conn package_url]${avatar_path}
 
 set avatar_image_path avatars/[ad_conn user_id].png
 set avatar_image_file [acs_package_root_dir [ad_conn package_key]]/www/$avatar_image_path
-set avatar_image_exists_p [ad_file exists $avatar_image_file]
 set avatar_image_url [ad_conn package_url]${avatar_image_path}
 
 ad_form \
@@ -90,3 +88,6 @@ ad_form \
         }
 
     }
+
+set avatar_image_exists_p [ad_file exists $avatar_image_file]
+set avatar_exists_p [ad_file exists $avatar_file]

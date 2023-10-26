@@ -37,25 +37,25 @@
         visit <a href="https://vr.readyplayer.me/" target="_blank">https://vr.readyplayer.me/</a>,
         customize your avatar, then copy the avatar URL that will be
         generated (the one starting by
-        https://api.readyplayer.me/v1/avatars/...).
+        https://models.readyplayer.me/...).
       </p>
       <p>
         We will download the model for you and also generate a nice
         thumbnail!
       </p>
     </div>
-    <if @avatar_image_exists_p;literal@ true>
-      <div class="flex-12">
-        <img src="@avatar_image_url@" width="320">
-      </div>
-    </if>
-    <if @avatar_exists_p;literal@ true>
-      <div class="flex-12">
-        You already have an avatar
-        <a id="download" href="@avatar_url@">Download</a>
-      </div>
-    </if>
+  </div>
+  <if @avatar_image_exists_p;literal@ true>
     <div class="flex-12">
-      <formtemplate id="avatar"></formtemplate>
+      <img src="@avatar_image_url@" width="320">
     </div>
+  </if>
+  <if @avatar_exists_p;literal@ true>
+    <div class="flex-12">
+      You already have an avatar
+      <a id="download" href="@avatar_url@">Download</a>
+    </div>
+  </if>
+  <div class="flex-12">
+    <formtemplate id="avatar"></formtemplate>
   </div>
