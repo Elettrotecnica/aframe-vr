@@ -60,6 +60,7 @@
 	    }
 	});
 
+
         if (window.AFRAME.utils.device.checkHeadsetConnected()) {
             //
             // Once controllers connect, make them a kinematic body and
@@ -74,11 +75,18 @@
             }
         } else {
             //
-            // Make our local avatar a kinematic body
+            // Avatars from the browser will behave as a kinematic
+            // body when they are in VR mode.
             //
             const camera = document.querySelector('a-camera');
-            camera.setAttribute('ammo-body', 'type: kinematic');
-            camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.6');
+            window.addEventListener('enter-vr', function (e) {
+                camera.setAttribute('ammo-body', 'type: kinematic');
+                camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.6');
+            });
+            window.addEventListener('exit-vr', function (e) {
+	        camera.removeAttribute('ammo-shape');
+                camera.removeAttribute('ammo-body');
+            });
         }
     });
 </script>

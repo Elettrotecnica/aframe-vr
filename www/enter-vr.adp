@@ -99,7 +99,7 @@
         <!-- camera -->
         <a-camera id="client-@user_id;literal@"
                   simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
-                  oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
+                  oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true; attach: false"
                   <if @webrtc_p;literal@ true>
                     janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
                   </if>>
@@ -108,12 +108,12 @@
         <a-entity id="client-@user_id;literal@-left-hand"
                   blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
                   hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+                  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture; attach: false">
         </a-entity>
         <a-entity id="client-@user_id;literal@-right-hand"
                   blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
                   hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-                  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+                  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture; attach: false">
         </a-entity>
       </a-entity>
     </template>
