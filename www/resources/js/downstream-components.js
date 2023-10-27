@@ -1602,11 +1602,17 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       const element = e.detail.el;
       const tracks = self.remoteTracks[element.id];
       if (tracks) {
-        element.addEventListener('loaded', function (e) {
+        if (element.hasLoaded) {
           for (const track of tracks) {
             self._attachTrack(element, track);
           }
-        });
+        } else {
+          element.addEventListener('loaded', function (e) {
+            for (const track of tracks) {
+              self._attachTrack(element, track);
+            }
+          });
+        }
       }
     });
   }
