@@ -1,5 +1,12 @@
 {
   "name": "ada-venue",
   "title": "Ada Venue",
-  "surfaces": []
+  "surfaces": [
+    {
+      "name": "stage-screen",
+      "title": "Stage screen",
+      "audio": true,
+      "video": true
+    }
+  ]
 }

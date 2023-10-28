@@ -118,6 +118,15 @@
     >
   </a-sound>
 
+  <a-video
+    id="stage-screen"
+    width="8"
+    height="4.5"
+    rotation="0 90 0"
+    position="16.5 2.9 0.13"
+    >
+  </a-video>
+
   <a-sphere
     oacs-networked-entity="permanent: true"
     id="ball"
