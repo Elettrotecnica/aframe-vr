@@ -56,6 +56,6 @@ set janus_room_pin [parameter::get -parameter janus_room_pin]
 template::head::add_javascript \
     -src https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js
 template::head::add_javascript \
-    -src [ad_conn package_url]/js/janus.js
+    -src /[ad_conn package_key]/resources/js/janus.js
 template::head::add_javascript \
     -src index.js
