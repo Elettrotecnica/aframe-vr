@@ -102,12 +102,21 @@
     <a-asset-item id="navmesh" src="models/navmesh.glb"></a-asset-item>
     <img id="bake" src="models/venue-lightmap.webp">
     <img id="ball-texture" src="models/ball.jpg">
+    <audio id="desert-loop" src="audio/desert-loop.m4a"></audio>
     <!-- /Templates -->
   </a-assets>
 
   <a-light id="dirlight" shadow-camera-automatic="[ar-shadow-helper],#table,#ladder" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
 
   <a-entity hide-on-enter-ar position="0 -0.2 0" environment="lighting:none;shadow:true;preset: osiris;"></a-entity>
+
+  <a-sound
+    src="#desert-loop"
+    autoplay="true"
+    loop="true"
+    position="-0.26 0 -10"
+    >
+  </a-sound>
 
   <a-sphere
     oacs-networked-entity="permanent: true"
