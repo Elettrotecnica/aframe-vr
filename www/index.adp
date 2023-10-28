@@ -30,7 +30,9 @@
       <if @admin_p;literal@ true>
         <a class="btn btn-primary" href="@settings_url@">Room Settings</a>
       </if>
-      <a class="btn btn-primary" href="@avatar_url@">Manage Avatar</a>
+      <if @write_p;literal@ true>
+	<a class="btn btn-primary" href="@avatar_url@">Manage Avatar</a>
+      </if>
     </div>
     <div class="flex-12">
       <if @write_p;literal@ true>

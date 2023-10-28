@@ -15,7 +15,14 @@ ad_page_contract {
     user.
 }
 
-set avatar_path avatars/[ad_conn user_id].glb
+set user_id [ad_conn user_id]
+
+permission::require_permission \
+    -object_id [ad_conn package_id] \
+    -party_id $user_id \
+    -privilege write
+
+set avatar_path avatars/${user_id}.glb
 set avatar_file [acs_package_root_dir [ad_conn package_key]]/www/$avatar_path
 set avatar_url [ad_conn package_url]${avatar_path}
 
