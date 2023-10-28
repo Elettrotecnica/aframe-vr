@@ -226,6 +226,7 @@
                     )
                    ) {
                     unMute();
+                    pushToTalkAudio.volume = 0.25;
                     pushToTalkAudio.play();
                 } else {
                     mute();
