@@ -7,7 +7,9 @@
   }
   [class*="flex-"] {
       flex: 100%;
-      margin-bottom: 10px;
+  }
+  [class*="flex-"] * {
+      margin-bottom: 2pt;
   }
   @media only screen and (min-width: 768px) {
       /* For desktop: */
@@ -28,18 +30,24 @@
   <div id="menu" class="flex-container">
     <div class="flex-12">
       <if @admin_p;literal@ true>
-        <a class="btn btn-primary" href="@settings_url@">Room Settings</a>
+        <button class="link btn btn-primary" data-href="@settings_url@">Room Settings</button>
       </if>
       <if @write_p;literal@ true>
-	<a class="btn btn-primary" href="@avatar_url@">Manage Avatar</a>
+	<button class="link btn btn-primary" data-href="@avatar_url@">Manage Avatar</button>
       </if>
-    </div>
-    <div class="flex-12">
       <if @write_p;literal@ true>
-        <a class="btn btn-primary" href="enter-vr">Enter VR</a>
+        <button class="link btn btn-primary" data-href="enter-vr">Enter VR</button>
       </if>
       <if @write_p;literal@ true and @stream_url@ not nil>
-        <a class="btn btn-primary" href="@stream_url@">Stream to Room</a>
+        <button class="link btn btn-primary" data-href="@stream_url@">Stream to Room</button>
       </if>
     </div>
   </div>
+  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    for (const b of document.querySelectorAll('#menu button.link')) {
+	b.addEventListener('click', e => {
+	    e.preventDefault();
+	    window.location.href = b.dataset.href;
+	});
+    }
+  </script>
