@@ -13,7 +13,7 @@ ad_proc -private aframe_vr::environment::get_streaming_surfaces {
     @return a list of streaming surfaces advertised by the
             environment's manifest file.
 } {
-    set environment_manifest_file [acs_package_root_dir [ad_conn package_key]]/www/environments/${environment}/manifest.json
+    set environment_manifest_file [acs_package_root_dir [ad_conn package_key]]/environments/${environment}/manifest.json
 
     if {[ad_file exists $environment_manifest_file]} {
         if {[namespace which ::json::json2dict] eq ""} {
