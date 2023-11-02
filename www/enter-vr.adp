@@ -143,17 +143,13 @@
 	  <div>
             <button id="mutebutton" class="w3-button w3-amber">Mute</button>
 	  </div>
-          <!-- TODO: find a way to display the volume in the VR menu -->
-          <!-- <span class="w3-margin-top w3-margin-bottom" -->
-          <!--       id="audio-volume" -->
-          <!--       style="height: 25px; width: 25px; background-color: #bbb; border-radius: 50%; display: inline-block;"> -->
-          <!-- </span> -->
-          <label>
-	    <input type="checkbox" id="pushtotalk">Use PushToTalk
-            <audio id="pushtotalk-audio"
-                   style="display: none;"
-                   src="/aframe-vr/resources/audio/roger.mp3"></audio>
-          </label>
+	  <canvas width="25" height="150"></canvas>
+	  <div class="checkbox">
+            <label>
+	      <input type="checkbox" id="pushtotalk">Use PushToTalk
+	      <audio id="pushtotalk-audio" style="display: none;" src="/aframe-vr/resources/audio/roger.mp3"></audio>
+            </label>
+	  </div>
 	</div>
       </div>
     </if>
@@ -427,40 +423,62 @@
 	  });
 
 
-          //
-          // TODO: find a way to show the volume in the VR menu
-          //
-          // const audioContext = new window.AudioContext();
+	  const audioContext = new window.AudioContext();
 
-	  // const analyser = new AnalyserNode(audioContext);
-	  // analyser.minDecibels = -100;
-	  // analyser.maxDecibels = -30;
-	  // analyser.fftSize = 32;
+	  const analyser = new AnalyserNode(audioContext);
+	  analyser.minDecibels = -100;
+	  analyser.maxDecibels = -30;
+	  analyser.fftSize = 32;
 
-	  // audioContext.createMediaStreamSource(stream).connect(analyser);
-	  // const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	  audioContext.createMediaStreamSource(stream).connect(analyser);
+	  const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-          // // Set up canvas context for visualizer
-          // const audioVolume = document.querySelector('#audio-volume');
+	  // Set up canvas context for visualizer
+	  const canvas = document.querySelector('#audiometer canvas');
+	  const canvasCtx = canvas.getContext("2d");
 
-	  // const audioMenu = document.getElementById('audio');
-	  // function draw() {
-	  //     requestAnimationFrame(draw);
+	  const WIDTH = canvas.width;
+	  const HEIGHT = canvas.height;
 
-	  //     analyser.getByteFrequencyData(dataArray);
+	  const audioMenu = document.getElementById('audio');
+	  function draw() {
+	      setTimeout(draw, 100);
 
-	  //     let barHeight = 0;
-	  //     for (let i = 0; i < dataArray.length; i++) {
-	  //         if (barHeight < dataArray[i]) {
-	  //             barHeight = dataArray[i];
-	  //         }
-	  //     }
+	      //
+	      // No need to draw the audiobar if the menu is not
+	      // visible.
+	      //
+	      if (audioMenu.style.display === 'none') {
+		  return;
+	      }
 
-          //     audioVolume.style.backgroundColor = `rgb(${155 * (barHeight / 255) + 100}, 100, 100)`;
-	  // }
+	      analyser.getByteFrequencyData(dataArray);
 
-	  // document.querySelector('#audiometer').style.display = 'block';
-	  // draw();
+	      canvasCtx.fillStyle = "rgb(0, 0, 0)";
+	      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
+	      let barHeight = 0;
+	      for (let i = 0; i < dataArray.length; i++) {
+		  if (barHeight < dataArray[i]) {
+		      barHeight = dataArray[i];
+		  }
+	      }
+
+	      canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
+	      canvasCtx.fillRect(
+		  0,
+		  HEIGHT - (HEIGHT * (barHeight / 255)),
+		  WIDTH,
+		  HEIGHT
+	      );
+
+	      // Touch an attribute to trigger redrawing of the UI
+	      // in VR
+	      canvas.dataset.redraw = 1;
+	  }
+
+	  document.querySelector('#audiometer').style.display = 'block';
+	  draw();
       }
 
       camera.addEventListener('localstream', function (e) {
