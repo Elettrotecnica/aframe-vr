@@ -69,7 +69,7 @@
             for (const hand of document.querySelectorAll('[hand-controls]')) {
                 hand.addEventListener('controllerconnected', function () {
                     this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-                    this.setAttribute('ammo-shape', 'type: sphere');
+                    this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
                     this.setAttribute('grab', '');
                 }, {once: true });
             }
