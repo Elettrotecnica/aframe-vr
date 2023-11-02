@@ -126,7 +126,11 @@
 	<h2>Room</h2>
       </div>
       <div class="w3-panel">
-	<a class="w3-button w3-red w3-margin-bottom" href="@package_url@">Exit</a>
+        <a id="enter-vr"
+           class="w3-button w3-green w3-hover-green w3-margin-bottom">Enter VR</a>
+        <br>
+        <a class="w3-button w3-red w3-hover-red w3-margin-bottom"
+           href="@package_url@">Return to Main Menu</a>
       </div>
     </div>
 
@@ -170,6 +174,7 @@
   const vrScene = document.querySelector('a-scene');
   vrScene.setAttribute('oacs-networked-scene', 'wsURI: @ws_uri@');
   vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
+  vrScene.setAttribute('vr-mode-ui', 'enabled: false;');
   vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
 
   //
@@ -245,6 +250,25 @@
   };
   const observer = new MutationObserver(callback);
   observer.observe(targetNode, config);
+
+  const enterVRButton = document.querySelector('#enter-vr');
+  enterVRButton.addEventListener('click', function (e) {
+      if (vrScene.is('vr-mode')) {
+          vrScene.exitVR();
+      } else {
+          vrScene.enterVR();
+      }
+  });
+  window.addEventListener('enter-vr', function (e) {
+      enterVRButton.textContent = 'Exit VR';
+      enterVRButton.classList.replace('w3-green', 'w3-amber');
+      enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
+  });
+  window.addEventListener('exit-vr', function (e) {
+      enterVRButton.textContent = 'Enter VR';
+      enterVRButton.classList.replace('w3-amber', 'w3-green');
+      enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
+  });
 
   //
   // Spawning an object.
