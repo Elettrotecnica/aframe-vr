@@ -23,15 +23,8 @@ set fs_node_id [::site_node::get_children \
                        -element node_id \
                        -node_id [ad_conn node_id]]
 set spawn_objects_p [expr {$fs_node_id ne ""}]
-
-if {$spawn_objects_p} {
-    ad_form -name upload -form {
-	{model:file(file)
-	    {label {.gltf/.glb Model}}
-	    {html {required ""}}
-	}
-    } -on_submit {}
-}
+set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
+set spawn_min_size [::parameter::get -package_id $package_id -parameter spawn_min_size]
 
 #
 # User info
@@ -94,6 +87,9 @@ if {$webrtc_p} {
 ::template::head::add_javascript -src "/resources/aframe-vr/js/downstream-components.js" -order 1
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "/resources/aframe-vr/js/simple-navmesh-constraint.js" -order 3
+::template::head::add_javascript -src "/resources/aframe-vr/js/aframe-html.min.js" -order 3
+
+::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 
 #
 # CSP Rules

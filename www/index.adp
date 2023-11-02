@@ -41,6 +41,9 @@
       <if @write_p;literal@ true and @stream_url@ not nil>
         <button class="link btn btn-primary" data-href="@stream_url@">Stream to Room</button>
       </if>
+      <if @spawn_objects_p;literal@ true>
+        <button class="link btn btn-primary" data-href="./models/">Manage 3D Models</button>
+      </if>
     </div>
   </div>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>

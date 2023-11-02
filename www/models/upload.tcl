@@ -54,4 +54,5 @@ set revision_id [::fs::add_file \
                      -mime_type */* \
                      -package_id $fs_package_id]
 
-ns_return 200 text/plain OK
+ad_returnredirect .
+ad_script_abort
