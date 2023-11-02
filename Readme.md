@@ -21,13 +21,13 @@ stuff for multimedia. This VR you can definitely host on premise! ;-)
 * shared interactive networked entities, that all participants can interact with
 * spawn of .glb/.gltf models via UI in the entworked experience
 * physics enabled environments
+* in and out VR UI for spawning 3D models, mute/unmute microphone, enter/exit VR
 
 ## Future (?) improvements
 * richer model interaction (e.g. dynamical resize)
 * better avatar integration (use native model hands, support full body avatars, follow sound with eyes...)
 * "application based" server-side validation of the networked actions. This makes it currently unsuitable for "low trust" scenarios such as competitive games
 * hybrid participation support (e.g. chat)
-* in-vr UI for spawning, volume control, see participants...
 * ...
 
 ## How to use
