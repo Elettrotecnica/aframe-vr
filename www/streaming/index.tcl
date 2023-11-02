@@ -59,3 +59,9 @@ template::head::add_javascript \
     -src /[ad_conn package_key]/resources/js/janus.js
 template::head::add_javascript \
     -src index.js
+
+set url [ns_parseurl $janus_url]
+set host [dict get $url host]
+set port [dict get $url port]
+set webrtc_host $host[expr {$port ne "" ? ":$port" : ""}]
+security::csp::require connect-src $webrtc_host
