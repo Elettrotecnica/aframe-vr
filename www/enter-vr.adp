@@ -143,7 +143,9 @@
 	  <div>
             <button id="mutebutton" class="w3-button w3-amber">Mute</button>
 	  </div>
-	  <canvas width="25" height="150"></canvas>
+          <div style="margin-left: auto; margin-right: auto; width:25px; height:150px;" class="w3-red">
+            <div id="audio-level" class="w3-black"></div>
+          </div>
 	  <div class="checkbox">
             <label>
 	      <input type="checkbox" id="pushtotalk">Use PushToTalk
@@ -433,14 +435,8 @@
 	  audioContext.createMediaStreamSource(stream).connect(analyser);
 	  const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-	  // Set up canvas context for visualizer
-	  const canvas = document.querySelector('#audiometer canvas');
-	  const canvasCtx = canvas.getContext("2d");
-
-	  const WIDTH = canvas.width;
-	  const HEIGHT = canvas.height;
-
 	  const audioMenu = document.getElementById('audio');
+          const audioLevel = document.getElementById('audio-level');
 	  function draw() {
 	      setTimeout(draw, 100);
 
@@ -454,9 +450,6 @@
 
 	      analyser.getByteFrequencyData(dataArray);
 
-	      canvasCtx.fillStyle = "rgb(0, 0, 0)";
-	      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-
 	      let barHeight = 0;
 	      for (let i = 0; i < dataArray.length; i++) {
 		  if (barHeight < dataArray[i]) {
@@ -464,17 +457,7 @@
 		  }
 	      }
 
-	      canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ",50,50)";
-	      canvasCtx.fillRect(
-		  0,
-		  HEIGHT - (HEIGHT * (barHeight / 255)),
-		  WIDTH,
-		  HEIGHT
-	      );
-
-	      // Touch an attribute to trigger redrawing of the UI
-	      // in VR
-	      canvas.dataset.redraw = 1;
+              audioLevel.style.height = `${(1 - (barHeight / 255)) * 150}px`;
 	  }
 
 	  document.querySelector('#audiometer').style.display = 'block';
