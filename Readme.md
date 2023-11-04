@@ -20,14 +20,15 @@ stuff for multimedia. This VR you can definitely host on premise! ;-)
 * audio chat and WebRTC multimedia using [janus-gateway and the multistream videoroom plugin](https://janus.conf.meetecho.com/mvideoroomtest.html)
 * shared interactive networked entities, that all participants can interact with
 * spawn of .glb/.gltf models via UI in the entworked experience
+* integrated chat (dependent on the chat package)
 * physics enabled environments
-* in and out VR UI for spawning 3D models, mute/unmute microphone, enter/exit VR
+* in and out VR UI for spawning 3D models, mute/unmute microphone, enter/exit VR, chat
 
 ## Future (?) improvements
 * richer model interaction (e.g. dynamical resize)
 * better avatar integration (use native model hands, support full body avatars, follow sound with eyes...)
 * "application based" server-side validation of the networked actions. This makes it currently unsuitable for "low trust" scenarios such as competitive games
-* hybrid participation support (e.g. chat)
+* further hybrid participation support
 * ...
 
 ## How to use
