@@ -16,6 +16,16 @@ set package_key [apm_package_key_from_id $package_id]
 set package_url [ad_conn package_url]
 
 #
+# Check if this VR experience supports the chat
+#
+if {[namespace which ::chat::Chat] ne ""} {
+    set chat_room_id [::parameter::get -package_id $package_id -parameter chat_room_id]
+} else {
+    set chat_room_id ""
+}
+set chat_p [expr {$chat_room_id ne ""}]
+
+#
 # See if the file-storage is available so spawn objects.
 #
 set fs_node_id [::site_node::get_children \

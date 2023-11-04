@@ -118,8 +118,11 @@
     <if @spawn_objects_p;literal@ true>
       <button class="w3-bar-item w3-button tablink" data-menu="models">Models</button>
     </if>
+    <if @chat_p;literal@ true>
+      <button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
+    </if>
   </div>
-  <div style="background-color: white; margin-left:130px; width: max-content; height: max-content;">
+  <div style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
 
     <div id="room">
       <div class="w3-container w3-teal w3-light-grey">
@@ -166,6 +169,18 @@
 	</div>
       </div>
     </if>
+
+    <if @chat_p;literal@ true>
+      <div id="chat" style="display:none">
+	<div class="w3-container w3-teal w3-light-grey">
+	  <h2>Chat</h2>
+	</div>
+	<div class="w3-panel">
+	  <include src="/packages/chat/lib/chat" room_id="@chat_room_id;literal@">
+	</div>
+      </div>
+    </if>
+
   </div>
 </div>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
@@ -257,15 +272,30 @@
           vrScene.enterVR();
       }
   });
+
+  //
+  // Update the HTMLMesh when the chat messages are scrolled
+  //
+  document.querySelector('#xowiki-chat-messages')?.addEventListener('scroll', function (e) {
+      this.classList.toggle('scrolled');
+  });
+
+  const chatMessageForm = document.querySelector('#xowiki-chat-messages-form-block');
   window.addEventListener('enter-vr', function (e) {
       enterVRButton.textContent = 'Exit VR';
       enterVRButton.classList.replace('w3-green', 'w3-amber');
       enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
+      //
+      // Writing chat messages in immersive mode is not supported, at
+      // least for now.
+      //
+      if (chatMessageForm) {chatMessageForm.style.display = 'none';}
   });
   window.addEventListener('exit-vr', function (e) {
       enterVRButton.textContent = 'Enter VR';
       enterVRButton.classList.replace('w3-amber', 'w3-green');
       enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
+      if (chatMessageForm) {chatMessageForm.style.display = null;}
   });
 
   //
