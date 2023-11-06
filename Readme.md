@@ -7,11 +7,15 @@ to [Mozilla Hubs](https://hubs.mozilla.com/) in spirit, based on
 [Networked-Aframe](https://github.com/networked-aframe/networked-aframe).
 
 ## Why implementing a worse Mozilla Hubs?
-Hubs is great, but also quite complex. It currently offers no way to
-self-host it on premise and depends on many subsystems.  Here, the
-focus is on keeping it simple. NaviServer does the Websocket stuff
-needed to move things around on the scene and Janus does the WebRTC
-stuff for multimedia. This VR you can definitely host on premise! ;-)
+Hubs is great, but also quite complex. The process to host an own
+installation on premise is quite involved [as of right
+now](https://hubs.mozilla.com/labs/welcoming-community-edition/)
+because it depends on many subsystems.
+
+The focus of this implementation is on keeping it simple: NaviServer
+does the Websocket stuff needed to move things around on the scene and
+Janus does the WebRTC stuff for multimedia. This VR you can definitely
+host on premise! ;-)
 
 ## Main features
 * [ReadyPlayerMe](https://vr.readyplayer.me/) half-body avatar support
