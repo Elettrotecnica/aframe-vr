@@ -171,7 +171,7 @@
     </if>
 
     <if @chat_p;literal@ true>
-      <div id="chat" style="display:none">
+      <div id="chat" style="display:none; min-width: calc(50vw - 170px);">
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Chat</h2>
 	</div>
