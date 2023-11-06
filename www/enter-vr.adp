@@ -113,7 +113,7 @@
     <h5 class="w3-bar-item">Menu</h5>
     <button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
     <if @webrtc_p;literal@ true>
-      <button class="w3-bar-item w3-button tablink" data-menu="audio" style="display: none;">Audio</button>
+      <button class="w3-bar-item w3-button tablink" data-menu="audio">Audio</button>
     </if>
     <if @spawn_objects_p;literal@ true>
       <button class="w3-bar-item w3-button tablink" data-menu="models">Models</button>
@@ -142,8 +142,14 @@
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Audio</h2>
 	</div>
-	<div id="audiometer" class="w3-panel w3-center">
-	  <div>
+        <div class="w3-panel w3-pale-red w3-border" id="audio-inactive">
+          <p>
+            Your microphone is currently not active. Other
+            participants will not be able to hear you.
+          </p>
+        </div>
+        <div id="audiometer" class="w3-panel w3-center" style="display:none;">
+          <div>
             <button id="mutebutton" class="w3-button w3-amber">Mute</button>
 	  </div>
           <div style="margin-left: auto; margin-right: auto; width:25px; height:150px;" class="w3-red">
@@ -379,7 +385,6 @@
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
       const camera = document.querySelector('a-camera');
       function audioMeter(stream) {
-          document.querySelector('[data-menu=audio]').style.display = 'block';
           //
 	  // When the mute button is pressed, we silence our
 	  // WebRTC stream and also the local stream used to
@@ -490,6 +495,7 @@
               audioLevel.style.height = `${(1 - (barHeight / 255)) * 150}px`;
 	  }
 
+	  document.querySelector('#audio-inactive').style.display = 'none';
 	  document.querySelector('#audiometer').style.display = 'block';
 	  draw();
       }
