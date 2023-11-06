@@ -1,9 +1,9 @@
 <%
   security::csp::require connect-src cdn.jsdelivr.net
 %>
-<script src="js/aframe-environment-component.min.js"></script>
-<script src="js/ar-shadow-helper.js"></script>
-<script src="js/model-utils.js"></script>
+<script src="/aframe-vr/resources/js/aframe-environment-component.min.js"></script>
+<script src="/aframe-vr/resources/js/ar-shadow-helper.js"></script>
+<script src="/aframe-vr/resources/js/model-utils.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
 <script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
