@@ -122,9 +122,9 @@
       <button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
     </if>
   </div>
-  <div style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
+  <div id="vr-menu" style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
 
-    <div id="room">
+    <div data-menu="room">
       <div class="w3-container w3-teal w3-light-grey">
 	<h2>Room</h2>
       </div>
@@ -138,7 +138,7 @@
     </div>
 
     <if @webrtc_p;literal@ true>
-      <div id="audio" style="display:none">
+      <div data-menu="audio" style="display:none">
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Audio</h2>
 	</div>
@@ -166,7 +166,7 @@
     </if>
 
     <if @spawn_objects_p;literal@ true>
-      <div id="models" style="display:none">
+      <div data-menu="models" style="display:none">
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Models</h2>
 	</div>
@@ -177,7 +177,7 @@
     </if>
 
     <if @chat_p;literal@ true>
-      <div id="chat" style="display:none; min-width: calc(50vw - 170px);">
+      <div data-menu="chat" style="display:none; min-width: calc(50vw - 170px);">
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Chat</h2>
 	</div>
@@ -196,6 +196,10 @@
   vrScene.setAttribute('vr-mode-ui', 'enabled: false;');
   vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
 
+  function getVRMenu(name) {
+      return document.querySelector(`#vr-menu [data-menu='${name}']`);
+  }
+
   //
   // Switch to a different menu whenever the button is clicked in the
   // toolbar.
@@ -204,16 +208,16 @@
       l.addEventListener('click', function (e) {
 	  const menuSelected = document.querySelector('#toolbar .tablink.w3-dark-grey');
 	  menuSelected.classList.remove('w3-dark-grey');
-	  document.getElementById(menuSelected.dataset.menu).style.display = 'none';
+	  getVRMenu(menuSelected.dataset.menu).style.display = 'none';
 	  this.classList.add('w3-dark-grey');
-	  document.getElementById(this.dataset.menu).style.display = 'block';
+          getVRMenu(this.dataset.menu).style.display = 'block';
       });
   }
   //
   // Whenever the models menu becomes visible, fetch the models from
   // the JSON endpoint and display the spawning UI
   //
-  const targetNode = document.getElementById('models');
+  const targetNode = getVRMenu('models');
   const modelsList = targetNode.querySelector('ul');
   const config = { attributes: true };
   const callback = (mutationList, observer) => {
