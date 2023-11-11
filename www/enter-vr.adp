@@ -73,8 +73,6 @@
       <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
     </template>
 
-    <a-sphere color="black" radius="0.01" id="cursor" material="shader:flat"></a-sphere>
-
     <a-entity id="myCameraRig">
       <!-- camera -->
       <a-camera id="client-@user_id;literal@"
@@ -89,6 +87,10 @@
                 blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
                 hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture; attach: false">
+	<a-sphere color="black"
+		  radius="0.01"
+		  id="cursor"
+		  material="shader:flat"></a-sphere>
         <a-entity html="cursor:#cursor;html:#toolbar"
                   position="-0.142 -0.0166 -0.02928"
                   rotation="-80 90 0"
