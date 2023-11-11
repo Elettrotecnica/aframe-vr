@@ -474,7 +474,7 @@
 	  audioContext.createMediaStreamSource(stream).connect(analyser);
 	  const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-	  const audioMenu = document.getElementById('audio');
+	  const audioMenu = getVRMenu('audio');
           const audioLevel = document.getElementById('audio-level');
 	  function draw() {
 	      setTimeout(draw, 100);
