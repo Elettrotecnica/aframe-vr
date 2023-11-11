@@ -17,7 +17,7 @@
     material="src: #grid; repeat: 1000 1000; transparent: true;metalness:0.6; roughness: 0.4; sphericalEnvMap: #sky;"
     ></a-entity>
   <a-entity
-    geometry="primitive: plane; width: 250; height: 250;" rotation="-90 0 0"
+    geometry="primitive: plane; width: 250; height: 250;" rotation="-90 0 0" position="0 0 110"
     visible="false"
     class="collision"></a-entity>
 
@@ -26,21 +26,24 @@
   <a-entity light="color: white; intensity: 0.5" position="-5 5 15"></a-entity>
   <a-entity light="color: white; type: ambient;"></a-entity>
 
-  <a-box src="#boxTexture" position="-11 2 -5" rotation="0 45 45" scale="2 2 2"
+  <a-box src="#boxTexture" position="-7 2 -15" rotation="0 45 45" scale="2 2 2"
+         animation="property: object3D.position.y; to: 5; dir: alternate; dur: 2000; loop: true"></a-box>
+
+  <a-box src="#boxTexture" position="26 2 -15" rotation="0 45 45" scale="2 2 2"
          animation="property: object3D.position.y; to: 5; dir: alternate; dur: 2000; loop: true"></a-box>
 
   <a-video
     id="screen1"
     width="12.80"
     height="7.20"
-    position="-22 5 -15"
+    position="16 5 -15"
     >
   </a-video>
   <a-video
     id="screen2"
     width="12.80"
     height="7.20"
-    position="-35 5 -15"
+    position="3 5 -15"
     >
   </a-video>
 
