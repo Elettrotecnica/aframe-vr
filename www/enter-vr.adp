@@ -134,7 +134,7 @@
         <a id="enter-vr"
            class="w3-button w3-green w3-hover-green w3-margin-bottom">Enter VR</a>
         <br>
-        <a class="w3-button w3-red w3-hover-red w3-margin-bottom"
+        <a id="return-to-main-menu" class="w3-button w3-red w3-hover-red w3-margin-bottom"
            href="@package_url@">Return to Main Menu</a>
       </div>
     </div>
@@ -224,6 +224,16 @@
           vrScene.exitVR();
       } else {
           vrScene.enterVR();
+      }
+  });
+
+  //
+  // When we return to the main menu from inside of immersive mode,
+  // exit the immersive mode first to improve the comfort.
+  //
+  document.querySelector('#return-to-main-menu').addEventListener('click', function (e) {
+      if (vrScene.is('vr-mode')) {
+          vrScene.exitVR();
       }
   });
 
