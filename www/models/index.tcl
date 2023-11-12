@@ -10,6 +10,14 @@ ad_page_contract {
     {format:oneof(|json) ""}
 }
 
+set package_id [ad_conn package_id]
+
+set spawn_objects_p [parameter::get -package_id $package_id -parameter spawn_objects_p -boolean -default 0]
+if {!$spawn_objects_p} {
+    ad_return_complaint 1 "Spawning objects is not supported for this experience."
+    ad_script_abort
+}
+
 set fs_node_id [::site_node::get_children \
                        -package_key file-storage \
                        -element node_id \
@@ -20,7 +28,6 @@ if {$fs_node_id eq ""} {
 }
 
 set user_id [ad_conn user_id]
-set package_id [ad_conn package_id]
 
 set write_p [::permission::permission_p \
 		 -object_id $package_id \

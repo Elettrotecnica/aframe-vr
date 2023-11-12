@@ -198,6 +198,8 @@
   vrScene.setAttribute('vr-mode-ui', 'enabled: false;');
   vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
 
+  const camera = document.querySelector('a-camera');
+
   function getVRMenu(name) {
       return document.querySelector(`#vr-menu [data-menu='${name}']`);
   }
@@ -215,6 +217,50 @@
           getVRMenu(this.dataset.menu).style.display = 'block';
       });
   }
+
+  const enterVRButton = document.querySelector('#enter-vr');
+  enterVRButton.addEventListener('click', function (e) {
+      if (vrScene.is('vr-mode')) {
+          vrScene.exitVR();
+      } else {
+          vrScene.enterVR();
+      }
+  });
+
+<if @chat_p;literal@ true>
+
+  //
+  // Update the HTMLMesh when the chat messages are scrolled
+  //
+  document.querySelector('#xowiki-chat-messages')?.addEventListener('scroll', function (e) {
+      this.classList.toggle('scrolled');
+  });
+
+  const chatMessageForm = document.querySelector('#xowiki-chat-messages-form-block');
+  window.addEventListener('enter-vr', function (e) {
+      enterVRButton.textContent = 'Exit VR';
+      enterVRButton.classList.replace('w3-green', 'w3-amber');
+      enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
+      //
+      // Writing chat messages in immersive mode is not supported, at
+      // least for now.
+      //
+      if (chatMessageForm) {chatMessageForm.style.display = 'none';}
+  });
+  window.addEventListener('exit-vr', function (e) {
+      enterVRButton.textContent = 'Enter VR';
+      enterVRButton.classList.replace('w3-amber', 'w3-green');
+      enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
+      if (chatMessageForm) {chatMessageForm.style.display = null;}
+  });
+
+</if>
+<if @spawn_objects_p;literal@ true>
+
+  //
+  // Spawning an object.
+  //
+
   //
   // Whenever the models menu becomes visible, fetch the models from
   // the JSON endpoint and display the spawning UI
@@ -275,44 +321,6 @@
   };
   const observer = new MutationObserver(callback);
   observer.observe(targetNode, config);
-
-  const enterVRButton = document.querySelector('#enter-vr');
-  enterVRButton.addEventListener('click', function (e) {
-      if (vrScene.is('vr-mode')) {
-          vrScene.exitVR();
-      } else {
-          vrScene.enterVR();
-      }
-  });
-
-  //
-  // Update the HTMLMesh when the chat messages are scrolled
-  //
-  document.querySelector('#xowiki-chat-messages')?.addEventListener('scroll', function (e) {
-      this.classList.toggle('scrolled');
-  });
-
-  const chatMessageForm = document.querySelector('#xowiki-chat-messages-form-block');
-  window.addEventListener('enter-vr', function (e) {
-      enterVRButton.textContent = 'Exit VR';
-      enterVRButton.classList.replace('w3-green', 'w3-amber');
-      enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
-      //
-      // Writing chat messages in immersive mode is not supported, at
-      // least for now.
-      //
-      if (chatMessageForm) {chatMessageForm.style.display = 'none';}
-  });
-  window.addEventListener('exit-vr', function (e) {
-      enterVRButton.textContent = 'Enter VR';
-      enterVRButton.classList.replace('w3-amber', 'w3-green');
-      enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
-      if (chatMessageForm) {chatMessageForm.style.display = null;}
-  });
-
-  //
-  // Spawning an object.
-  //
 
   function isSpawned(spawnId) {
       return document.getElementById(spawnId) !== null;
@@ -386,128 +394,126 @@
   vrScene.addEventListener('child-attached', updateSpawnUI);
   vrScene.addEventListener('child-detached', updateSpawnUI);
 
-</script>
+</if>
 <if @webrtc_p;literal@ true>
-  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-      const camera = document.querySelector('a-camera');
-      function audioMeter(stream) {
-          //
-	  // When the mute button is pressed, we silence our
-	  // WebRTC stream and also the local stream used to
-	  // generate the audio meter.
-	  //
-	  const hands = document.querySelectorAll('[hand-controls]');
-	  const muteButton = document.querySelector('#mutebutton');
+  function audioMeter(stream) {
+      //
+      // When the mute button is pressed, we silence our
+      // WebRTC stream and also the local stream used to
+      // generate the audio meter.
+      //
+      const hands = document.querySelectorAll('[hand-controls]');
+      const muteButton = document.querySelector('#mutebutton');
 
-	  function isMuted() {
-	      return camera.getAttribute('janus-videoroom-entity').muted;
-	  }
-
-	  function mute() {
-	      camera.setAttribute('janus-videoroom-entity', 'muted', true);
-	      muteButton.classList.replace('w3-amber', 'w3-blue');
-	      muteButton.textContent = 'Unmute';
-	  }
-	  function unMute() {
-	      camera.setAttribute('janus-videoroom-entity', 'muted', false);
-	      muteButton.classList.replace('w3-blue', 'w3-amber');
-	      muteButton.textContent = 'Mute';
-	  }
-
-	  muteButton.addEventListener('click', function (e) {
-	      e.preventDefault();
-	      const muted = isMuted();
-	      if (muted) {
-		  unMute();
-	      } else {
-		  mute();
-	      }
-	  });
-
-	  const pushToTalkCheckBox = document.querySelector('#pushtotalk');
-	  const pushToTalkAudio = document.querySelector('#pushtotalk-audio');
-	  function pushToTalkHandler(e) {
-	      if (!pushToTalkCheckBox.checked) {
-		  return;
-	      }
-
-	      const muted = isMuted();
-	      if (muted &&
-		  (e.type === 'abuttondown' ||
-		   e.type === 'xbuttondown' ||
-		   (e.type === 'keydown' && e.ctrlKey)
-		  )
-		 ) {
-		  unMute();
-		  pushToTalkAudio.volume = 0.25;
-		  pushToTalkAudio.play();
-	      } else {
-		  mute();
-	      }
-	  }
-
-	  document.body.addEventListener('keydown', pushToTalkHandler);
-	  document.body.addEventListener('keyup', pushToTalkHandler);
-	  for (const hand of hands) {
-	      hand.addEventListener('abuttondown', pushToTalkHandler);
-	      hand.addEventListener('xbuttondown', pushToTalkHandler);
-	      hand.addEventListener('xbuttonup', pushToTalkHandler);
-	      hand.addEventListener('abuttonup', pushToTalkHandler);
-	  }
-
-	  pushToTalkCheckBox.addEventListener('click', function (e) {
-	      if (this.checked) {
-		  mute();
-		  mutebutton.setAttribute('disabled', '');
-	      } else {
-		  unMute();
-		  mutebutton.removeAttribute('disabled');
-	      }
-	  });
-
-
-	  const audioContext = new window.AudioContext();
-
-	  const analyser = new AnalyserNode(audioContext);
-	  analyser.minDecibels = -100;
-	  analyser.maxDecibels = -30;
-	  analyser.fftSize = 32;
-
-	  audioContext.createMediaStreamSource(stream).connect(analyser);
-	  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-	  const audioMenu = getVRMenu('audio');
-          const audioLevel = document.getElementById('audio-level');
-	  function draw() {
-	      setTimeout(draw, 100);
-
-	      //
-	      // No need to draw the audiobar if the menu is not
-	      // visible.
-	      //
-	      if (audioMenu.style.display === 'none') {
-		  return;
-	      }
-
-	      analyser.getByteFrequencyData(dataArray);
-
-	      let barHeight = 0;
-	      for (let i = 0; i < dataArray.length; i++) {
-		  if (barHeight < dataArray[i]) {
-		      barHeight = dataArray[i];
-		  }
-	      }
-
-              audioLevel.style.height = `${(1 - (barHeight / 255)) * 150}px`;
-	  }
-
-	  document.querySelector('#audio-inactive').style.display = 'none';
-	  document.querySelector('#audiometer').style.display = 'block';
-	  draw();
+      function isMuted() {
+	  return camera.getAttribute('janus-videoroom-entity').muted;
       }
 
-      camera.addEventListener('localstream', function (e) {
-	  audioMeter(e.detail.stream);
+      function mute() {
+	  camera.setAttribute('janus-videoroom-entity', 'muted', true);
+	  muteButton.classList.replace('w3-amber', 'w3-blue');
+	  muteButton.textContent = 'Unmute';
+      }
+      function unMute() {
+	  camera.setAttribute('janus-videoroom-entity', 'muted', false);
+	  muteButton.classList.replace('w3-blue', 'w3-amber');
+	  muteButton.textContent = 'Mute';
+      }
+
+      muteButton.addEventListener('click', function (e) {
+	  e.preventDefault();
+	  const muted = isMuted();
+	  if (muted) {
+	      unMute();
+	  } else {
+	      mute();
+	  }
       });
-   </script>
+
+      const pushToTalkCheckBox = document.querySelector('#pushtotalk');
+      const pushToTalkAudio = document.querySelector('#pushtotalk-audio');
+      function pushToTalkHandler(e) {
+	  if (!pushToTalkCheckBox.checked) {
+	      return;
+	  }
+
+	  const muted = isMuted();
+	  if (muted &&
+	      (e.type === 'abuttondown' ||
+	       e.type === 'xbuttondown' ||
+	       (e.type === 'keydown' && e.ctrlKey)
+	      )
+	     ) {
+	      unMute();
+	      pushToTalkAudio.volume = 0.25;
+	      pushToTalkAudio.play();
+	  } else {
+	      mute();
+	  }
+      }
+
+      document.body.addEventListener('keydown', pushToTalkHandler);
+      document.body.addEventListener('keyup', pushToTalkHandler);
+      for (const hand of hands) {
+	  hand.addEventListener('abuttondown', pushToTalkHandler);
+	  hand.addEventListener('xbuttondown', pushToTalkHandler);
+	  hand.addEventListener('xbuttonup', pushToTalkHandler);
+	  hand.addEventListener('abuttonup', pushToTalkHandler);
+      }
+
+      pushToTalkCheckBox.addEventListener('click', function (e) {
+	  if (this.checked) {
+	      mute();
+	      mutebutton.setAttribute('disabled', '');
+	  } else {
+	      unMute();
+	      mutebutton.removeAttribute('disabled');
+	  }
+      });
+
+
+      const audioContext = new window.AudioContext();
+
+      const analyser = new AnalyserNode(audioContext);
+      analyser.minDecibels = -100;
+      analyser.maxDecibels = -30;
+      analyser.fftSize = 32;
+
+      audioContext.createMediaStreamSource(stream).connect(analyser);
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      const audioMenu = getVRMenu('audio');
+      const audioLevel = document.getElementById('audio-level');
+      function draw() {
+	  setTimeout(draw, 100);
+
+	  //
+	  // No need to draw the audiobar if the menu is not
+	  // visible.
+	  //
+	  if (audioMenu.style.display === 'none') {
+	      return;
+	  }
+
+	  analyser.getByteFrequencyData(dataArray);
+
+	  let barHeight = 0;
+	  for (let i = 0; i < dataArray.length; i++) {
+	      if (barHeight < dataArray[i]) {
+		  barHeight = dataArray[i];
+	      }
+	  }
+
+	  audioLevel.style.height = `${(1 - (barHeight / 255)) * 150}px`;
+      }
+
+      document.querySelector('#audio-inactive').style.display = 'none';
+      document.querySelector('#audiometer').style.display = 'block';
+      draw();
+  }
+
+  camera.addEventListener('localstream', function (e) {
+      audioMeter(e.detail.stream);
+  });
 </if>
+</script>

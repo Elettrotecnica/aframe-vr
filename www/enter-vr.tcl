@@ -18,7 +18,8 @@ set package_url [ad_conn package_url]
 #
 # Check if this VR experience supports the chat
 #
-if {[namespace which ::chat::Chat] ne ""} {
+if {[namespace which ::chat::Chat] ne "" &&
+    [::parameter::get -package_id $package_id -boolean -parameter chat_p -default 0]} {
     set chat_room_id [::parameter::get -package_id $package_id -parameter chat_room_id]
 } else {
     set chat_room_id ""
@@ -26,15 +27,21 @@ if {[namespace which ::chat::Chat] ne ""} {
 set chat_p [expr {$chat_room_id ne ""}]
 
 #
-# See if the file-storage is available so spawn objects.
+# Check if this VR experience supports spawning objects
 #
-set fs_node_id [::site_node::get_children \
-                       -package_key file-storage \
-                       -element node_id \
-                       -node_id [ad_conn node_id]]
-set spawn_objects_p [expr {$fs_node_id ne ""}]
-set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
-set spawn_min_size [::parameter::get -package_id $package_id -parameter spawn_min_size]
+set spawn_objects_p [parameter::get -package_id $package_id -parameter spawn_objects_p -boolean -default 0]
+if {$spawn_objects_p} {
+    #
+    # See if the file-storage is available so spawn objects.
+    #
+    set fs_node_id [::site_node::get_children \
+			-package_key file-storage \
+			-element node_id \
+			-node_id [ad_conn node_id]]
+    set spawn_objects_p [expr {$fs_node_id ne ""}]
+    set spawn_max_size [::parameter::get -package_id $package_id -parameter spawn_max_size]
+    set spawn_min_size [::parameter::get -package_id $package_id -parameter spawn_min_size]
+}
 
 #
 # User info
@@ -47,7 +54,7 @@ set avatar_url ${package_url}${avatar_path}
 #
 # Environment
 #
-set environment [parameter::get -parameter environment -default default]
+set environment [parameter::get -package_id $package_id -parameter environment -default default]
 
 #
 # Websocket
@@ -60,22 +67,25 @@ set ws_host $host[expr {$port ne "" ? ":$port" : ""}]
 set ws_uri ${proto}://${ws_host}/aframe-vr/connect/$package_id
 
 #
-# WebRTC
+# Check if this VR experience supports WebRTC
 #
-set janus_url [parameter::get -parameter janus_url -default ""]
-if {$janus_url ne ""} {
-    try {
-        aframe_vr::room::require
-    } on error {errmsg} {
-        ns_log warning $errmsg
-        set janus_url ""
+set webrtc_p [parameter::get -package_id $package_id -parameter webrtc_p -boolean -default 0]
+if {$webrtc_p} {
+    set janus_url [parameter::get -package_id $package_id -parameter janus_url -default ""]
+    if {$janus_url ne ""} {
+	try {
+	    aframe_vr::room::require
+	} on error {errmsg} {
+	    ns_log warning $errmsg
+	    set janus_url ""
+	}
     }
+
+    set janus_room [parameter::get -package_id $package_id -parameter janus_room]
+    set janus_room_pin [parameter::get -package_id $package_id -parameter janus_room_pin]
+
+    set webrtc_p [expr {$janus_url ne ""}]
 }
-
-set janus_room [parameter::get -parameter janus_room]
-set janus_room_pin [parameter::get -parameter janus_room_pin]
-
-set webrtc_p [expr {$janus_url ne ""}]
 if {$webrtc_p} {
     set url [ns_parseurl $janus_url]
     set host [dict get $url host]

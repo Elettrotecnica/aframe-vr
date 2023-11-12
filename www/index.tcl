@@ -16,27 +16,32 @@ set admin_p [permission::permission_p \
 
 set settings_url /shared/parameters?package_id=$package_id&return_url=[ad_return_url]
 
-set environment [parameter::get -parameter environment -default default]
+set environment [parameter::get -package_id $package_id -parameter environment -default default]
 
-set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
-if {[llength $surfaces] != 0} {
-    try {
-        aframe_vr::room::require
-    } on error {errmsg} {
-        ns_log warning $errmsg
-    } on ok {} {
-        set stream_url streaming/
+set webrtc_p [parameter::get -package_id $package_id -parameter webrtc_p -boolean -default 0]
+if {$webrtc_p} {
+    set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
+    if {[llength $surfaces] != 0} {
+	try {
+	    aframe_vr::room::require
+	} on error {errmsg} {
+	    ns_log warning $errmsg
+	} on ok {} {
+	    set stream_url streaming/
+	}
     }
 }
 
-
 set avatar_url avatar/
 
-#
-# See if the file-storage is available so spawn objects.
-#
-set fs_node_id [::site_node::get_children \
-                       -package_key file-storage \
-                       -element node_id \
-                       -node_id [ad_conn node_id]]
-set spawn_objects_p [expr {$fs_node_id ne ""}]
+set spawn_objects_p [parameter::get -package_id $package_id -parameter spawn_objects_p -boolean -default 0]
+if {$spawn_objects_p} {
+    #
+    # See if the file-storage is available so spawn objects.
+    #
+    set fs_node_id [::site_node::get_children \
+			-package_key file-storage \
+			-element node_id \
+			-node_id [ad_conn node_id]]
+    set spawn_objects_p [expr {$fs_node_id ne ""}]
+}

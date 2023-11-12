@@ -8,16 +8,22 @@ ad_page_contract {
     {display_media_id ""}
 }
 
+set package_id [ad_conn package_id]
+
 permission::require_permission \
-    -object_id [ad_conn package_id] \
+    -object_id $package_id \
     -privilege write
 
-set environment [parameter::get -parameter environment -default default]
+set webrtc_p [parameter::get -package_id $package_id -parameter webrtc_p -boolean -default 0]
+if {!$webrtc_p} {
+    ad_return_complaint 1 "WebRTC features are not enabled for this experience."
+    ad_script_abort
+}
 
+set environment [parameter::get -package_id $package_id -parameter environment -default default]
 set surfaces [::aframe_vr::environment::get_streaming_surfaces $environment]
 if {[llength $surfaces] == 0} {
-    # No surfaces, kick user out
-    ad_returnredirect [ad_conn package_url]
+    ad_return_complaint 1 "This environment does not support streaming."
     ad_script_abort
 }
 
@@ -39,7 +45,7 @@ foreach s $surfaces {
         [dict get $s name] [dict get $s title] $audio $video $audio_video
 }
 
-set janus_url [parameter::get -parameter janus_url -default ""]
+set janus_url [parameter::get -package_id $package_id -parameter janus_url -default ""]
 if {$janus_url eq ""} {
     if {[security::secure_conn_p]} {
         set janus_url https://localhost:8089/janus
@@ -50,8 +56,8 @@ if {$janus_url eq ""} {
 
 aframe_vr::room::require
 
-set janus_room [parameter::get -parameter janus_room]
-set janus_room_pin [parameter::get -parameter janus_room_pin]
+set janus_room [parameter::get -package_id $package_id -parameter janus_room]
+set janus_room_pin [parameter::get -package_id $package_id -parameter janus_room_pin]
 
 template::head::add_javascript \
     -src https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js
