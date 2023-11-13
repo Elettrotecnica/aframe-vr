@@ -226,6 +226,16 @@
           vrScene.enterVR();
       }
   });
+  window.addEventListener('enter-vr', function (e) {
+      enterVRButton.textContent = 'Exit VR';
+      enterVRButton.classList.replace('w3-green', 'w3-amber');
+      enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
+  });
+  window.addEventListener('exit-vr', function (e) {
+      enterVRButton.textContent = 'Enter VR';
+      enterVRButton.classList.replace('w3-amber', 'w3-green');
+      enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
+  });
 
   //
   // When we return to the main menu from inside of immersive mode,
@@ -246,21 +256,16 @@
       this.classList.toggle('scrolled');
   });
 
+  //
+  // Writing chat messages in immersive mode is not supported, at
+  // least for now. We hide/display the chat text field when
+  // entering/leaving VR.
+  //
   const chatMessageForm = document.querySelector('#xowiki-chat-messages-form-block');
   window.addEventListener('enter-vr', function (e) {
-      enterVRButton.textContent = 'Exit VR';
-      enterVRButton.classList.replace('w3-green', 'w3-amber');
-      enterVRButton.classList.replace('w3-hover-green', 'w3-hover-amber');
-      //
-      // Writing chat messages in immersive mode is not supported, at
-      // least for now.
-      //
       if (chatMessageForm) {chatMessageForm.style.display = 'none';}
   });
   window.addEventListener('exit-vr', function (e) {
-      enterVRButton.textContent = 'Enter VR';
-      enterVRButton.classList.replace('w3-amber', 'w3-green');
-      enterVRButton.classList.replace('w3-hover-amber', 'w3-hover-green');
       if (chatMessageForm) {chatMessageForm.style.display = null;}
   });
 
