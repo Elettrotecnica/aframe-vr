@@ -366,7 +366,10 @@
           model.setAttribute('center', '');
           model.setAttribute('clamp-size',
                              'maxSize: @spawn_max_size;literal@; minSize: @spawn_min_size;literal@');
-          model.setAttribute('oacs-networked-entity', `permanent: true; template: #${templateId}`);
+          model.setAttribute(
+              'oacs-networked-entity',
+              `permanent: true; template: #${templateId}; properties: position, rotation, scale`
+          );
           model.setAttribute('data-spawn', 'theirs');
           model.setAttribute('src', `url(${modelURL})`);
           model.flushToDOM(true);
