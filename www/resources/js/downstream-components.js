@@ -2458,8 +2458,8 @@ window.AFRAME.registerComponent('standard-hands', {
       // and the distance now.
       //
       // Note that we do this via setInterval instead of a tick
-      // handler. This seem to be necessary on the oculus browser for
-      // Quest 1...
+      // handler. This seem to be necessary, at least on the Oculus
+      // Browser for Quest 1...
       //
       const startHandsDistance = this._calcHandsDistance();
       if (startHandsDistance === null) {
