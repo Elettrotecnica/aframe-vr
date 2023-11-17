@@ -2365,7 +2365,12 @@ window.AFRAME.registerComponent('bound-to-entity', {
  *
  * Requires: physics
  *
- * Lifted from https://github.com/c-frame/aframe-physics-system.
+ * Started from the grab component provided by
+ * https://github.com/c-frame/aframe-physics-system and extended to
+ * mimick some of the features by
+ * https://github.com/c-frame/aframe-super-hands-component, but with
+ * Ammo support and limited focus to the use cases in this package.
+ *
  */
 window.AFRAME.registerComponent('standard-hands', {
   init: function () {
@@ -2381,6 +2386,7 @@ window.AFRAME.registerComponent('standard-hands', {
     this.onHitAmmo = this.onHitAmmo.bind(this);
     this.onGripOpen = this.onGripOpen.bind(this);
     this.onGripClose = this.onGripClose.bind(this);
+    this.onThumbstickMoved = this.onThumbstickMoved.bind(this);
   },
 
   play: function () {
@@ -2392,6 +2398,7 @@ window.AFRAME.registerComponent('standard-hands', {
     el.addEventListener('trackpadup', this.onGripOpen);
     el.addEventListener('triggerdown', this.onGripClose);
     el.addEventListener('triggerup', this.onGripOpen);
+    el.addEventListener('thumbstickmoved', this.onThumbstickMoved);
   },
 
   pause: function () {
@@ -2403,6 +2410,37 @@ window.AFRAME.registerComponent('standard-hands', {
     el.removeEventListener('trackpadup', this.onGripOpen);
     el.removeEventListener('triggerdown', this.onGripClose);
     el.removeEventListener('triggerup', this.onGripOpen);
+    el.removeEventListener('thumbstickmoved', this.onThumbstickMoved);
+  },
+
+  onThumbstickMoved: function (evt) {
+    //
+    // One-handed scale control of grabbed objects.
+    //
+    // Whe we are grabbing something and the thumbstick is moved up or
+    // down, scale the entity up or down respectively.
+    //
+
+    if (!this.hitEl) { return; }
+
+    if (evt.detail.y > 0.95) {
+      //
+      // Down
+      //
+      this.hitEl.object3D.scale.multiplyScalar(0.9);
+    }
+    if (evt.detail.y < -0.95) {
+      //
+      // Up
+      //
+      this.hitEl.object3D.scale.multiplyScalar(1.1);
+    }
+
+    //
+    // For reference in case we want to handle other directions.
+    //
+    // if (evt.detail.x < -0.95) { console.log("LEFT"); }
+    // if (evt.detail.x > 0.95) { console.log("RIGHT"); }
   },
 
   onGripClose: function (evt) {
