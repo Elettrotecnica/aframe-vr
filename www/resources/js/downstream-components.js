@@ -1994,7 +1994,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 window.AFRAME.registerComponent('oacs-networked-entity', {
   schema: {
     networkId: {type: 'string'},
-    template: {type: 'string'},
+    template: {type: 'selector'},
     color: {type: 'color', default: ''},
     randomColor: {type: 'boolean', default: false},
     permanent: {type: 'boolean', default: false},
@@ -2019,7 +2019,7 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
       // The template is serialized and sent in full to the
       // peers. This enables to spawn arbitrary entities.
       //
-      this.template = document.querySelector(this.data.template).outerHTML;
+      this.template = this.data.template.outerHTML;
     }
 
     this.networkId = this.data.networkId ? this.data.networkId : this.el.getAttribute('id');
