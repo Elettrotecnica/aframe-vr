@@ -99,7 +99,8 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     };
     switch(property) {
       case 'position':
-        this.properties['position']['new'] = new THREE.Vector3();
+      case 'scale':
+        this.properties[property]['new'] = new THREE.Vector3();
         break;
       case 'rotation':
          this.properties['rotation']['new'] = {};
@@ -115,6 +116,9 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     switch(property) {
       case 'position':
         this._getAbsolutePosition();
+        break;
+      case 'scale':
+        this._getScale();
         break;
       case 'rotation':
         this._getAbsoluteRotation();
@@ -149,7 +153,13 @@ window.AFRAME.registerComponent('oacs-change-listener', {
   _getAbsolutePosition: function () {
     const newValue = this.properties['position']['new'];
     this.el.object3D.getWorldPosition(newValue);
+  },
+
+  _getScale: function () {
+    const newValue = this.properties['scale']['new'];
+    newValue.copy(this.el.object3D.scale);
   }
+
 });
 
 /**
@@ -2150,7 +2160,8 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
     // Position and rotation are applied directly on the object3D.
     //
     if ((property === 'rotation' ||
-         property === 'position') &&
+         property === 'position' ||
+         property === 'scale') &&
         el.object3D) {
       return function (value) {
         el.object3D[property].set(
@@ -2346,25 +2357,25 @@ window.AFRAME.registerComponent('bound-to-entity', {
 });
 
 /**
- * Grab component
+ * StandardHands Component
  *
  * A component to be put on entities running hand-controls (aka your
- * hands) that enables grabbing physic objects. Depends on ammo.
+ * hands) that enables actions such as grabbing and stretching on
+ * physics objects. Depends on ammo.
  *
  * Requires: physics
  *
  * Lifted from https://github.com/c-frame/aframe-physics-system.
  */
-window.AFRAME.registerComponent('grab', {
+window.AFRAME.registerComponent('standard-hands', {
   init: function () {
-    this.system = this.el.sceneEl.systems.physics;
-
     this.GRABBED_STATE = 'grabbed';
 
     this.grabbing = false;
     this.hitEl =      /** @type {AFRAME.Element}    */ null;
-    this.physics =    /** @type {AFRAME.System}     */ this.el.sceneEl.systems.physics;
-    this.constraint = /** @type {Ammo.Constraint} */ null;
+
+    this.startScale = new THREE.Vector3();
+    this.stretchInterval = null;
 
     // Bind event handlers
     this.onHitAmmo = this.onHitAmmo.bind(this);
@@ -2399,27 +2410,77 @@ window.AFRAME.registerComponent('grab', {
   },
 
   onGripOpen: function (evt) {
-    const hitEl = this.hitEl;
     this.grabbing = false;
-    if (!hitEl) { return; }
-    hitEl.removeState(this.GRABBED_STATE);
 
+    clearInterval(this.stretchInterval);
+    this.stretchInterval = null;
+
+    if (!this.hitEl) { return; }
+    this.hitEl.removeState(this.GRABBED_STATE);
     this.hitEl.removeAttribute(`ammo-constraint__${this.el.id}`)
+    this.hitEl = null;
+  },
 
-    this.hitEl = undefined;
-
+  _calcHandsDistance: function () {
+    //
+    // We require that the other hand is found here. What is important
+    // is that we do it when we are sure both hands have been
+    // initialized.
+    //
+    if (!this.otherHand) {
+      for (const hand of document.querySelectorAll('[standard-hands]')) {
+        if (hand !== this.el) {
+          this.otherHand = hand;
+        }
+      }
+    }
+    if (!this.otherHand) {
+      return null;
+    }
+    return this.el.object3D.position.distanceTo(this.otherHand.object3D.position);
   },
 
   onHitAmmo: function (evt) {
     const hitEl = evt.detail.targetEl;
-    // If the element is already grabbed (it could be grabbed by another controller).
     // If the hand is not grabbing the element does not stick.
     // If we're already grabbing something you can't grab again.
-    if (!hitEl || hitEl.is(this.GRABBED_STATE) || !this.grabbing || this.hitEl) { return; }
-    hitEl.addState(this.GRABBED_STATE);
-    this.hitEl = hitEl;
-    this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
-                            { target: `#${this.el.id}` })
+    if (!hitEl || !this.grabbing || this.hitEl || this.stretchInterval) { return; }
+
+    if (hitEl.is(this.GRABBED_STATE)) {
+      //
+      // Entity is already grabbed by another hand. we are going to
+      // stretch it.
+      //
+
+      //
+      // At every interval we multiply the starting scale of our item
+      // for the ratio between the initial distance between our hands
+      // and the distance now.
+      //
+      // Note that we do this via setInterval instead of a tick
+      // handler. This seem to be necessary on the oculus browser for
+      // Quest 1...
+      //
+      const startHandsDistance = this._calcHandsDistance();
+      if (startHandsDistance === null) {
+        return;
+      }
+      this.startScale.copy(hitEl.object3D.scale);
+      this.stretchInterval = setInterval(() => {
+        const handsDistance = this._calcHandsDistance();
+        const ratio = handsDistance / startHandsDistance;
+        hitEl.object3D.scale.copy(this.startScale).multiplyScalar(ratio);
+      }, 200);
+
+    } else {
+      //
+      // Entity is being grabbed.
+      //
+      hitEl.addState(this.GRABBED_STATE);
+      this.hitEl = hitEl;
+      this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
+                              { target: `#${this.el.id}` });
+    }
   }
 });
 

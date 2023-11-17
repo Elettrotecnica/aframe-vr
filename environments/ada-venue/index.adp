@@ -70,7 +70,7 @@
                 hand.addEventListener('controllerconnected', function () {
                     this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
                     this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
-                    this.setAttribute('grab', '');
+                    this.setAttribute('standard-hands', '');
                 }, {once: true });
             }
         } else {
@@ -128,7 +128,7 @@
   </a-video>
 
   <a-sphere
-    oacs-networked-entity="permanent: true"
+    oacs-networked-entity="permanent: true; properties: position, rotation, scale;"
     id="ball"
     position="-1 3 -1.5"
     radius="0.5"
