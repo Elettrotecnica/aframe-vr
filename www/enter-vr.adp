@@ -369,6 +369,7 @@
           model.setAttribute('oacs-networked-entity', `permanent: true; template: #${templateId}`);
           model.setAttribute('data-spawn', 'theirs');
           model.setAttribute('src', `url(${modelURL})`);
+          model.flushToDOM(true);
 
           template = document.createElement('template');
           template.setAttribute('id', templateId);
