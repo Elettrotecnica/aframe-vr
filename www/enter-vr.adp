@@ -394,7 +394,7 @@
       // may be fancier at some point and let it spawn
       // e.g. "1 meter in front of us".
       //
-      spawnedEntity.setAttribute('position', camera.getAttribute('position'));
+      camera.object3D.getWorldPosition(spawnedEntity.object3D.position);
 
       return true;
   }
