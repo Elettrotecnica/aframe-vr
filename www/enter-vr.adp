@@ -345,6 +345,14 @@
       return vrScene.systems['oacs-networked-scene'].deleteEntity(spawnId);
   }
 
+  //
+  // We use a placeholder object to compute the position, relative to
+  // the camera, where new objects will spawn.
+  //
+  const spawnPositionPlaceholder = new THREE.Object3D();
+  camera.object3D.add(spawnPositionPlaceholder);
+  spawnPositionPlaceholder.translateZ(-0.5);
+
   function spawnObject(spawnId, modelURL) {
       if (isSpawned(spawnId)) {
           alert('This model already exists on the scene.');
@@ -390,11 +398,9 @@
       vrScene.appendChild(spawnedEntity);
 
       //
-      // We let the new entity spawn where we are. We
-      // may be fancier at some point and let it spawn
-      // e.g. "1 meter in front of us".
+      // Compute and set the spawn position.
       //
-      camera.object3D.getWorldPosition(spawnedEntity.object3D.position);
+      spawnPositionPlaceholder.getWorldPosition(spawnedEntity.object3D.position);
 
       return true;
   }
