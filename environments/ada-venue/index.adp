@@ -1,100 +1,19 @@
-<%
-  security::csp::require connect-src cdn.jsdelivr.net
-%>
 <script src="/aframe-vr/resources/js/aframe-environment-component.min.js"></script>
 <script src="/aframe-vr/resources/js/ar-shadow-helper.js"></script>
 <script src="/aframe-vr/resources/js/model-utils.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
-<script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     window.addEventListener('load', function () {
-
 	const scene = document.querySelector('a-scene');
-        //
-        // When objects requiring physics finish to load, attach physics to them
-        //
-	scene.addEventListener('model-loaded', function (e) {
-	    if (e.target.hasAttribute('data-spawn')) {
-		//
-		// Objects spawned by peers
-		//
-		const spawn = e.target.getAttribute('data-spawn');
-		const type = spawn === 'mine' ? 'type: dynamic' : 'type: kinematic; emitCollisionEvents: true';
-		e.target.setAttribute('ammo-body', type);
-	        e.target.setAttribute('ammo-shape', 'type: hull');
-		e.target.setAttribute('bound-to-entity', 'entity: #venue-model');
-	    }
-	});
-
 	scene.addEventListener('collidestart', function (e) {
-            if (e.target.matches('#ball, [data-spawn]') && e.detail.targetEl.matches('a-camera, [hand-controls]')) {
+            if (e.target.id === 'ball' && e.detail.targetEl.matches('a-camera, [hand-controls]')) {
                 e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
             }
         });
-
-	//
-	// Switch entities physics when they are grabbed/released from
-	// dynamic (local) to kinematic (remote).
-	//
-	function switchBodyType(e, type) {
-	    const shape = e.getAttribute('ammo-shape');
-	    if (e.components['ammo-body'].addedToSystem) {
-		e.removeAttribute('ammo-shape');
-                e.removeAttribute('ammo-body');
-	    }
-            e.setAttribute('ammo-body', type);
-	    e.setAttribute('ammo-shape', shape);
-	}
-	scene.addEventListener('release', function (e) {
-	    if (e.target.components['ammo-body'] &&
-		e.target.components['ammo-shape'] &&
-		e.target.components['ammo-body'].data.type === 'dynamic') {
-		switchBodyType(e.target, 'type: kinematic; emitCollisionEvents: true');
-	    }
-	});
-	scene.addEventListener('grab', function (e) {
-	    if (e.target.components['ammo-body'] &&
-		e.target.components['ammo-shape'] &&
-		e.target.components['ammo-body'].data.type === 'kinematic') {
-		switchBodyType(e.target, 'type: dynamic');
-	    }
-	});
-
-
-        if (window.AFRAME.utils.device.checkHeadsetConnected()) {
-            //
-            // Once controllers connect, make them a kinematic body and
-            // let them grab stuff.
-            //
-            for (const hand of document.querySelectorAll('[hand-controls]')) {
-                hand.addEventListener('controllerconnected', function () {
-                    this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-                    this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
-                    this.setAttribute('standard-hands', '');
-                }, {once: true });
-            }
-        } else {
-            //
-            // Avatars from the browser will behave as a kinematic
-            // body when they are in VR mode.
-            //
-            const camera = document.querySelector('a-camera');
-            window.addEventListener('enter-vr', function (e) {
-                camera.setAttribute('ammo-body', 'type: kinematic');
-                camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.6');
-            });
-            window.addEventListener('exit-vr', function (e) {
-	        camera.removeAttribute('ammo-shape');
-                camera.removeAttribute('ammo-body');
-            });
-        }
     });
 </script>
 <a-scene
   reflection="directionalLight:#dirlight;"
   renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
-  shadow="type: pcfsoft"
-  physics="driver: ammo; debug: false"
   >
   <a-assets>
     <a-asset-item id="venue-physics" src="models/venue-physics.glb"></a-asset-item>

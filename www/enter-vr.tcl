@@ -55,6 +55,16 @@ set avatar_url ${package_url}${avatar_path}
 # Environment
 #
 set environment [parameter::get -package_id $package_id -parameter environment -default default]
+set manifest [aframe_vr::environment::read_manifest $environment]
+set physics_p [expr {
+                     [dict exists $manifest physics] &&
+                     [string is true -strict [dict get $manifest physics]]
+                 }]
+if {$physics_p} {
+    set damping ""
+} else {
+    set damping "; gravity: 0 0 0; linearDamping: 1; angularDamping: 1"
+}
 
 #
 # Websocket
