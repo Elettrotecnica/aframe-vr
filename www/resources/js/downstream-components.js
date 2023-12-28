@@ -1773,7 +1773,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     //
     // Network entities that represent the user, such as avatar and
-    // hands will not be added to the scene right away, but deferred
+    // hands may not be added to the scene right away, but deferred
     // after certain events take place.
     //
     // The main reasons to do this instead of attaching everything
@@ -1783,10 +1783,17 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // in this case.
     //
 
-    //
-    // Clear all of my networked entities when exiting VR
-    //
-    window.addEventListener('exit-vr', this._clear);
+    if (this.isHeadset) {
+      //
+      // On headsets, clear all of my networked entities when exiting
+      // VR.
+      //
+      // We don't want to do it on desktop, because they do not have
+      // access to the menu in immersive mode and may exit just to use
+      // it.
+      //
+      window.addEventListener('exit-vr', this._clear);
+    }
 
     //
     // All deferred networked entities that are not hands will be
@@ -1796,7 +1803,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       const entities = document.querySelectorAll('[oacs-networked-entity]:not([hand-controls])');
       for (const e of entities) {
         const component = e.components['oacs-networked-entity'];
-        if (!component.data.attach) {
+        if (!component.isAttached) {
           component.attach();
         }
       }
@@ -1999,7 +2006,6 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     randomColor: {type: 'boolean', default: false},
     permanent: {type: 'boolean', default: false},
     properties: { type: 'array', default: ['position', 'rotation'] },
-    attach: { type: 'boolean', default: true },
     name: {default: ''}
   },
 
@@ -2038,10 +2044,12 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
 
     //
     // For some entities, we do not want to add them to the networked
-    // scene immediately. One example is the avatars, that we add only
-    // upon entering immersive mode.
+    // scene immediately.
     //
-    if (this.data.attach) {
+    // When using a headset, we defer the actual creation of networked
+    // entities to when we enter immersive mode.
+    //
+    if (!this.networkedScene.isHeadset || this.el.sceneEl.is('vr-mode')) {
       this.attach();
     }
   },
