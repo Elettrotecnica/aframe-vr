@@ -1,6 +1,7 @@
 {
   "name": "ada-venue",
   "title": "Ada Venue",
+  "physics": true,
   "surfaces": [
     {
       "name": "stage-screen",

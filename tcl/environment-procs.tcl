@@ -12,7 +12,8 @@ ad_proc -private aframe_vr::environment::read_manifest {
 } {
     @return the manifest data as dict
 } {
-    set environment_manifest_file [acs_package_root_dir aframe-vr]/environments/${environment}/manifest.json
+    set environment_manifest_file [acs_package_root_dir \
+                                       aframe-vr]/environments/${environment}/manifest.json
 
     if {[ad_file exists $environment_manifest_file]} {
         if {[namespace which ::json::json2dict] eq ""} {
