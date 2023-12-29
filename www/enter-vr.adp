@@ -617,12 +617,23 @@
                }
            } else {
                //
-               // Avatars from the browser will behave as a kinematic
-               // bodies
+               // On desktop, users will see a cursor extending 1
+               // meter in front of them. This cursor is a kinematic
+               // body and can grab objects by keeping the spacebar
+               // pressed and touching an object. While grabbing,
+               // using the + and - buttons will increase/decrease the
+               // size.
                //
                const camera = document.querySelector('a-camera');
-               camera.setAttribute('ammo-body', 'type: kinematic');
-               camera.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 1.6');
+               const cursor = document.createElement('a-entity');
+               cursor.id = 'client-cursor-@user_id;literal@';
+               cursor.setAttribute('position', '0 0 -1');
+               cursor.setAttribute('geometry', 'primitive: circle; radius: 0.01; segments: 4');
+               cursor.setAttribute('material', 'color: #FF4444; shader: flat');
+               cursor.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+               cursor.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.1');
+               cursor.setAttribute('standard-hands', '');
+               camera.appendChild(cursor);
            }
        });
    </script>

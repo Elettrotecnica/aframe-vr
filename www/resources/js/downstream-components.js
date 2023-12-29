@@ -2387,6 +2387,19 @@ window.AFRAME.registerComponent('standard-hands', {
     this.onGripOpen = this.onGripOpen.bind(this);
     this.onGripClose = this.onGripClose.bind(this);
     this.onThumbstickMoved = this.onThumbstickMoved.bind(this);
+    this.onPlusMinus = this.onPlusMinus.bind(this);
+
+    const self = this;
+    this.onSpaceBarGripOpen = function (e) {
+      if (e.code === 'Space') {
+        self.onGripOpen();
+      }
+    }
+    this.onSpaceBarGripClose = function (e) {
+      if (e.code === 'Space') {
+        self.onGripClose();
+      }
+    }
   },
 
   play: function () {
@@ -2399,6 +2412,9 @@ window.AFRAME.registerComponent('standard-hands', {
     el.addEventListener('triggerdown', this.onGripClose);
     el.addEventListener('triggerup', this.onGripOpen);
     el.addEventListener('thumbstickmoved', this.onThumbstickMoved);
+    window.addEventListener('keydown', this.onSpaceBarGripClose);
+    window.addEventListener('keyup', this.onSpaceBarGripOpen);
+    window.addEventListener('keydown', this.onPlusMinus);
   },
 
   pause: function () {
@@ -2411,6 +2427,8 @@ window.AFRAME.registerComponent('standard-hands', {
     el.removeEventListener('triggerdown', this.onGripClose);
     el.removeEventListener('triggerup', this.onGripOpen);
     el.removeEventListener('thumbstickmoved', this.onThumbstickMoved);
+    window.removeEventListener('keydown', this.onSpaceBarGripClose);
+    window.removeEventListener('keyup', this.onSpaceBarGripOpen);
   },
 
   onThumbstickMoved: function (evt) {
@@ -2441,6 +2459,29 @@ window.AFRAME.registerComponent('standard-hands', {
     //
     // if (evt.detail.x < -0.95) { console.log("LEFT"); }
     // if (evt.detail.x > 0.95) { console.log("RIGHT"); }
+  },
+
+  onPlusMinus: function (evt) {
+    //
+    // Desktop version of scale control of grabbed objects.
+    //
+    // Whe we are grabbing something and plus or minus are pressed,
+    // scale the entity up or down respectively.
+    //
+
+    if (!this.hitEl) { return; }
+
+    if (evt.code === 'NumpadSubtract') {
+      //
+      // Down
+      //
+      this.hitEl.object3D.scale.multiplyScalar(0.9);
+    } else if (evt.code === 'NumpadAdd') {
+      //
+      // Up
+      //
+      this.hitEl.object3D.scale.multiplyScalar(1.1);
+    }
   },
 
   onGripClose: function (evt) {
