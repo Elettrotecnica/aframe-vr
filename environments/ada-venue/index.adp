@@ -5,7 +5,7 @@
     window.addEventListener('load', function () {
 	const scene = document.querySelector('a-scene');
 	scene.addEventListener('collidestart', function (e) {
-            if (e.target.id === 'ball' && e.detail.targetEl.matches('a-camera, [hand-controls]')) {
+            if (e.target.id === 'ball' && e.detail.targetEl.hasAttribute('standard-hands')) {
                 e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
             }
         });
