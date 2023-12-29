@@ -1771,54 +1771,43 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       }
     });
 
-    //
-    // Network entities that represent the user, such as avatar and
-    // hands may not be added to the scene right away, but deferred
-    // after certain events take place.
-    //
-    // The main reasons to do this instead of attaching everything
-    // right away is that window.onbeforeunload is not triggered
-    // easily on e.g. oculus, because one does seldom close the app
-    // explicitly. enter-vr and exit-vr are much more realiable events
-    // in this case.
-    //
 
     if (this.isHeadset) {
       //
-      // On headsets, clear all of my networked entities when exiting
-      // VR.
+      // On headsets, avatar and hands are not attached to the scene
+      // right away, but deferred to when we are in immersive mode.
       //
-      // We don't want to do it on desktop, because they do not have
-      // access to the menu in immersive mode and may exit just to use
-      // it.
+      // The main reasons is that window.onbeforeunload is not
+      // triggered easily on e.g. Oculus, because one does seldom
+      // close the app explicitly. enter-vr and exit-vr are much more
+      // realiable events in this case.
+      //
+
+      //
+      // On headsets, clear all of my networked entities when exiting
+      // immersive mode.
       //
       window.addEventListener('exit-vr', this._clear);
-    }
 
-    //
-    // All deferred networked entities that are not hands will be
-    // generated upon entering immersive mode.
-    //
-    window.addEventListener('enter-vr', function (e) {
-      const entities = document.querySelectorAll('[oacs-networked-entity]:not([hand-controls])');
-      for (const e of entities) {
-        const component = e.components['oacs-networked-entity'];
-        if (!component.isAttached) {
-          component.attach();
-        }
-      }
-    });
+      //
+      // On headsets, our avatar will spawn only once we enter
+      // immersive mode.
+      //
+      window.addEventListener('enter-vr', function (e) {
+        document.querySelector('a-camera[oacs-networked-entity]')?.
+          components['oacs-networked-entity'].attach();
+      });
+    }
 
     //
     // Hands are attached to the scene only upon controller
     // connection.
     //
-    window.addEventListener('controllerconnected', function (e) {
-      const component = e.target.components['oacs-networked-entity'];
-      if (component && e.target.getAttribute('hand-controls')) {
-        component.attach();
-      }
-    });
+    for (const e of document.querySelectorAll('[hand-controls][oacs-networked-entity]')) {
+      e.addEventListener('controllerconnected', function () {
+        e.components['oacs-networked-entity'].attach();
+      });
+    }
 
     //
     // When the page is closed, clear our stuff.
@@ -2043,13 +2032,16 @@ window.AFRAME.registerComponent('oacs-networked-entity', {
     this.isAttached = false;
 
     //
-    // For some entities, we do not want to add them to the networked
-    // scene immediately.
+    // Hands and avatars are special and we may not add them to the
+    // scene right away
     //
-    // When using a headset, we defer the actual creation of networked
-    // entities to when we enter immersive mode.
+    // - hands: only when controllers are connected
+    // - avatar: immediately if we are on desktop and only if we enter
+    //           immersive mode otherwise
     //
-    if (!this.networkedScene.isHeadset || this.el.sceneEl.is('vr-mode')) {
+    if (!this.el.hasAttribute('hand-controls') &&
+        (!this.networkedScene.isHeadset ||
+         !this.el.tagName !== 'A-CAMERA')) {
       this.attach();
     }
   },
