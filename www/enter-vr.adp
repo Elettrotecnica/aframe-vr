@@ -569,7 +569,7 @@
            });
 
            scene.addEventListener('collidestart', function (e) {
-               if (e.target.hasAttribute('data-spawn') && e.detail.targetEl.matches('a-camera, [hand-controls]')) {
+               if (e.target.hasAttribute('data-spawn') && e.detail.targetEl.hasAttribute('standard-hands')) {
                    e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
                }
            });
