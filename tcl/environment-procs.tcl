@@ -40,6 +40,6 @@ ad_proc -private aframe_vr::environment::get_streaming_surfaces {
     @return a list of streaming surfaces advertised by the
             environment's manifest file.
 } {
-    set manifest [aframe_vr::environment::read_manifest]
+    set manifest [aframe_vr::environment::read_manifest $environment]
     return [dict get $manifest surfaces]
 }
