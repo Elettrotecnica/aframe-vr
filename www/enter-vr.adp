@@ -193,7 +193,8 @@
 </div>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
   const vrScene = document.querySelector('a-scene');
-  vrScene.setAttribute('oacs-networked-scene', 'wsURI: @ws_uri@');
+  const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
+  vrScene.setAttribute('oacs-networked-scene', wsURI);
   vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
   vrScene.setAttribute('vr-mode-ui', 'enabled: false;');
   vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);

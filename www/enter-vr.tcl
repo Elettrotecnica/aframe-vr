@@ -67,16 +67,6 @@ if {$physics_p} {
 }
 
 #
-# Websocket
-#
-set url [ns_parseurl [ad_conn location]]
-set proto [expr {[dict get $url proto] eq "http" ? "ws" : "wss"}]
-set host [dict get $url host]
-set port [dict get $url port]
-set ws_host $host[expr {$port ne "" ? ":$port" : ""}]
-set ws_uri ${proto}://${ws_host}/aframe-vr/connect/$package_id
-
-#
 # Check if this VR experience supports WebRTC
 #
 set webrtc_p [parameter::get -package_id $package_id -parameter webrtc_p -boolean -default 0]
@@ -125,7 +115,6 @@ if {$webrtc_p} {
 # CSP Rules
 #
 
-security::csp::require connect-src $ws_host
 if {[info exists webrtc_host]} {
     security::csp::require connect-src $webrtc_host
 }
