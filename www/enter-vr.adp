@@ -543,7 +543,7 @@
   });
 </if>
 </script>
-<if @spawn_objects_p@ or @physics_p@>
+<if @spawn_objects_p;literal@ true or @physics_p;literal@ true>
    <%
      security::csp::require connect-src cdn.jsdelivr.net
    %>
