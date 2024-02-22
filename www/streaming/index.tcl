@@ -71,3 +71,8 @@ set host [dict get $url host]
 set port [dict get $url port]
 set webrtc_host $host[expr {$port ne "" ? ":$port" : ""}]
 security::csp::require connect-src $webrtc_host
+
+#
+# Needed in order to view local media on the page.
+#
+security::csp::require media-src blob:
