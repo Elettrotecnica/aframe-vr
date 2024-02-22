@@ -1,4 +1,6 @@
 # OpenACS A-Frame VR
+![aframe-vr-screenshot](https://github.com/Elettrotecnica/aframe-vr/assets/3331940/234670fe-c79f-4515-bd2a-782c8bd3ce04)
+
 
 This package enables networked VR experiences on an
 [OpenACS](https://openacs.org/) installation. It is somewhat similar
