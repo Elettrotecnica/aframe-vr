@@ -565,7 +565,7 @@ class JanusConnector {
                     } else if (event === 'destroyed') {
                       // The room has been destroyed
                       window.Janus.warn('The room has been destroyed!');
-                      window.location.reload();
+                      // window.location.reload();
                     } else if (event === 'event') {
                       // Any info on our streams or a new feed to attach to?
                       if (msg['streams']) {
@@ -692,8 +692,9 @@ class JanusConnector {
               });
           },
           error: function (error) {
+            alert(error);
             window.Janus.error(error);
-            window.location.reload();
+            // window.location.reload();
           },
           destroyed: function () {
             window.location.reload();

@@ -1495,7 +1495,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                       } else if (event === 'destroyed') {
                         // The room has been destroyed
                         console.warn('The room has been destroyed!');
-                        window.location.reload();
+                        // window.location.reload();
                       } else if (event === 'event') {
                         // Any info on our streams or a new feed to attach to?
                         if (msg['streams']) {
@@ -1593,10 +1593,11 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             },
             error: function (error) {
               console.error(error);
-              window.location.reload();
+              // window.location.reload();
             },
             destroyed: function () {
-              window.location.reload();
+              console.warn('Janus object has been destroyed');
+              // window.location.reload();
             }
           });
       }
