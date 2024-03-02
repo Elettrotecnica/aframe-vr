@@ -41,7 +41,7 @@
     id="stage-screen"
     width="8"
     height="4.5"
-    rotation="0 90 0"
+    rotation="0 270 0"
     position="16.5 2.9 0.13"
     >
   </a-video>
