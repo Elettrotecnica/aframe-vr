@@ -1,6 +1,26 @@
 <master src="/www/blank-master">
   <property name="doc(title)">Enter VR</property>
 
+  <if @interact@ nil>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+     //
+     // Detect if the user tried to refresh the page, and send them
+     // back to the Main Menu instead, as otherwise audio will not
+     // start.
+     //
+     const entries = performance.getEntriesByType('navigation');
+     entries.forEach((entry) => {
+	 if (entry.type === 'reload') {
+             alert('It seems you are trying to refresh!\n\n' +
+		   'Unfortunately, in order for audio to work, you must first interact with the page...\n\n' +
+		   'You will be redirected to the Main Menu, please enter the experience again from there :-)'
+		  );
+	     window.location.assign('@package_url@');
+	 }
+     });
+    </script>
+  </if>
+
   <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
   <template id="vr-rig">
