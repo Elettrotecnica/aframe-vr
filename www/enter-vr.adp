@@ -298,6 +298,23 @@
   //
 
   //
+  // Fetch all existing models from the JSON endpoint and append them
+  // to the page assets so they can be preloaded. This should reduce
+  // loading times when spawning, in particular if models do not
+  // change so much during the experience.
+  //
+  const assetsXml = new XMLHttpRequest();
+  const assets = document.querySelector('a-assets');
+  assetsXml.responseType = 'json';
+  assetsXml.addEventListener('load', e => {
+      for (const m of assetsXml.response) {
+	  assets.innerHTML += `<a-asset-item id="spawn-${m.live_revision}-model" src="${m.download_url}">`;
+      }
+  });
+  assetsXml.open('GET', './models/?format=json');
+  assetsXml.send();
+
+  //
   // Whenever the models menu becomes visible, fetch the models from
   // the JSON endpoint and display the spawning UI
   //
@@ -400,7 +417,15 @@
               `permanent: true; template: #${templateId}; properties: position, rotation, scale`
           );
           model.setAttribute('data-spawn', 'theirs');
-          model.setAttribute('src', `url(${modelURL})`);
+
+          //
+          // We first try to look for the model in the preloaded
+          // assets. If these do not exist, we load the model on the
+          // fly.
+          //
+          const assetModel = document.querySelector(`a-asset-item#${spawnId}-model`);
+          model.setAttribute('src', assetModel ? `#${assetModel.id}` : `url(${modelURL})`);
+
           model.flushToDOM(true);
 
           template = document.createElement('template');
