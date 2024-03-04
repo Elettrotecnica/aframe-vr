@@ -2276,6 +2276,11 @@ window.AFRAME.registerComponent('clamp-size', {
 const _centerModel = (function () {
   const b = new THREE.Box3();
   return function (object) {
+    //
+    // Ensure world matrix is up to date.
+    //
+    object.updateMatrixWorld();
+
     b.setFromObject(object);
     for (child of object.children) {
       object.worldToLocal(b.getCenter(child.position)).
