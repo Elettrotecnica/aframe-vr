@@ -2229,14 +2229,26 @@ const _getBoundinBoxSize = (function () {
 window.AFRAME.registerComponent('clamp-size', {
   schema: {
     minSize: {type: 'number', default: 0.2},
-    maxSize: {type: 'number', default: 1.6}
+    maxSize: {type: 'number', default: 1.6},
+    always: {type: 'boolean', default: false}
   },
 
   init: function () {
     this.minSize = this.data.minSize;
     this.maxSize = this.data.maxSize;
 
+    //
+    // We clamp the size at init.
+    //
     this._clampSize();
+
+    if (this.data.always) {
+      //
+      // When requested, we also clamp the size every second to
+      // enforce that size stays in range.
+      //
+      this.tick = AFRAME.utils.throttleTick(this._clampSize, 1000, this);
+    }
   },
 
   _getSize: function () {
@@ -2262,8 +2274,9 @@ window.AFRAME.registerComponent('clamp-size', {
     } else if (size < this.minSize) {
       ratio = this.minSize / size;
     }
+
     if (typeof ratio !== 'undefined') {
-      this.el.object3D.scale.set(ratio, ratio, ratio);
+      this.el.object3D.scale.multiplyScalar(ratio);
     }
   }
 });
