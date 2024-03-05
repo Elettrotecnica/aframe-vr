@@ -2510,16 +2510,52 @@ window.AFRAME.registerComponent('standard-hands', {
   onGripOpen: function (evt) {
     this.grabbing = false;
 
+    //
+    // Hand A grabs, hand B stretches.
+    //
+    this._findOtherHand();
+    const otherHandIsGrabbing = this.otherHand &&
+          this.otherHand.components['standard-hands'].stretchInterval !== null;
+
+    if (otherHandIsGrabbing) {
+      //
+      // Hand B should stop stretching to become hand A.
+      //
+      clearInterval(this.otherHand.components['standard-hands'].stretchInterval);
+      this.otherHand.components['standard-hands'].stretchInterval = null;
+    }
+
     clearInterval(this.stretchInterval);
     this.stretchInterval = null;
 
     if (!this.hitEl) { return; }
-    this.hitEl.removeState(this.GRABBED_STATE);
+
+    //
+    // Item will be detached from hand A.
+    //
     this.hitEl.removeAttribute(`ammo-constraint__${this.el.id}`)
+    if (otherHandIsGrabbing) {
+      //
+      // We move the constraint to hand B.
+      //
+      this.otherHand.components['standard-hands'].hitEl = this.hitEl;
+      this.hitEl.setAttribute(`ammo-constraint__${this.otherHand.id}`,
+                              { target: `#${this.otherHand.id}` });
+    } else {
+      //
+      // When this was the only hand grabbing the item, then this is
+      // not grabbed anymore.
+      //
+      this.hitEl.removeState(this.GRABBED_STATE);
+    }
+
+    //
+    // This hand is not hitting anything anymoe.
+    //
     this.hitEl = null;
   },
 
-  _calcHandsDistance: function () {
+  _findOtherHand: function () {
     //
     // We require that the other hand is found here. What is important
     // is that we do it when we are sure both hands have been
@@ -2532,6 +2568,10 @@ window.AFRAME.registerComponent('standard-hands', {
         }
       }
     }
+  },
+
+  _calcHandsDistance: function () {
+    this._findOtherHand();
     if (!this.otherHand) {
       return null;
     }
