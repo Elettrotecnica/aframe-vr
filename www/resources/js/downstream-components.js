@@ -30,9 +30,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
 
   update: function () {
     for (const property of this.data.properties) {
-      if (!this.properties[property]) {
-        this._initPropertyValue(property);
-      }
+      this._initPropertyValue(property);
       this._fetchPropertyValue(property);
     }
   },
@@ -1663,8 +1661,6 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
     this._addDelegatedListeners();
 
-    this.messageQueue = [];
-
     this._privateProperties = ['id', 'type', 'template'];
 
     this.grabEvent = new Event('grab', {bubbles: true});
@@ -1693,8 +1689,6 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   send: function (data) {
     if (this.websocket && this.websocket.readyState === window.WebSocket.OPEN) {
       this.websocket.send(JSON.stringify(data));
-    } else {
-      this.messageQueue.push(Object.assign({}, data));
     }
   },
 
@@ -1957,15 +1951,34 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _connect: function () {
     const self = this;
+
+    if (this.websocket) {
+      //
+      // If this is a reconnection, make sure the old websocket is
+      // closed first.
+      //
+      this.websocket.close();
+    }
+
     this.websocket = new window.WebSocket(this.wsURI);
 
     this.websocket.onopen = function (e) {
       //
-      // Send the messages we have queued so far.
+      // Send (or re-send) all networked entities that have already
+      // been attached to the scene locally, then issue a forced
+      // update on all of them.
       //
-      while (self.messageQueue.length > 0) {
-        self.send(self.messageQueue.shift());
+      // This handles both the cases of connection and reconnection.
+      //
+      for (const entity of
+           document.querySelectorAll('[oacs-networked-entity]')) {
+        const networkedEntity = entity.components['oacs-networked-entity'];
+        if (networkedEntity.isAttached) {
+          networkedEntity.attach();
+          entity.components['oacs-change-listener'].update();
+        }
       }
+      console.log('Connected.');
     };
     this.websocket.addEventListener('close', function (e) {
       console.log('Disconnected.');
@@ -1984,7 +1997,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         console.warn('Not connected, attempting reconnection...');
         self._connect();
       }
-    }, 60000);
+    }, 30000);
   }
 });
 
