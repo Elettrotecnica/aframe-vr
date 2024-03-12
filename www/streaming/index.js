@@ -25,21 +25,6 @@ class JanusConnector {
       this.room = window.parseInt(this.room, 10);
     }
 
-    this.janus = null;
-    this.pluginHandle = null;
-    this.privateId = null;
-
-    this.remoteFeed = null;
-    this.feeds = {};
-    this.feedStreams = {};
-    this.subStreams = {};
-    this.subscriptions = {};
-    this.remoteTracks = {};
-    this.bitrateTimer = [];
-    this.simulcastStarted = {};
-
-    this.creatingSubscription = false;
-
     this.videoType = data.videoType;
     this.useAudio = data.useAudio;
     this.doSimulcast = data.doSimulcast ? true : false;
@@ -54,7 +39,10 @@ class JanusConnector {
   }
 
   disconnect () {
-    this.janus.destroy();
+    //
+    // Just leave the page to disconnect.
+    //
+    window.location.reload();
   }
 
   setBitrate(bitrate) {
@@ -86,6 +74,31 @@ class JanusConnector {
         this.pluginHandle.unmuteAudio();
       }
     }
+  }
+
+  _notifyConnectionChange(level, status) {
+    document.body.dispatchEvent(new CustomEvent(
+      'connectionstatuschange',
+      {detail: {
+        level: level,
+        status: status
+      }}
+    ));
+  }
+
+  _reconnectOnError(error) {
+    //
+    // Error handling
+    //
+    // On error, we destroy this entire Janus connection and
+    // create a fresh one from scratch after waiting 2
+    // seconds.
+    //
+    this._notifyConnectionChange('danger', `${error}. Reconnecting...`);
+    console.log('Destroying current connection...');
+    this.janus.destroy({cleanupHandles: true});
+    console.log('Attempting reconnection in 2s...');
+    setTimeout(this.connect.bind(this), 2000);
   }
 
   _unsubscribeFrom (id) {
@@ -163,6 +176,8 @@ class JanusConnector {
       return;
     }
 
+    this._notifyConnectionChange('warning', 'Preparing to stream...');
+
     var self = this;
     this.pluginHandle.createOffer({
       tracks: tracks,
@@ -189,7 +204,11 @@ class JanusConnector {
         self.pluginHandle.send({ message: publish, jsep: jsep });
       },
       error: function (error) {
-        window.Janus.error('WebRTC error:', error);
+        //
+        // This UI is meant for us to stream, so if we fail doing so,
+        // this is an error.
+        //
+        self._notifyConnectionChange('danger', error);
       }
     });
   }
@@ -307,7 +326,7 @@ class JanusConnector {
         self.remoteFeed.send({ message: subscribe });
       },
       error: function (error) {
-        window.Janus.error('  -- Error attaching plugin...', error);
+        self._notifyConnectionChange('danger', error);
       },
       iceState: function (state) {
         window.Janus.log('ICE state (remote feed) changed to ' + state);
@@ -324,7 +343,7 @@ class JanusConnector {
         var event = msg['videoroom'];
         window.Janus.debug('Event: ' + event);
         if (msg['error']) {
-          window.Janus.error(msg['error']);
+          self._notifyConnectionChange('danger', msg['error']);
         } else if (event) {
           if (event === 'attached') {
             // Now we have a working subscription, next requests will update this one
@@ -458,6 +477,21 @@ class JanusConnector {
   }
 
   connect () {
+    this.janus = null;
+    this.pluginHandle = null;
+    this.privateId = null;
+
+    this.remoteFeed = null;
+    this.feeds = {};
+    this.feedStreams = {};
+    this.subStreams = {};
+    this.subscriptions = {};
+    this.remoteTracks = {};
+    this.bitrateTimer = [];
+    this.simulcastStarted = {};
+
+    this.creatingSubscription = false;
+
     var self = this;
 
     // Initialize the library (all console debuggers enabled)
@@ -466,7 +500,7 @@ class JanusConnector {
       callback: function () {
         // Make sure the browser supports WebRTC
         if (!window.Janus.isWebrtcSupported()) {
-          window.Janus.error('No WebRTC support... ');
+          self._notifyConnectionChange('danger', 'No WebRTC support... ');
           return;
         }
         // Create session
@@ -478,6 +512,8 @@ class JanusConnector {
           //or
           //apisecret: 'serversecret',
           success: function () {
+            self._notifyConnectionChange('warning', 'Connected to server.');
+
             // Attach to VideoRoom plugin
             self.janus.attach(
               {
@@ -498,9 +534,11 @@ class JanusConnector {
                     register.id = self.id;
                   }
                   self.pluginHandle.send({ message: register });
+
+                  self._notifyConnectionChange('success', 'Ready to stream.');
                 },
                 error: function (error) {
-                  window.Janus.error('  -- Error attaching plugin...', error);
+                  self._notifyConnectionChange('danger', error);
                 },
                 consentDialog: function (on) {
                   window.Janus.debug('Consent dialog should be ' + (on ? 'on' : 'off') + ' now');
@@ -563,12 +601,27 @@ class JanusConnector {
                         }
                       }
                     } else if (event === 'destroyed') {
-                      // The room has been destroyed
-                      window.Janus.warn('The room has been destroyed!');
-                      // window.location.reload();
+                      self._reconnectOnError('Videoroom has been destroyed.');
                     } else if (event === 'event') {
-                      // Any info on our streams or a new feed to attach to?
-                      if (msg['streams']) {
+                      if (msg['error']) {
+                        //
+                        // Errors in here may be such as "wrong room"
+                        // or "wrong pin", which may happen if the
+                        // server was restarted and a new volatile
+                        // room was generated. Reloading the page may
+                        // help here, so this is what we suggest.
+                        //
+                        const error = msg['error_code'] === 426 ? 'No such room' : msg['error'];
+                        if (confirm(`The webRCT backend reported an error: ${error}.\n\nReloading the interface may solve the problem. Reload now?`)) {
+                          window.location.reload();
+                        } else {
+                          self._notifyConnectionChange('danger', error);
+                        }
+                      } else if (msg['streams']) {
+                        //
+                        // Info on our streams or a new feed to attach
+                        // to.
+                        //
                         var streams = msg['streams'];
                         for (var i in streams) {
                           var stream = streams[i];
@@ -625,12 +678,6 @@ class JanusConnector {
                           return;
                         }
                         self._unsubscribeFrom(unpublished);
-                      } else if (msg['error']) {
-                        if (msg['error_code'] === 426) {
-                          window.Janus.error('No such room!');
-                        } else {
-                          window.Janus.error(msg['error']);
-                        }
                       }
                     }
                   }
@@ -680,6 +727,8 @@ class JanusConnector {
                       canvas.style.display = 'block';
                       animate();
                     }
+
+                    self._notifyConnectionChange('success', 'Streaming...');
                   }
                 },
                 onremotetrack: function (track, mid, on) {
@@ -691,13 +740,9 @@ class JanusConnector {
                 }
               });
           },
-          error: function (error) {
-            alert(error);
-            window.Janus.error(error);
-            // window.location.reload();
-          },
+          error: self._reconnectOnError.bind(self),
           destroyed: function () {
-            window.location.reload();
+            console.warn('Janus was destroyed');
           }
         });
       }

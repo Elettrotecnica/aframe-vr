@@ -971,23 +971,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       this.room = window.parseInt(this.room, 10);
     }
 
-    this.janus = null;
-    this.pluginHandle = null;
-    this.privateId = null;
-    this.stream = null;
-
-    this.remoteFeed = null;
-    this.feeds = {};
-    this.feedStreams = {};
-    this.subStreams = {};
-    this.subscriptions = {};
-    this.remoteTracks = {};
-    this.bitrateTimer = [];
-    this.simulcastStarted = {};
-
-    this.creatingSubscription = false;
-
     this._connect();
+    this._attachTracksOnNewEntities();
+    this._notifyConnectionStatus('warning', 'Waiting for connection...');
   },
 
   update: function (oldData) {
@@ -1151,6 +1137,10 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         self.pluginHandle.send({ message: publish, jsep: jsep });
       },
       error: function (error) {
+        self._notifyConnectionStatus(
+          'warning',
+          'We do not stream our own microphone. Other participants won\'t be able to hear us.'
+        );
         console.error('WebRTC error:', error);
       }
     });
@@ -1389,16 +1379,64 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     });
   },
 
+  _notifyConnectionStatus: function (level, status, data = {}) {
+    data.level = level;
+    data.status = status;
+    this.el.dispatchEvent(new CustomEvent(
+      'connectionstatuschange',
+      {detail: data}
+    ));
+    if (level === 'success') {
+      console.log(status);
+    } else if (level === 'warning') {
+      console.warn(status);
+    } else {
+      console.error(status);
+    }
+  },
+
+  _reconnectOnError: function (error) {
+    //
+    // Error handling
+    //
+    // On error, we destroy this entire Janus connection and
+    // create a fresh one from scratch after waiting 2
+    // seconds.
+    //
+    this._notifyConnectionStatus('danger', error);
+    console.log('Destroying current connection...');
+    this.janus.destroy({cleanupHandles: true});
+    console.log('Attempting reconnection in 2s...');
+    setTimeout(this._connect.bind(this), 2000);
+  },
+
   _connect: function () {
+    this._notifyConnectionStatus('warning', 'Connecting...');
+
+    this.janus = null;
+    this.pluginHandle = null;
+    this.privateId = null;
+    this.stream = null;
+
+    this.remoteFeed = null;
+    this.feeds = {};
+    this.feedStreams = {};
+    this.subStreams = {};
+    this.subscriptions = {};
+    this.remoteTracks = {};
+    this.bitrateTimer = [];
+    this.simulcastStarted = {};
+
+    this.creatingSubscription = false;
+
     const self = this;
 
-    // Initialize the library (all console debuggers enabled)
     window.Janus.init({
       debug: this.debug,
       callback: function () {
         // Make sure the browser supports WebRTC
         if (!window.Janus.isWebrtcSupported()) {
-          console.error('No WebRTC support... ');
+          self._notifyConnectionStatus('danger', 'No WebRTC support...');
           return;
         }
         // Create session
@@ -1433,6 +1471,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     self.pluginHandle.send({ message: register });
                   },
                   error: function (error) {
+                    self._notifyConnectionStatus('danger', error);
                     console.error('  -- Error attaching plugin...', error);
                   },
                   consentDialog: function (on) {
@@ -1491,12 +1530,41 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                           }
                         }
                       } else if (event === 'destroyed') {
-                        // The room has been destroyed
-                        console.warn('The room has been destroyed!');
-                        // window.location.reload();
+                        //
+                        // The room may be destroyed when the web
+                        // server is restarted and a new volatile room
+                        // is generated.
+                        //
+                        // Reconnecting may not solve the issue if the
+                        // pin was also changed, but on reconnection
+                        // the appropriate error will pop up informing
+                        // the user they should probably reload the
+                        // experience.
+                        //
+                        self._reconnectOnError('Videoroom has been destroyed.');
                       } else if (event === 'event') {
-                        // Any info on our streams or a new feed to attach to?
-                        if (msg['streams']) {
+                        if (msg['error']) {
+                          //
+                          // Errors in here may be such as "wrong
+                          // room" or "wrong pin", which may happen if
+                          // the server was restarted and a new
+                          // volatile room was generated. Reloading
+                          // the page may help here, but do not want
+                          // to do it mid-experience, so we just
+                          // display the error we received and suggest the
+                          // user they may reload.
+                          //
+                          const errMsg = msg['error_code'] === 426 ?
+                                'webRTC room not found.' : msg['error'];
+                          self._notifyConnectionStatus(
+                            'danger',
+                            `The webRCT backend reported an error: ${errMsg}. Exiting and re-entering the VR experience may solve the problem.`
+                          );
+                        } else if (msg['streams']) {
+                          //
+                          // Info on our streams or a new feed to
+                          // attach to.
+                          //
                           const streams = msg['streams'];
                           for (const i in streams) {
                             const stream = streams[i];
@@ -1545,17 +1613,16 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                           const unpublished = msg['unpublished'];
                           console.log('Publisher left:', unpublished);
                           if (unpublished === 'ok') {
-                            // That's us
-                            self.pluginHandle.hangup();
+                            //
+                            // This is our feed. We currently do not
+                            // support unpublishing our audio feed
+                            // mid-experience, so we treat it as an
+                            // error.
+                            //
+                            self._reconnectOnError('Local feed was lost');
                             return;
                           }
                           self._unsubscribeFrom(unpublished);
-                        } else if (msg['error']) {
-                          if (msg['error_code'] === 426) {
-                            console.error('No such room!');
-                          } else {
-                            console.error(msg['error']);
-                          }
                         }
                       }
                     }
@@ -1571,14 +1638,26 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                     console.debug(' ::: Got a local track event :::');
                     console.debug(`Local track ${on ? 'added' : 'removed'}:`, track);
 
-                    const stream = self._getLocalStream();
-                    self.el.dispatchEvent(
-                      new CustomEvent('localstream', {
-                        detail: {
-                          stream: stream
-                        }
-                      })
-                    );
+                    if (on) {
+                      //
+                      // We use the presence of our local feed as proof
+                      // that the connection works.
+                      //
+                      self._notifyConnectionStatus('success', 'Connected.', {
+                        stream: self._getLocalStream()
+                      });
+                    } else {
+                      //
+                      // Losing the local feed could happen if we
+                      // revoke access to the microphone
+                      // mid-experience. It is not expected to happen
+                      // otherwise. We reconnect to try and
+                      // recover. If the permission was denied on
+                      // purpose, user will be informed when trying to
+                      // publish the local feed again.
+                      //
+                      self._reconnectOnError('Local feed was lost');
+                    }
                   },
                   onremotetrack: function (track, mid, on) {
                     // The publisher stream is sendonly, we don't expect anything here
@@ -1589,10 +1668,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
                   }
                 });
             },
-            error: function (error) {
-              console.error(error);
-              // window.location.reload();
-            },
+            error: self._reconnectOnError.bind(self),
             destroyed: function () {
               console.warn('Janus object has been destroyed');
               // window.location.reload();
@@ -1600,7 +1676,10 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
           });
       }
     });
+  },
 
+  _attachTracksOnNewEntities: function () {
+    const self = this;
     //
     // We might have gotten the tracks already for element that are
     // still not part of the scene. We detect whenever a new element
@@ -1625,6 +1704,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       }
     });
   }
+
 });
 
 /**

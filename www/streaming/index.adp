@@ -26,14 +26,20 @@
     }
   </style>
   <div class="flex-container">
+    <div id="details" class="flex-12">
+      <p>This page allows to stream multimedia content on the available
+      surfaces in the VR space.</p>
+      <p>Select which source you wish to stream and to which surface
+      this should be streamed to, then press "Start".<p>
+    </div>
+    <div style="text-align: center" class="flex-12 bg-warning text-light rounded-pill" id="status">
+      Waiting for server...
+    </div>
     <div class="flex-6">
       <div class="flex-12">
         <button class="btn btn-success" id="start">Start</button>
         <button class="btn btn-secondary" id="stop" disabled>Stop</button>
         <button class="btn btn-secondary" id="mute" disabled>Mute</button>
-      </div>
-      <div id="details" class="flex-12">
-        This page will allow you to stream camera, desktop or both on one of the available surfaces in the VR space.
       </div>
       <div id="settings" class="flex-12">
         <div class="flex-4">
@@ -352,6 +358,26 @@
         }
         muteButton.classList.toggle('btn-warning');
         muteButton.classList.toggle('btn-primary');
+      });
+
+      let mustReload = false;
+      const statusElement = document.querySelector('#status');
+      document.body.addEventListener('connectionstatuschange', (e) => {
+        if (!mustReload && e.detail.level === 'danger' && !mediaVideo.paused) {
+          //
+          // MediaStreams generated via captureStream will not resume
+          // automatically in case of reconnection, but this may not
+          // be evident to the user. We refresh the UI in this case.
+          //
+          mustReload = true;
+          alert(e.detail.status);
+          window.location.reload();
+        }
+        statusElement.classList.remove('bg-success');
+        statusElement.classList.remove('bg-warning');
+        statusElement.classList.remove('bg-danger');
+        statusElement.classList.add(`bg-${e.detail.level}`);
+        statusElement.textContent = e.detail.status;
       });
     });
   </script>

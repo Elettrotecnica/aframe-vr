@@ -164,12 +164,7 @@
 	<div class="w3-container w3-teal w3-light-grey">
 	  <h2>Audio</h2>
 	</div>
-        <div class="w3-panel w3-pale-red w3-border" id="audio-inactive">
-          <p>
-            Your microphone is currently not active. Other
-            participants will not be able to hear you.
-          </p>
-        </div>
+        <div class="w3-panel w3-border" id="webrtc-status"></div>
         <div id="audiometer" class="w3-panel w3-center" style="display:none;">
           <div>
             <button id="mutebutton" class="w3-button w3-amber">Mute</button>
@@ -467,7 +462,28 @@
 
 </if>
 <if @webrtc_p;literal@ true>
+  const webRTCStatusElement = document.querySelector('#webrtc-status');
+  const audioMeterElement = document.querySelector('#audiometer');
+  const audioContext = new window.AudioContext();
+
+  const analyser = new AnalyserNode(audioContext);
+  analyser.minDecibels = -100;
+  analyser.maxDecibels = -30;
+  analyser.fftSize = 32;
+
+  let audioMeterMediaSource;
   function audioMeter(stream) {
+      if (audioMeterMediaSource) {
+          //
+          // We only need to replace the stream tracked by the
+          // audiometer.
+          //
+          audioMeterMediaSource.disconnect();
+          audioMeterMediaSource = audioContext.createMediaStreamSource(stream);
+          audioMeterMediaSource.connect(analyser);
+          return;
+      }
+
       //
       // When the mute button is pressed, we silence our
       // WebRTC stream and also the local stream used to
@@ -542,15 +558,8 @@
 	  }
       });
 
-
-      const audioContext = new window.AudioContext();
-
-      const analyser = new AnalyserNode(audioContext);
-      analyser.minDecibels = -100;
-      analyser.maxDecibels = -30;
-      analyser.fftSize = 32;
-
-      audioContext.createMediaStreamSource(stream).connect(analyser);
+      audioMeterMediaSource = audioContext.createMediaStreamSource(stream);
+      audioMeterMediaSource.connect(analyser);
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
       const audioMenu = getVRMenu('audio');
@@ -578,13 +587,36 @@
 	  audioLevel.style.height = `${(1 - (barHeight / 255)) * 150}px`;
       }
 
-      document.querySelector('#audio-inactive').style.display = 'none';
-      document.querySelector('#audiometer').style.display = 'block';
       draw();
   }
 
-  camera.addEventListener('localstream', function (e) {
-      audioMeter(e.detail.stream);
+  camera.addEventListener('connectionstatuschange', function (e) {
+      //
+      // Update the VR menu UI according to changes in the webRTC
+      // connection status.
+      //
+      webRTCStatusElement.classList.remove('w3-pale-green');
+      webRTCStatusElement.classList.remove('w3-pale-yellow');
+      webRTCStatusElement.classList.remove('w3-pale-red');
+      switch (e.detail.level) {
+      case 'success':
+          webRTCStatusElement.classList.add('w3-pale-green');
+          if (e.detail.stream) {
+              audioMeter(e.detail.stream);
+          }
+          break;
+      case 'warning':
+          webRTCStatusElement.classList.add('w3-pale-yellow');
+          break;
+      case 'danger':
+          webRTCStatusElement.classList.add('w3-pale-red');
+          break;
+      }
+
+      webRTCStatusElement.textContent = e.detail.status;
+
+      webRTCStatusElement.style.display = e.detail.stream ? 'none' : 'block';
+      audioMeterElement.style.display = e.detail.stream ? 'block' : 'none'
   });
 </if>
 </script>
