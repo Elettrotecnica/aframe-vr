@@ -10,14 +10,14 @@
     <inherit-templates-p>f</inherit-templates-p>
     <auto-mount>aframe-vr</auto-mount>
 
-    <version name="0.8d" url="http://openacs.org/repository/download/apm/aframe-vr-0.8d.apm">
+    <version name="0.9d" url="http://openacs.org/repository/download/apm/aframe-vr-0.9d.apm">
         <owner url="mailto:antonio@elettrotecnica.it">Antonio Pisano</owner>
         <summary>VR networked environments based on A-Frame</summary>
-        <release-date>2022-11-12</release-date>
+        <release-date>2024-03-12</release-date>
         <description format="text/html">VR networked environments based on A-Frame</description>
         <maturity>0</maturity>
 
-        <provides url="aframe-vr" version="0.8d"/>
+        <provides url="aframe-vr" version="0.9d"/>
 
         <callbacks>
         </callbacks>
@@ -26,6 +26,7 @@
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="chat_room_id"  description="Id of a chat room from the chat OpenACS package that will be included in this VR experience." section_name="Chat"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="environment"  default="default" description="The environment that this package instance will use." section_name="Environment"/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="janus_room"  description="The room id where the audio/video chat will take place. Will default to the instance package id when not specified. Unless you plan to use a custom Janus configuration for your room, there is no need to specify this parameter." section_name="WebRTC"/>
+            <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="janus_room_permanent_p"  default="0" description="Request for this instance a permanent room to the Janus backend. 1 to enable and 0 to disable. A permanent room will be written in the Janus configuration file and will survive a server restart." section_name="WebRTC"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_room_pin"  description="The PIN required to access the Janus room. When not specified, a random one will be generated and stored as the value for this parameter. Unless you plan to use a custom Janus configuration for your room, there is no need to specify this parameter." section_name="WebRTC"/>
             <parameter scope="instance" datatype="string"  min_n_values="1"  max_n_values="1"  name="janus_url"  description="URL of the Janus instance that will be used for the audio and video chat." section_name="WebRTC"/>
             <parameter scope="instance" datatype="number"  min_n_values="1"  max_n_values="1"  name="spawn_max_size"  default="1.6" description="Maxmimum size for spawned objects expressed in meters" section_name="Object spawning"/>

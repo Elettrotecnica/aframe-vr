@@ -70,8 +70,15 @@ ad_proc -private aframe_vr::room::require {
             }
 
             if {$force_p || !$room_exists_p} {
+                set permanent_p [parameter::get \
+                                     -package_id $package_id \
+                                     -parameter janus_room_permanent_p \
+                                     -boolean \
+                                     -default false]
+
                 set janus_room_pin [expr {rand() * 10000}]
                 set janus_room [::janus::videoroom::create \
+                                    -permanent $permanent_p \
                                     -plugin_url $plugin_url \
                                     -room $janus_room \
                                     -description "AFrame VR room for package $package_id" \
