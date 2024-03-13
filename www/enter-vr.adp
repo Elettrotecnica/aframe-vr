@@ -678,92 +678,88 @@
    <script src="https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js"></script>
    <script src="/aframe-vr/resources/js/aframe-physics-system.js"></script>
    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-       window.addEventListener('load', function () {
+       const scene = document.querySelector('a-scene');
 
-           const scene = document.querySelector('a-scene');
-
-           //
-           // When objects requiring physics finish to load, attach physics to them
-           //
-           scene.addEventListener('model-loaded', function (e) {
-               if (e.target.hasAttribute('data-spawn')) {
-                   //
-                   // Objects spawned by peers
-                   //
-                   const spawn = e.target.getAttribute('data-spawn');
-                   const type = spawn === 'mine' ? 'type: dynamic@damping@' : 'type: kinematic; emitCollisionEvents: true';
-                   e.target.setAttribute('ammo-body', type);
-                   e.target.setAttribute('ammo-shape', 'type: hull');
-               }
-           });
-
-           scene.addEventListener('collidestart', function (e) {
-               if (e.target.hasAttribute('data-spawn') && e.detail.targetEl.hasAttribute('standard-hands')) {
-                   e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
-               }
-           });
-
-           //
-           // Switch entities physics when they are grabbed/released from
-           // dynamic (local) to kinematic (remote).
-           //
-           function switchBodyType(e, type) {
-               const shape = e.getAttribute('ammo-shape');
-               if (e.components['ammo-body'].addedToSystem) {
-                   e.removeAttribute('ammo-shape');
-                   e.removeAttribute('ammo-body');
-               }
-               e.setAttribute('ammo-body', type);
-               e.setAttribute('ammo-shape', shape);
-           }
-           scene.addEventListener('release', function (e) {
-               if (e.target.components['ammo-body'] &&
-                   e.target.components['ammo-shape'] &&
-                   e.target.components['ammo-body'].data.type === 'dynamic') {
-                   switchBodyType(e.target, 'type: kinematic; emitCollisionEvents: true');
-               }
-           });
-           scene.addEventListener('grab', function (e) {
-               if (e.target.components['ammo-body'] &&
-                   e.target.components['ammo-shape'] &&
-                   e.target.components['ammo-body'].data.type === 'kinematic') {
-                   switchBodyType(e.target, 'type: dynamic@damping@');
-               }
-           });
-
-
-           if (window.AFRAME.utils.device.checkHeadsetConnected()) {
-               //
-               // Once controllers connect, make them a kinematic body and
-               // let them grab stuff.
-               //
-               for (const hand of document.querySelectorAll('[hand-controls]')) {
-                   hand.addEventListener('controllerconnected', function () {
-                       this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-                       this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
-                       this.setAttribute('standard-hands', '');
-                   }, {once: true });
-               }
-           } else {
-               //
-               // On desktop, users will see a cursor extending 1
-               // meter in front of them. This cursor is a kinematic
-               // body and can grab objects by keeping the spacebar
-               // pressed and touching an object. While grabbing,
-               // using the + and - buttons will increase/decrease the
-               // size.
-               //
-               const camera = document.querySelector('a-camera');
-               const cursor = document.createElement('a-entity');
-               cursor.id = 'client-cursor-@user_id;literal@';
-               cursor.setAttribute('position', '0 0 -1');
-               cursor.setAttribute('geometry', 'primitive: circle; radius: 0.01; segments: 4');
-               cursor.setAttribute('material', 'color: #FF4444; shader: flat');
-               cursor.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-               cursor.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.1');
-               cursor.setAttribute('standard-hands', '');
-               camera.appendChild(cursor);
-           }
+       //
+       // When objects requiring physics finish to load, attach physics to them
+       //
+       scene.addEventListener('model-loaded', function (e) {
+	   if (e.target.hasAttribute('data-spawn')) {
+	       //
+	       // Objects spawned by peers
+	       //
+	       const spawn = e.target.getAttribute('data-spawn');
+	       const type = spawn === 'mine' ? 'type: dynamic@damping@' : 'type: kinematic; emitCollisionEvents: true';
+	       e.target.setAttribute('ammo-body', type);
+	       e.target.setAttribute('ammo-shape', 'type: hull');
+	   }
        });
+
+       scene.addEventListener('collidestart', function (e) {
+	   if (e.target.hasAttribute('data-spawn') && e.detail.targetEl.hasAttribute('standard-hands')) {
+	       e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
+	   }
+       });
+
+       //
+       // Switch entities physics when they are grabbed/released from
+       // dynamic (local) to kinematic (remote).
+       //
+       function switchBodyType(e, type) {
+	   const shape = e.getAttribute('ammo-shape');
+	   if (e.components['ammo-body'].addedToSystem) {
+	       e.removeAttribute('ammo-shape');
+	       e.removeAttribute('ammo-body');
+	   }
+	   e.setAttribute('ammo-body', type);
+	   e.setAttribute('ammo-shape', shape);
+       }
+       scene.addEventListener('release', function (e) {
+	   if (e.target.components['ammo-body'] &&
+	       e.target.components['ammo-shape'] &&
+	       e.target.components['ammo-body'].data.type === 'dynamic') {
+	       switchBodyType(e.target, 'type: kinematic; emitCollisionEvents: true');
+	   }
+       });
+       scene.addEventListener('grab', function (e) {
+	   if (e.target.components['ammo-body'] &&
+	       e.target.components['ammo-shape'] &&
+	       e.target.components['ammo-body'].data.type === 'kinematic') {
+	       switchBodyType(e.target, 'type: dynamic@damping@');
+	   }
+       });
+
+       if (window.AFRAME.utils.device.checkHeadsetConnected()) {
+	   //
+	   // Once controllers connect, make them a kinematic body and
+	   // let them grab stuff.
+	   //
+	   for (const hand of document.querySelectorAll('[hand-controls]')) {
+	       hand.addEventListener('controllerconnected', function () {
+		   this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+		   this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
+		   this.setAttribute('standard-hands', '');
+	       }, {once: true });
+	   }
+       } else {
+	   //
+	   // On desktop, users will see a cursor extending 1
+	   // meter in front of them. This cursor is a kinematic
+	   // body and can grab objects by keeping the spacebar
+	   // pressed and touching an object. While grabbing,
+	   // using the + and - buttons will increase/decrease the
+	   // size.
+	   //
+	   const camera = document.querySelector('a-camera');
+	   const cursor = document.createElement('a-entity');
+	   cursor.id = 'client-cursor-@user_id;literal@';
+	   cursor.setAttribute('position', '0 0 -1');
+	   cursor.setAttribute('geometry', 'primitive: circle; radius: 0.01; segments: 4');
+	   cursor.setAttribute('material', 'color: #FF4444; shader: flat');
+	   cursor.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+	   cursor.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.1');
+	   cursor.setAttribute('standard-hands', '');
+	   camera.appendChild(cursor);
+       }
    </script>
 </if>
