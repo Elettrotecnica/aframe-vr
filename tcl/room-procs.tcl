@@ -76,7 +76,7 @@ ad_proc -private aframe_vr::room::require {
                                      -boolean \
                                      -default false]
 
-                set janus_room_pin [expr {rand() * 10000}]
+                set janus_room_pin [expr {int(rand() * 10000)}]
                 set janus_room [::janus::videoroom::create \
                                     -permanent $permanent_p \
                                     -plugin_url $plugin_url \
