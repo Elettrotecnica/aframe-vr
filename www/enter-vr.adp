@@ -134,6 +134,7 @@
   <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
     <h5 class="w3-bar-item">Menu</h5>
     <button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
+    <button class="w3-bar-item w3-button tablink" data-menu="connection">Connection</button>
     <if @webrtc_p;literal@ true>
       <button class="w3-bar-item w3-button tablink" data-menu="audio">Audio</button>
     </if>
@@ -156,6 +157,24 @@
         <br>
         <a id="return-to-main-menu" class="w3-button w3-red w3-hover-red w3-margin-bottom"
            href="@package_url@">Return to Main Menu</a>
+      </div>
+    </div>
+
+    <div data-menu="connection" style="display:none">
+      <div class="w3-container w3-teal w3-light-grey">
+	<h2>Connection</h2>
+      </div>
+      <div class="w3-panel">
+        <table>
+          <tr>
+	    <td>Websocket:</td><td><span id="websocket-connection-status"></span></td>
+	  </tr>
+	  <if @webrtc_p;literal@ true>
+	    <tr>
+	      <td>WebRTC:</td><td><span id="webrtc-connection-status"></span></td>
+	    </tr>
+	  </if>
+	</table>
       </div>
     </div>
 
@@ -213,6 +232,29 @@
   vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
   vrScene.setAttribute('xr-mode-ui', 'enabled: false;');
   vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
+
+  const websocketConnectionStatusElement = document.querySelector('#websocket-connection-status');
+  vrScene.addEventListener('connectionstatuschange', function (e) {
+      let status;
+      websocketConnectionStatusElement.classList.remove('w3-pale-green');
+      websocketConnectionStatusElement.classList.remove('w3-pale-yellow');
+      websocketConnectionStatusElement.classList.remove('w3-pale-red');
+      switch (e.detail.level) {
+      case 'success':
+          websocketConnectionStatusElement.classList.add('w3-pale-green');
+	  status = 'OK';
+          break;
+      case 'warning':
+          websocketConnectionStatusElement.classList.add('w3-pale-yellow');
+	  status = 'Warning';
+          break;
+      case 'danger':
+          websocketConnectionStatusElement.classList.add('w3-pale-red');
+	  status = 'Error';
+          break;
+      }
+      websocketConnectionStatusElement.textContent = status;
+  });
 
   const camera = document.querySelector('a-camera');
 
@@ -463,6 +505,7 @@
 </if>
 <if @webrtc_p;literal@ true>
   const webRTCStatusElement = document.querySelector('#webrtc-status');
+  const webRTCConnectionStatusElement = document.querySelector('#webrtc-connection-status');
   const audioMeterElement = document.querySelector('#audiometer');
   const audioContext = new window.AudioContext();
 
@@ -617,6 +660,26 @@
 
       webRTCStatusElement.style.display = e.detail.stream ? 'none' : 'block';
       audioMeterElement.style.display = e.detail.stream ? 'block' : 'none'
+
+      let status;
+      webRTCConnectionStatusElement.classList.remove('w3-pale-green');
+      webRTCConnectionStatusElement.classList.remove('w3-pale-yellow');
+      webRTCConnectionStatusElement.classList.remove('w3-pale-red');
+      switch (e.detail.level) {
+      case 'success':
+          webRTCConnectionStatusElement.classList.add('w3-pale-green');
+	  status = 'OK';
+          break;
+      case 'warning':
+          webRTCConnectionStatusElement.classList.add('w3-pale-yellow');
+	  status = 'Warning';
+          break;
+      case 'danger':
+          webRTCConnectionStatusElement.classList.add('w3-pale-red');
+	  status = 'Error';
+          break;
+      }
+      webRTCConnectionStatusElement.textContent = status;
   });
 </if>
 </script>

@@ -2029,8 +2029,33 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     }
   },
 
+  _notifyConnectionStatus: function (level, status) {
+    this.el.dispatchEvent(new CustomEvent(
+      'connectionstatuschange',
+      {detail: {
+        level: level,
+        status: status
+      }}
+    ));
+    if (level === 'success') {
+      console.log(status);
+    } else if (level === 'warning') {
+      console.warn(status);
+    } else {
+      console.error(status);
+    }
+  },
+
+  _reconnectOnError: function (error) {
+    this._notifyConnectionStatus('danger', error);
+    console.log('Attempting reconnection in 2s...');
+    setTimeout(this._connect.bind(this), 2000);
+  },
+
   _connect: function () {
     const self = this;
+
+    this._notifyConnectionStatus('warning', 'Connecting...');
 
     if (this.websocket) {
       //
@@ -2038,6 +2063,15 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       // closed first.
       //
       this.websocket.close();
+    } else {
+      //
+      // At first connection, start the websocket keepalive.
+      //
+      setInterval(function () {
+        if (self.websocket.readyState === window.WebSocket.OPEN) {
+          self.websocket.send('ping');
+        }
+      }, 30000);
     }
 
     this.websocket = new window.WebSocket(this.wsURI);
@@ -2058,26 +2092,17 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
           entity.components['oacs-change-listener'].update();
         }
       }
-      console.log('Connected.');
+      self._notifyConnectionStatus('success', 'Connected.');
     };
     this.websocket.addEventListener('close', function (e) {
-      console.log('Disconnected.');
+      self._reconnectOnError('Disconnected.');
     });
     this.websocket.addEventListener('message', function (e) {
       self._onMessage(e);
     });
     this.websocket.addEventListener('error', function (e) {
-      console.error(e.data);
+      self._notifyConnectionStatus('danger', e);
     });
-
-    setInterval(function () {
-      if (self.websocket.readyState === window.WebSocket.OPEN) {
-        self.websocket.send('ping');
-      } else {
-        console.warn('Not connected, attempting reconnection...');
-        self._connect();
-      }
-    }, 30000);
   }
 });
 
