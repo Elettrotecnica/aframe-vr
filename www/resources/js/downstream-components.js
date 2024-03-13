@@ -2429,6 +2429,168 @@ window.AFRAME.registerComponent('center', {
 });
 
 /**
+ * Creates a glowing effect around the entity. Used to provide visual
+ * feedback on interaction.
+ *
+ * Port of example at
+ * https://stemkoski.github.io/Three.js/Shader-Glow.html
+ */
+const GLOW_VERTEX_SHADER = `
+uniform vec3 viewVector;
+uniform float c;
+uniform float p;
+varying float intensity;
+void main()
+{
+    vec3 vNormal = normalize( normalMatrix * normal );
+    vec3 vNormel = normalize( normalMatrix * viewVector );
+    intensity = pow( c - dot(vNormal, vNormel), p );
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+`;
+const GLOW_FRAGMENT_SHADER = `
+uniform vec3 glowColor;
+varying float intensity;
+void main()
+{
+    vec3 glow = glowColor * intensity;
+    gl_FragColor = vec4( glow, 1.0 );
+}
+`;
+window.AFRAME.registerComponent('glow', {
+  schema: {
+    enabled: {
+      type: 'boolean',
+      default: 'false'
+    },
+    renderSide: {
+      type: 'string',
+      default: 'back',
+      oneOf: ['back', 'front']
+    },
+    blending: {
+      type: 'string',
+      default: 'additive',
+      oneOf: ['additive', 'normal']
+    },
+    color: {
+      type: 'color',
+      default: '#ffff00'
+    },
+    c: {
+      type: 'number',
+      default: 0.6
+    },
+    p: {
+      type: 'number',
+      default: 6
+    }
+  },
+  _getSize: function () {
+    const vec = _getBoundinBoxSize(this.el.object3D);
+    return Math.max(vec.x, vec.y, vec.z);
+  },
+  init: function () {
+
+    const size = this._getSize();
+    if (size === 0) {
+      //
+      // Wait for the model to be loaded, then update again.
+      //
+      this.el.addEventListener('model-loaded', this.update.bind(this));
+    }
+
+    //
+    // Create custom material from the shader code.
+    //
+    this.material = new THREE.ShaderMaterial(
+      {
+	uniforms:
+	{
+          'c': {
+            type: 'f',
+            value: 1.0
+          },
+	  'p': {
+            type: 'f',
+            value: 1.4
+          },
+	  glowColor: {
+            type: 'c',
+            value: new THREE.Color()
+          },
+	  viewVector: {
+            type: 'v3',
+            value: document.querySelector('a-camera').object3D.position
+          }
+	},
+	vertexShader:   GLOW_VERTEX_SHADER,
+	fragmentShader: GLOW_FRAGMENT_SHADER,
+        side: THREE.FrontSide,
+	blending: THREE.AdditiveBlending,
+	transparent: true
+      }
+    );
+  },
+  update: function () {
+    const size = this._getSize();
+    if (size === 0) {
+      //
+      // Not loaded yet.
+      //
+      return;
+    }
+
+    const color = this.data.color.replace('#', '0x');
+
+    const blending = this.data.blending === 'additive' ?
+          THREE.AdditiveBlending : THREE.NormalBlending;
+
+    const side = this.data.renderSide === 'front' ?
+          THREE.FrontSide : THREE.BackSide;
+
+    this.material.uniforms.c.value = this.data.c;
+    this.material.uniforms.p.value = this.data.p;
+    this.material.uniforms.glowColor.value.setHex(color);
+    this.material.blending = blending;
+    this.material.side = side;
+
+    if (this.glowMesh) {
+      this.glowMesh.visible = this.data.enabled;
+      //
+      // The glowing mesh was already computed. We can leave.
+      //
+      return;
+    }
+
+    //
+    // Ideally, the glow mesh will have the same shape as the entity,
+    // just slightly bigger. In practice, we use for every model a
+    // SphereGeometry, as this is easier to compute for arbitrary
+    // models.
+    //
+    const geometry = new THREE.SphereGeometry(size);
+    this.glowMesh = new THREE.Mesh(geometry, this.material);
+    this.glowMesh.visible = this.data.enabled;
+
+    //
+    // In practice, we want a smaller bounding sphere, as the bounding
+    // box we use to compute the sphere is already bigger than the
+    // original shape.
+    //
+    // this.glowMesh.scale.multiplyScalar(1.2);
+    this.glowMesh.scale.multiplyScalar(0.8);
+
+    //
+    // The new mesh will become a child of the entity so that it will
+    // move and transform with it.
+    //
+    this.el.object3D.add(this.glowMesh);
+  }
+});
+
+/**
  * Ensure an entity never leaves the bounding box of a particular
  * item. When this happens, reposition it either to its starting
  * position or a custom pre-defined one.
