@@ -226,6 +226,30 @@
   </div>
 </div>
 <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+  function renderConnectionStatus(element, statusEvent) {
+      let status;
+      element.classList.remove(
+          'w3-pale-green',
+          'w3-pale-yellow',
+          'w3-pale-red'
+      );
+      switch (statusEvent.detail.level) {
+      case 'success':
+          element.classList.add('w3-pale-green');
+	  status = 'Online';
+          break;
+      case 'warning':
+          element.classList.add('w3-pale-yellow');
+	  status = 'Connecting...';
+          break;
+      case 'danger':
+          element.classList.add('w3-pale-red');
+	  status = 'Offline';
+          break;
+      }
+      element.textContent = status;
+  }
+
   const vrScene = document.querySelector('a-scene');
   const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
   vrScene.setAttribute('oacs-networked-scene', wsURI);
@@ -235,25 +259,7 @@
 
   const websocketConnectionStatusElement = document.querySelector('#websocket-connection-status');
   vrScene.addEventListener('connectionstatuschange', function (e) {
-      let status;
-      websocketConnectionStatusElement.classList.remove('w3-pale-green');
-      websocketConnectionStatusElement.classList.remove('w3-pale-yellow');
-      websocketConnectionStatusElement.classList.remove('w3-pale-red');
-      switch (e.detail.level) {
-      case 'success':
-          websocketConnectionStatusElement.classList.add('w3-pale-green');
-	  status = 'OK';
-          break;
-      case 'warning':
-          websocketConnectionStatusElement.classList.add('w3-pale-yellow');
-	  status = 'Warning';
-          break;
-      case 'danger':
-          websocketConnectionStatusElement.classList.add('w3-pale-red');
-	  status = 'Error';
-          break;
-      }
-      websocketConnectionStatusElement.textContent = status;
+      renderConnectionStatus(websocketConnectionStatusElement, e);
   });
 
   const camera = document.querySelector('a-camera');
@@ -661,25 +667,7 @@
       webRTCStatusElement.style.display = e.detail.stream ? 'none' : 'block';
       audioMeterElement.style.display = e.detail.stream ? 'block' : 'none'
 
-      let status;
-      webRTCConnectionStatusElement.classList.remove('w3-pale-green');
-      webRTCConnectionStatusElement.classList.remove('w3-pale-yellow');
-      webRTCConnectionStatusElement.classList.remove('w3-pale-red');
-      switch (e.detail.level) {
-      case 'success':
-          webRTCConnectionStatusElement.classList.add('w3-pale-green');
-	  status = 'OK';
-          break;
-      case 'warning':
-          webRTCConnectionStatusElement.classList.add('w3-pale-yellow');
-	  status = 'Warning';
-          break;
-      case 'danger':
-          webRTCConnectionStatusElement.classList.add('w3-pale-red');
-	  status = 'Error';
-          break;
-      }
-      webRTCConnectionStatusElement.textContent = status;
+      renderConnectionStatus(webRTCConnectionStatusElement, e);
   });
 </if>
 </script>
