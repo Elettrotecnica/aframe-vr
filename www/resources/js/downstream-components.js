@@ -2344,6 +2344,10 @@ const _getBoundinBoxSize = (function () {
     return _getBoundinBox(object).getSize(vec);
   };
 })();
+function _getObjectSize(object) {
+  const vec = _getBoundinBoxSize(object);
+  return Math.max(vec.x, vec.y, vec.z);
+}
 window.AFRAME.registerComponent('clamp-size', {
   schema: {
     minSize: {type: 'number', default: 0.2},
@@ -2369,14 +2373,8 @@ window.AFRAME.registerComponent('clamp-size', {
     }
   },
 
-  _getSize: function () {
-    const vec = _getBoundinBoxSize(this.el.object3D);
-    return Math.max(vec.x, vec.y, vec.z);
-  },
-
   _clampSize: function () {
-    const size = this._getSize();
-
+    const size = _getObjectSize(this.el.object3D);
     if (size === 0) {
       //
       // This is probably a gltf model, we need to wait for it to be
@@ -2487,13 +2485,8 @@ window.AFRAME.registerComponent('glow', {
       default: 6
     }
   },
-  _getSize: function () {
-    const vec = _getBoundinBoxSize(this.el.object3D);
-    return Math.max(vec.x, vec.y, vec.z);
-  },
   init: function () {
-
-    const size = this._getSize();
+    const size = _getObjectSize(this.el.object3D);
     if (size === 0) {
       //
       // Wait for the model to be loaded, then update again.
@@ -2534,7 +2527,7 @@ window.AFRAME.registerComponent('glow', {
     );
   },
   update: function () {
-    const size = this._getSize();
+    const size = _getObjectSize(this.el.object3D);
     if (size === 0) {
       //
       // Not loaded yet.
@@ -2564,23 +2557,25 @@ window.AFRAME.registerComponent('glow', {
       return;
     }
 
-    //
-    // Ideally, the glow mesh will have the same shape as the entity,
-    // just slightly bigger. In practice, we use for every model a
-    // SphereGeometry, as this is easier to compute for arbitrary
-    // models.
-    //
-    const geometry = new THREE.SphereGeometry(size);
+    const mesh = this.el.getObject3D('mesh');
+    let geometry;
+    let scale;
+    if (mesh && mesh.geometry) {
+      //
+      // Our own mesh comes with a geometry. We use that for the shape
+      // of our halo, just slightly bigger.
+      //
+      geometry = mesh.geometry;
+    } else {
+      //
+      // We do not have a geometry directly on the mesh. We are going
+      // to use a SphereGeometry the size of our object.
+      //
+      geometry = new THREE.SphereGeometry(size * 0.5);
+    }
     this.glowMesh = new THREE.Mesh(geometry, this.material);
     this.glowMesh.visible = this.data.enabled;
-
-    //
-    // In practice, we want a smaller bounding sphere, as the bounding
-    // box we use to compute the sphere is already bigger than the
-    // original shape.
-    //
-    // this.glowMesh.scale.multiplyScalar(1.2);
-    this.glowMesh.scale.multiplyScalar(0.8);
+    this.glowMesh.scale.multiplyScalar(1.2);
 
     //
     // The new mesh will become a child of the entity so that it will
