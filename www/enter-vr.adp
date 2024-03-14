@@ -702,17 +702,39 @@
        });
 
        //
+       // When our hands collide, the object we touch displays a halo,
+       // which disappears when the collision stops.
+       //
+       scene.addEventListener('collidestart', function (e) {
+	   if (e.target.hasAttribute('standard-hands')) {
+	       e.detail.targetEl.setAttribute('glow', 'enabled: true;');
+	   }
+       });
+       scene.addEventListener('collideend', function (e) {
+	   if (e.target.hasAttribute('standard-hands')) {
+	       e.detail.targetEl.setAttribute('glow', 'enabled: false;');
+	   }
+       });
+
+       //
        // Switch entities physics when they are grabbed/released from
        // dynamic (local) to kinematic (remote).
        //
+       // Note that we need to toggle the halo on the entity, if any,
+       // before we generate the new ammo shape, or else this will be
+       // also included in the physics body.
+       //
        function switchBodyType(e, type) {
+	   const glow = e.getAttribute('glow');
 	   const shape = e.getAttribute('ammo-shape');
 	   if (e.components['ammo-body'].addedToSystem) {
 	       e.removeAttribute('ammo-shape');
 	       e.removeAttribute('ammo-body');
 	   }
+	   e.setAttribute('glow', 'enabled: false;');
 	   e.setAttribute('ammo-body', type);
 	   e.setAttribute('ammo-shape', shape);
+	   e.setAttribute('glow', glow);
        }
        scene.addEventListener('release', function (e) {
 	   if (e.target.components['ammo-body'] &&
