@@ -792,7 +792,22 @@
            let intersectionInterval;
            cursor.addEventListener('mouseenter', (e) => {
                const intersectedEl = e.detail.intersectedEl;
+               if (intersectedEl &&
+                   intersectedEl.components['ammo-body'].type === 'static') {
+                   //
+                   // Don't extend our hand to static bodies, e.g. the environment.
+                   //
+                   return;
+               }
                intersectionInterval = setInterval(() => {
+                   if (hand.components['standard-hands'].hitEl) {
+                       //
+                       // We are grabbing something already. Stop the
+                       // update.
+                       //
+                       clearInterval(intersectionInterval);
+                       return;
+                   }
                    const intersection = cursor.components.raycaster.getIntersection(intersectedEl);
                    if (!intersection) {
                        return;
