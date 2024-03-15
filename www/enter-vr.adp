@@ -773,15 +773,26 @@
 	   // size.
 	   //
 	   const camera = document.querySelector('a-camera');
-	   const cursor = document.createElement('a-entity');
-	   cursor.id = 'client-cursor-@user_id;literal@';
-	   cursor.setAttribute('position', '0 0 -1');
-	   cursor.setAttribute('geometry', 'primitive: circle; radius: 0.01; segments: 4');
-	   cursor.setAttribute('material', 'color: #FF4444; shader: flat');
-	   cursor.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-	   cursor.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.1');
-	   cursor.setAttribute('standard-hands', '');
+	   const cursor = document.createElement('a-cursor');
+	   cursor.setAttribute('far', 2);
+	   cursor.setAttribute('objects', '[ammo-body]');
+
+	   const hand = document.createElement('a-sphere');
+	   hand.id = 'client-hand-@user_id;literal@';
+	   hand.setAttribute('visible', false);
+	   hand.setAttribute('color', 'red');
+	   hand.setAttribute('radius', 0.01);
+	   hand.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+	   hand.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.01;');
+	   hand.setAttribute('standard-hands', '');
+	   cursor.appendChild(hand);
 	   camera.appendChild(cursor);
+	   cursor.addEventListener('mouseenter', (e) => {
+	       hand.object3D.translateOnAxis(
+		   hand.object3D.worldToLocal(e.detail.intersection.point),
+		   e.detail.intersection.distance - 0.01
+	       );
+	   });
        }
    </script>
 </if>

@@ -2682,18 +2682,6 @@ window.AFRAME.registerComponent('standard-hands', {
     this.onGripClose = this.onGripClose.bind(this);
     this.onThumbstickMoved = this.onThumbstickMoved.bind(this);
     this.onPlusMinus = this.onPlusMinus.bind(this);
-
-    const self = this;
-    this.onSpaceBarGripOpen = function (e) {
-      if (e.code === 'Space') {
-        self.onGripOpen();
-      }
-    }
-    this.onSpaceBarGripClose = function (e) {
-      if (e.code === 'Space') {
-        self.onGripClose();
-      }
-    }
   },
 
   play: function () {
@@ -2706,8 +2694,8 @@ window.AFRAME.registerComponent('standard-hands', {
     el.addEventListener('triggerdown', this.onGripClose);
     el.addEventListener('triggerup', this.onGripOpen);
     el.addEventListener('thumbstickmoved', this.onThumbstickMoved);
-    window.addEventListener('keydown', this.onSpaceBarGripClose);
-    window.addEventListener('keyup', this.onSpaceBarGripOpen);
+    window.addEventListener('mousedown', this.onGripClose);
+    window.addEventListener('mouseup', this.onGripOpen);
     window.addEventListener('keydown', this.onPlusMinus);
   },
 
@@ -2721,8 +2709,9 @@ window.AFRAME.registerComponent('standard-hands', {
     el.removeEventListener('triggerdown', this.onGripClose);
     el.removeEventListener('triggerup', this.onGripOpen);
     el.removeEventListener('thumbstickmoved', this.onThumbstickMoved);
-    window.removeEventListener('keydown', this.onSpaceBarGripClose);
-    window.removeEventListener('keyup', this.onSpaceBarGripOpen);
+    window.removeEventListener('mousedown', this.onGripClose);
+    window.removeEventListener('mouseup', this.onGripOpen);
+    window.removeEventListener('keydown', this.onPlusMinus);
   },
 
   onThumbstickMoved: function (evt) {
@@ -2858,7 +2847,7 @@ window.AFRAME.registerComponent('standard-hands', {
     // If the hand is not grabbing the element does not stick.
     // If we're already grabbing something you can't grab again.
     if (!hitEl || !this.grabbing || this.hitEl || this.stretchInterval) { return; }
-
+    console.log('hit ammo', hitEl);
     if (hitEl.is(this.GRABBED_STATE)) {
       //
       // Entity is already grabbed by another hand. we are going to
