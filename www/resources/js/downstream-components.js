@@ -2427,8 +2427,90 @@ window.AFRAME.registerComponent('center', {
 });
 
 /**
- * Creates a glowing effect around the entity. Used to provide visual
- * feedback on interaction.
+ * Creates an outline effect around the entity. Useful e.g. to provide
+ * visual feedback on interaction.
+ *
+ * Port of example at
+ * https://stemkoski.github.io/Three.js/Outline.html
+ */
+window.AFRAME.registerComponent('outline', {
+  schema: {
+    enabled: {
+      type: 'boolean',
+      default: 'false'
+    },
+    color: {
+      type: 'color',
+      default: '#ffff00'
+    }
+  },
+  init: function () {
+    this.mesh = this.el.getObject3D('mesh');
+    if (!this.mesh) {
+      //
+      // Wait for the model to be loaded, then update again.
+      //
+      this.el.addEventListener('model-loaded', this.update.bind(this));
+    }
+
+    this.material = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      side: THREE.BackSide
+    });
+  },
+  update: function () {
+    if (!this.mesh) {
+      //
+      // Not loaded yet.
+      //
+      return;
+    }
+
+    this.material.color.set(this.data.color);
+
+    if (this.outlines) {
+      //
+      // We have computed the outline meshes already. Just update the
+      // visibility.
+      //
+      for (const outline of this.outlines) {
+        outline.visible = this.data.enabled;
+      }
+      return;
+    }
+
+    //
+    // Traverse the meshes on the object and for each generate a
+    // shadow outline mesh that is slightly bigger.
+    //
+    const meshes = [];
+    this.outlines = [];
+    this.el.object3D.traverseVisible((o) => {
+      if (o.isMesh && o.geometry) {
+        const outline = new THREE.Mesh(o.geometry, this.material);
+        outline.visible = this.data.enabled;
+        outline.scale.multiplyScalar(1.05);
+        this.outlines.push(outline);
+        meshes.push(o);
+      }
+    });
+
+    //
+    // Add the new meshes to their original counterpart, so they will
+    // move together.
+    //
+    // Notice that this must happen after the end of traversal to not
+    // generate infinite loops.
+    //
+    for (let i = 0; i < this.outlines.length; i++) {
+      meshes[i].add(this.outlines[i]);
+    }
+  }
+});
+
+/**
+ * Creates a glowing effect around the entity. Useful e.g. to provide
+ * visual feedback on interaction.
  *
  * Port of example at
  * https://stemkoski.github.io/Three.js/Shader-Glow.html
@@ -2499,32 +2581,33 @@ window.AFRAME.registerComponent('glow', {
     //
     this.material = new THREE.ShaderMaterial(
       {
-	uniforms:
-	{
+        uniforms:
+        {
           'c': {
             type: 'f',
             value: 1.0
           },
-	  'p': {
+          'p': {
             type: 'f',
             value: 1.4
           },
-	  glowColor: {
+          glowColor: {
             type: 'c',
             value: new THREE.Color()
           },
-	  viewVector: {
+          viewVector: {
             type: 'v3',
             value: document.querySelector('a-camera').object3D.position
           }
-	},
-	vertexShader:   GLOW_VERTEX_SHADER,
-	fragmentShader: GLOW_FRAGMENT_SHADER,
+        },
+        vertexShader:   GLOW_VERTEX_SHADER,
+        fragmentShader: GLOW_FRAGMENT_SHADER,
         side: THREE.FrontSide,
-	blending: THREE.AdditiveBlending,
-	transparent: true
+        blending: THREE.AdditiveBlending,
+        transparent: true
       }
     );
+
   },
   update: function () {
     const size = _getObjectSize(this.el.object3D);
