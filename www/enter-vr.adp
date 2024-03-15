@@ -731,10 +731,15 @@
 
        if (window.AFRAME.utils.device.checkHeadsetConnected()) {
 	   //
-	   // Once controllers connect, make them a kinematic body and
-	   // let them grab stuff.
-	   //
-	   for (const hand of document.querySelectorAll('[hand-controls]')) {
+           // On headset: use hands to manipulate the environment.
+           //
+
+           //
+           // As soon as controllers connect, make every hand-controls
+           // instance into a kinematic body, then attach the
+           // standard-hands component.
+           //
+           for (const hand of document.querySelectorAll('[hand-controls]')) {
 	       hand.addEventListener('controllerconnected', function () {
 		   this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
 		   this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
@@ -742,35 +747,65 @@
 	       }, {once: true });
 	   }
        } else {
-	   //
-	   // On desktop, users will see a cursor extending 1
-	   // meter in front of them. This cursor is a kinematic
-	   // body and can grab objects by keeping the spacebar
-	   // pressed and touching an object. While grabbing,
-	   // using the + and - buttons will increase/decrease the
-	   // size.
-	   //
-	   const camera = document.querySelector('a-camera');
-	   const cursor = document.createElement('a-cursor');
-	   cursor.setAttribute('far', 2);
-	   cursor.setAttribute('objects', '[ammo-body]');
+           //
+           // On desktop:
+           //
+           // a cursor tells where your virtual hand is extending and
+           // will touch every item up to 2m away. By keeping the
+           // mouse clicked, touched items will be picked up.
+           //
+           const camera = document.querySelector('a-camera');
 
-	   const hand = document.createElement('a-sphere');
-	   hand.id = 'client-hand-@user_id;literal@';
-	   hand.setAttribute('visible', false);
-	   hand.setAttribute('color', 'red');
-	   hand.setAttribute('radius', 0.01);
-	   hand.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-	   hand.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.01;');
-	   hand.setAttribute('standard-hands', '');
-	   cursor.appendChild(hand);
-	   camera.appendChild(cursor);
-	   cursor.addEventListener('mouseenter', (e) => {
-	       hand.object3D.translateOnAxis(
-		   hand.object3D.worldToLocal(e.detail.intersection.point),
-		   e.detail.intersection.distance - 0.01
-	       );
-	   });
+           //
+           // This cursor interacts only with physics objects, up to 2
+           // meters away.
+           //
+           const cursor = document.createElement('a-cursor');
+           cursor.setAttribute('far', 2);
+           cursor.setAttribute('objects', '[ammo-body]');
+           camera.appendChild(cursor);
+
+           //
+           // The virtual hand is an invisible sphere that moves with
+           // the cursor. It is also a kinematic body with the
+           // standard-hands component.
+           //
+           const hand = document.createElement('a-sphere');
+           hand.id = 'client-hand-@user_id;literal@';
+           hand.setAttribute('visible', false);
+           hand.setAttribute('radius', 0.05);
+           hand.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+           hand.setAttribute('ammo-shape', 'type: sphere');
+           hand.setAttribute('standard-hands', '');
+           cursor.appendChild(hand);
+
+           //
+           // When we hover on an entity, an interval starts. As long
+           // as we hover, the virtual hand will be moved along the
+           // surface of the entity we are hovering, where the raycast
+           // intersection is happening.
+           //
+           // This makes so that the hand extends up to the extent of
+           // the cursor and can get in contact with the entity to
+           // interact.
+           //
+           let intersectionInterval;
+           cursor.addEventListener('mouseenter', (e) => {
+               const intersectedEl = e.detail.intersectedEl;
+               intersectionInterval = setInterval(() => {
+                   const intersection = cursor.components.raycaster.getIntersection(intersectedEl);
+                   if (!intersection) {
+                       return;
+                   }
+                   hand.object3D.translateOnAxis(
+                       hand.object3D.worldToLocal(intersection.point),
+                       intersection.distance
+                   );
+               }, 100);
+           });
+           cursor.addEventListener('mouseleave', () => {
+               clearInterval(intersectionInterval);
+           });
        }
    </script>
 </if>
