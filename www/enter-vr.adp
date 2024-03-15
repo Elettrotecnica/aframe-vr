@@ -792,10 +792,12 @@
            let intersectionInterval;
            cursor.addEventListener('mouseenter', (e) => {
                const intersectedEl = e.detail.intersectedEl;
-               if (intersectedEl &&
-                   intersectedEl.components['ammo-body'].type === 'static') {
+               if (!intersectedEl ||
+                   !intersectedEl.components ||
+                   intersectedEl.components['ammo-body'].data.type === 'static') {
                    //
-                   // Don't extend our hand to static bodies, e.g. the environment.
+                   // Don't extend our hand to entities that are not
+                   // relevant, e.g. static bodies.
                    //
                    return;
                }
@@ -812,10 +814,8 @@
                    if (!intersection) {
                        return;
                    }
-                   hand.object3D.translateOnAxis(
-                       hand.object3D.worldToLocal(intersection.point),
-                       intersection.distance
-                   );
+                   hand.object3D.worldToLocal(intersection.point);
+                   hand.object3D.position.copy(intersection.point);
                }, 100);
            });
            cursor.addEventListener('mouseleave', () => {
