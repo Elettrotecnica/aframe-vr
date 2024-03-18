@@ -108,7 +108,7 @@
                 hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
 	<a-sphere color="black"
-		  radius="0.01"
+		  radius="0.005"
 		  id="cursor"
 		  material="shader:flat"></a-sphere>
         <a-entity html="cursor:#cursor;html:#toolbar"
@@ -124,7 +124,7 @@
                 hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
                 oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
         <a-entity cursor
-                  raycaster="showLine: false; far: 100; lineColor: red; objects: [html]; interval:100;"
+                  raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;"
                   rotation="-90 0 90"></a-entity>
       </a-entity>
     </a-entity>
