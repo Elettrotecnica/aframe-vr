@@ -2437,7 +2437,7 @@ window.AFRAME.registerComponent('outline', {
   schema: {
     enabled: {
       type: 'boolean',
-      default: 'false'
+      default: false
     },
     color: {
       type: 'color',
@@ -2542,7 +2542,7 @@ window.AFRAME.registerComponent('glow', {
   schema: {
     enabled: {
       type: 'boolean',
-      default: 'false'
+      default: false
     },
     renderSide: {
       type: 'string',
