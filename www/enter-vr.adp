@@ -695,8 +695,14 @@
 	   }
        });
 
+       //
+       // When a networked object is touched by us, we try to become the
+       // object's owner.
+       //
        scene.addEventListener('collidestart', function (e) {
-	   if (e.target.hasAttribute('data-spawn') && e.detail.targetEl.hasAttribute('standard-hands')) {
+	   if (e.target.components['oacs-networked-entity'] &&
+	       !e.target.matches('a-camera, [hand-controls]') &&
+	       e.detail.targetEl.matches('a-camera, [hand-controls]')) {
 	       e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
 	   }
        });
@@ -731,96 +737,34 @@
 
        if (window.AFRAME.utils.device.checkHeadsetConnected()) {
 	   //
-           // On headset: use hands to manipulate the environment.
-           //
-
-           //
-           // As soon as controllers connect, make every hand-controls
-           // instance into a kinematic body, then attach the
-           // standard-hands component.
-           //
-           for (const hand of document.querySelectorAll('[hand-controls]')) {
+	   // On headset:
+	   //
+	   // Use hands to manipulate the environment. Grabbing with
+	   // the controller, then touching an item will pick it up.
+	   // A picked up object can be scaled up or down either via
+	   // moving the thumbstick up or down, or by grabbing the
+	   // item with two hands, then extending/getting them closer.
+	   //
+	   for (const hand of document.querySelectorAll('[hand-controls]')) {
 	       hand.addEventListener('controllerconnected', function () {
-		   this.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-		   this.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
 		   this.setAttribute('standard-hands', '');
 	       }, {once: true });
 	   }
        } else {
-           //
-           // On desktop:
-           //
-           // a cursor tells where your virtual hand is extending and
-           // will touch every item up to 2m away. By keeping the
-           // mouse clicked, touched items will be picked up.
-           //
-           const camera = document.querySelector('a-camera');
-
-           //
-           // This cursor interacts only with physics objects, up to 2
-           // meters away.
-           //
-           const cursor = document.createElement('a-cursor');
-           cursor.setAttribute('far', 2);
-           cursor.setAttribute('objects', '[ammo-body]');
-           camera.appendChild(cursor);
-
-           //
-           // The virtual hand is an invisible sphere that moves with
-           // the cursor. It is also a kinematic body with the
-           // standard-hands component.
-           //
-           const hand = document.createElement('a-sphere');
-           hand.id = 'client-hand-@user_id;literal@';
-           hand.setAttribute('visible', false);
-           hand.setAttribute('radius', 0.05);
-           hand.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-           hand.setAttribute('ammo-shape', 'type: sphere');
-           hand.setAttribute('standard-hands', '');
-           cursor.appendChild(hand);
-
-           //
-           // When we hover on an entity, an interval starts. As long
-           // as we hover, the virtual hand will be moved along the
-           // surface of the entity we are hovering, where the raycast
-           // intersection is happening.
-           //
-           // This makes so that the hand extends up to the extent of
-           // the cursor and can get in contact with the entity to
-           // interact.
-           //
-           let intersectionInterval;
-           cursor.addEventListener('mouseenter', (e) => {
-               const intersectedEl = e.detail.intersectedEl;
-               if (!intersectedEl ||
-                   !intersectedEl.components ||
-                   intersectedEl.components['ammo-body'].data.type === 'static') {
-                   //
-                   // Don't extend our hand to entities that are not
-                   // relevant, e.g. static bodies.
-                   //
-                   return;
-               }
-               intersectionInterval = setInterval(() => {
-                   if (hand.components['standard-hands'].hitEl) {
-                       //
-                       // We are grabbing something already. Stop the
-                       // update.
-                       //
-                       clearInterval(intersectionInterval);
-                       return;
-                   }
-                   const intersection = cursor.components.raycaster.getIntersection(intersectedEl);
-                   if (!intersection) {
-                       return;
-                   }
-                   hand.object3D.worldToLocal(intersection.point);
-                   hand.object3D.position.copy(intersection.point);
-               }, 100);
-           });
-           cursor.addEventListener('mouseleave', () => {
-               clearInterval(intersectionInterval);
-           });
+	   //
+	   // On desktop:
+	   //
+	   // One "touches" the object when the cursor points at an
+	   // object no farther than 2 meters
+	   //
+	   // When an object is "touched" we can:
+	   // - Grab - Press and hold "E" and move around.
+	   // - Scale - Press "+" or "-" on the keypad
+	   // - Rotate - Press "X", "Y" or "Z" to rotate 90° along an
+	   //   axis.
+	   //
+	   const camera = document.querySelector('a-camera');
+	   camera.setAttribute('standard-eyes', '');
        }
    </script>
 </if>

@@ -2751,6 +2751,9 @@ window.AFRAME.registerComponent('bound-to-entity', {
  */
 window.AFRAME.registerComponent('standard-hands', {
   init: function () {
+    this.el.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
+    this.el.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
+
     this.GRABBED_STATE = 'grabbed';
 
     this.grabbing = false;
@@ -2764,7 +2767,6 @@ window.AFRAME.registerComponent('standard-hands', {
     this.onGripOpen = this.onGripOpen.bind(this);
     this.onGripClose = this.onGripClose.bind(this);
     this.onThumbstickMoved = this.onThumbstickMoved.bind(this);
-    this.onPlusMinus = this.onPlusMinus.bind(this);
   },
 
   play: function () {
@@ -2777,9 +2779,6 @@ window.AFRAME.registerComponent('standard-hands', {
     el.addEventListener('triggerdown', this.onGripClose);
     el.addEventListener('triggerup', this.onGripOpen);
     el.addEventListener('thumbstickmoved', this.onThumbstickMoved);
-    window.addEventListener('mousedown', this.onGripClose);
-    window.addEventListener('mouseup', this.onGripOpen);
-    window.addEventListener('keydown', this.onPlusMinus);
   },
 
   pause: function () {
@@ -2792,9 +2791,6 @@ window.AFRAME.registerComponent('standard-hands', {
     el.removeEventListener('triggerdown', this.onGripClose);
     el.removeEventListener('triggerup', this.onGripOpen);
     el.removeEventListener('thumbstickmoved', this.onThumbstickMoved);
-    window.removeEventListener('mousedown', this.onGripClose);
-    window.removeEventListener('mouseup', this.onGripOpen);
-    window.removeEventListener('keydown', this.onPlusMinus);
   },
 
   onThumbstickMoved: function (evt) {
@@ -2825,29 +2821,6 @@ window.AFRAME.registerComponent('standard-hands', {
     //
     // if (evt.detail.x < -0.95) { console.log("LEFT"); }
     // if (evt.detail.x > 0.95) { console.log("RIGHT"); }
-  },
-
-  onPlusMinus: function (evt) {
-    //
-    // Desktop version of scale control of grabbed objects.
-    //
-    // Whe we are grabbing something and plus or minus are pressed,
-    // scale the entity up or down respectively.
-    //
-
-    if (!this.hitEl) { return; }
-
-    if (evt.code === 'NumpadSubtract') {
-      //
-      // Down
-      //
-      this.hitEl.object3D.scale.multiplyScalar(0.9);
-    } else if (evt.code === 'NumpadAdd') {
-      //
-      // Up
-      //
-      this.hitEl.object3D.scale.multiplyScalar(1.1);
-    }
   },
 
   onGripClose: function (evt) {
@@ -2930,7 +2903,7 @@ window.AFRAME.registerComponent('standard-hands', {
     // If the hand is not grabbing the element does not stick.
     // If we're already grabbing something you can't grab again.
     if (!hitEl || !this.grabbing || this.hitEl || this.stretchInterval) { return; }
-    console.log('hit ammo', hitEl);
+
     if (hitEl.is(this.GRABBED_STATE)) {
       //
       // Entity is already grabbed by another hand. we are going to
@@ -2965,6 +2938,183 @@ window.AFRAME.registerComponent('standard-hands', {
       this.hitEl = hitEl;
       this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
                               { target: `#${this.el.id}` });
+    }
+  }
+});
+
+/**
+ * StandardEyes Component
+ *
+ * A component for the camera that enables actions such as grabbing,
+ * scaling and rotating on physics objects. Depends on ammo.
+ *
+ */
+window.AFRAME.registerComponent('standard-eyes', {
+  schema: {
+    scaleUpCode: {default: 'NumpadAdd'},
+    scaleDownCode: {default: 'NumpadSubtract'},
+    grabCode: {default: 'KeyE'},
+    rotateXcode: {default: 'KeyX'},
+    rotateYcode: {default: 'KeyY'},
+    rotateZcode: {default: 'KeyZ'},
+    far: {type: 'number', default: 1.6}
+  },
+  init: function () {
+    this.intersectedEl = null;
+
+    if (this.el.tagName !== 'A-CAMERA') {
+      throw 'standard-eyes must be set on the a-camera element on the scene';
+    }
+
+    this.cursor = this.el.querySelector('a-cursor');
+    if (this.cursor) {
+      console.warn('standard-eyes overrides existing cursor configuration');
+    } else {
+      this.cursor = document.createElement('a-cursor');
+    }
+
+    //
+    // The cursor should interact only with physics bodies.
+    //
+    this.cursor.setAttribute('far', this.data.far);
+    this.cursor.setAttribute('objects', '[ammo-body]');
+    this.el.appendChild(this.cursor);
+
+    //
+    // The virtual hand is an invisible sphere that moves with
+    // the cursor. It is also a kinematic body, but will not
+    // partake the physics simulation. It is only needed as a
+    // hook for the constraint.
+    //
+    this.hand = document.createElement('a-sphere');
+    this.hand.id = 'a-camera-a-cursor-standard-eyes-hand';
+    this.hand.setAttribute('visible', false);
+    this.hand.setAttribute('radius', 0.01);
+    this.hand.setAttribute('ammo-body', 'type: kinematic; activationState: disableSimulation;');
+    this.hand.setAttribute('ammo-shape', 'type: sphere');
+    this.cursor.appendChild(this.hand);
+
+    //
+    // Bind event handlers
+    //
+    this.onMouseEnter = this.onMouseEnter.bind(this);
+    this.onMouseLeave = this.onMouseLeave.bind(this);
+    this.onKeyDown = this.onKeyDown.bind(this);
+    this.onKeyUp = this.onKeyUp.bind(this);
+  },
+
+  play: function () {
+    this.cursor.addEventListener('mouseenter', this.onMouseEnter);
+    this.cursor.addEventListener('mouseleave', this.onMouseLeave);
+    window.addEventListener('keydown', this.onKeyDown);
+    window.addEventListener('keyup', this.onKeyUp);
+  },
+
+  pause: function () {
+    this.cursor.removeEventListener('mouseenter', this.onMouseEnter);
+    this.cursor.removeEventListener('mouseleave', this.onMouseLeave);
+    window.removeEventListener('keydown', this.onKeyDown);
+    window.removeEventListener('keyup', this.onKeyUp);
+  },
+
+  onMouseEnter: function (evt) {
+    if (!this.intersectedEl?.hasAttribute(`ammo-constraint__${this.hand.id}`) &&
+	evt.detail.intersectedEl.components['ammo-body'].data.type !== 'static') {
+      this.intersectedEl = evt.detail.intersectedEl;
+      //
+      // We fake collide with the intersected element.
+      //
+      this.intersectedEl.emit('collidestart', {targetEl: this.el});
+    }
+  },
+
+  onMouseLeave: function (evt) {
+    if (!this.intersectedEl?.hasAttribute(`ammo-constraint__${this.hand.id}`)) {
+      this.intersectedEl = null;
+    }
+  },
+
+  onKeyDown: function (evt) {
+    const intersectedEl = this.intersectedEl;
+
+    switch (evt.code) {
+    case this.data.scaleUpCode:
+      //
+      // Scale up
+      //
+      intersectedEl?.object3D.scale.multiplyScalar(1.1);
+      break;
+    case this.data.scaleDownCode:
+      //
+      // Scale down
+      //
+      intersectedEl?.object3D.scale.multiplyScalar(0.9);
+      break;
+    case this.data.grabCode:
+      //
+      // Grabbing
+      //
+      if (this.cursor.components.raycaster.getIntersection(intersectedEl) &&
+	  !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+        //
+        // Default bodies will go to sleep shortly after they stop
+        // moving. As we do not really touch them, they won't wake up
+        // on their own. We need to do it manually.
+        //
+	intersectedEl.components['ammo-body'].body.activate(true);
+	intersectedEl.setAttribute(`ammo-constraint__${this.hand.id}`,
+				   { target: `#${this.hand.id}` });
+      }
+      break;
+    case this.data.rotateXcode:
+      //
+      // Rotate on the X axis
+      //
+      if (intersectedEl &&
+          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+        const rotation = intersectedEl.object3D.rotation.x;
+        intersectedEl.object3D.rotateX(Math.PI / 2);
+        intersectedEl.components['ammo-body'].syncToPhysics();
+      }
+      break;
+    case this.data.rotateYcode:
+      //
+      // Rotate on the Y axis
+      //
+      if (intersectedEl &&
+          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+        const rotation = intersectedEl.object3D.rotation.y;
+        intersectedEl.object3D.rotateY(Math.PI / 2);
+        intersectedEl.components['ammo-body'].syncToPhysics();
+      }
+      break;
+    case this.data.rotateZcode:
+      //
+      // Rotate on the Z axis
+      //
+      if (intersectedEl &&
+          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+        const rotation = intersectedEl.object3D.rotation.z;
+        intersectedEl.object3D.rotateZ(Math.PI / 2);
+        intersectedEl.components['ammo-body'].syncToPhysics();
+      }
+      break;
+    }
+  },
+
+  onKeyUp: function (evt) {
+    const intersectedEl = this.intersectedEl;
+
+    switch (evt.code) {
+    case this.data.grabCode:
+      //
+      // Releasing
+      //
+      if (intersectedEl &&
+	  intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+	intersectedEl.removeAttribute(`ammo-constraint__${this.hand.id}`);
+      }
+      break;
     }
   }
 });
