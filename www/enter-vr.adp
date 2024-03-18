@@ -115,9 +115,10 @@
                   position="-0.142 -0.0166 -0.02928"
                   rotation="-80 90 0"
                   scale="0.5 0.5 0.5"></a-entity>
-        <a-entity cursor
-                  raycaster="showLine: false; far: 100; lineColor: red; objects: [html]; interval:100;"
-                  rotation="-90 0 90"></a-entity>
+        <!-- Kept around because one day I want to enable switching of the menu hand -->
+        <!-- <a-entity cursor -->
+        <!--           raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;" -->
+        <!--           rotation="-90 0 90"></a-entity> -->
       </a-entity>
       <a-entity id="client-@user_id;literal@-right-hand"
                 blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
