@@ -108,6 +108,8 @@ if {$webrtc_p} {
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "/resources/aframe-vr/js/simple-navmesh-constraint.js" -order 3
 ::template::head::add_javascript -src "/resources/aframe-vr/js/aframe-html.min.js" -order 3
+::template::head::add_javascript -src "/aframe-vr/resources/js/aframe-environment-component.min.js" -order 3
+::template::head::add_javascript -src "/aframe-vr/resources/js/model-utils.js" -order 3
 
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 

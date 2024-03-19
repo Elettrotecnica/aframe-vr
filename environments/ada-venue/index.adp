@@ -1,6 +1,3 @@
-<script src="/aframe-vr/resources/js/aframe-environment-component.min.js"></script>
-<script src="/aframe-vr/resources/js/ar-shadow-helper.js"></script>
-<script src="/aframe-vr/resources/js/model-utils.js"></script>
 <a-scene
   reflection="directionalLight:#dirlight;"
   renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
@@ -15,7 +12,7 @@
     <!-- /Templates -->
   </a-assets>
 
-  <a-light id="dirlight" shadow-camera-automatic="[ar-shadow-helper],#table,#ladder" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
+  <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>
 
   <a-entity hide-on-enter-ar position="0 -0.2 0" environment="lighting:none;shadow:true;preset: osiris;"></a-entity>
 
