@@ -1,16 +1,6 @@
 <script src="/aframe-vr/resources/js/aframe-environment-component.min.js"></script>
 <script src="/aframe-vr/resources/js/ar-shadow-helper.js"></script>
 <script src="/aframe-vr/resources/js/model-utils.js"></script>
-<script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-    window.addEventListener('load', function () {
-	const scene = document.querySelector('a-scene');
-	scene.addEventListener('collidestart', function (e) {
-            if (e.target.id === 'ball' && e.detail.targetEl.hasAttribute('standard-hands')) {
-                e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
-            }
-        });
-    });
-</script>
 <a-scene
   reflection="directionalLight:#dirlight;"
   renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
