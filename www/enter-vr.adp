@@ -130,7 +130,7 @@
       </a-entity>
     </a-entity>
   </template>
-</div>
+
 <div id="toolbar">
   <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
     <h5 class="w3-bar-item">Menu</h5>
