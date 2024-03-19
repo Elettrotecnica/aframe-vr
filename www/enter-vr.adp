@@ -701,7 +701,7 @@
        // object's owner.
        //
        scene.addEventListener('collidestart', function (e) {
-	   if (e.target.components['oacs-networked-entity'] &&
+	   if (e.target.matches('[oacs-networked-entity][ammo-body]') &&
 	       !e.target.matches('a-camera, [hand-controls]') &&
 	       e.detail.targetEl.matches('a-camera, [hand-controls]')) {
 	       e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
