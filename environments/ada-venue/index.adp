@@ -8,7 +8,7 @@
     <a-asset-item id="navmesh" src="models/navmesh.glb"></a-asset-item>
     <img id="bake" src="models/venue-lightmap.webp">
     <img id="ball-texture" src="models/ball.jpg">
-    <audio id="desert-loop" src="audio/desert-loop.m4a"></audio>
+    <audio id="desert-loop" src="audio/desert-loop.mp3"></audio>
     <!-- /Templates -->
   </a-assets>
 
