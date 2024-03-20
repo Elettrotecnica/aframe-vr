@@ -243,6 +243,31 @@
 	  }
 	  element.textContent = status;
       }
+      function playAutoplaySounds() {
+          for (const sound of document.querySelectorAll('a-sound[autoplay=true]')) {
+              //
+              // See if sound is already playing.
+              //
+              if (sound.components &&
+                  sound.components.sound &&
+                  sound.components.sound.isPlaying) {
+                  return;
+              }
+              //
+              // Try to play the sound right now, or wait for it to be loaded.
+              //
+              if (sound.components &&
+                  sound.components.sound) {
+                  sound.components.sound.playSound();
+              } else {
+                  sound.addEventListener(
+                      'sound-loaded',
+                      sound.components.sound.playSound.bind(sound),
+                      {once: true}
+                  );
+              }
+          }
+      }
       const vrScene = document.querySelector('a-scene');
       vrScene.addEventListener('loaded', () => {
 	  const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
@@ -279,6 +304,15 @@
 	      if (vrScene.is('vr-mode')) {
 		  vrScene.exitVR();
 	      } else {
+                  //
+                  // Some browsers prevent any autoplay, unless
+                  // started by an explicit interaction with the
+                  // page. Having interacted with the page in the past
+                  // does not seem to be sufficient. For those
+                  // stricter browsers, we start any autoplay sound at
+                  // the time the user clicks on "Enter VR".
+                  //
+                  playAutoplaySounds();
 		  vrScene.enterVR();
 	      }
 	  });
