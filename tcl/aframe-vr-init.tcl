@@ -5,14 +5,16 @@ ns_register_proc GET /aframe-vr/connect ::ws::aframevr::connect
 # the mutex to avoid race conditions.
 nsv_set aframe-vr-janus-rooms mutex [ns_mutex create]
 
-# Create the janus rooms for every package instance
-foreach package_id [apm_package_ids_from_key -package_key aframe-vr -mounted] {
-    try {
-        aframe_vr::room::require -force -package_id $package_id
-    } on error {errmsg} {
-        ad_log warning \
-            "Could not create Janus videoroom for package $package_id. Is the Janus server down?" \
-            $errmsg
+ad_schedule_proc -thread t -once t 1ms eval {
+    # Create the janus rooms for every package instance
+    foreach package_id [apm_package_ids_from_key -package_key aframe-vr -mounted] {
+        try {
+            aframe_vr::room::require -force -package_id $package_id
+        } on error {errmsg} {
+            ad_log warning \
+                "Could not create Janus videoroom for package $package_id. Is the Janus server down?" \
+                $errmsg
+        }
     }
 }
 
