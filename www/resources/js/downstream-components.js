@@ -1878,11 +1878,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     // Hands are attached to the scene only upon controller
     // connection.
     //
-    for (const e of document.querySelectorAll('[hand-controls][oacs-networked-entity]')) {
-      e.addEventListener('controllerconnected', function () {
-        e.components['oacs-networked-entity'].attach();
-      });
-    }
+    window.addEventListener('controllerconnected', (e) => {
+      e.target?.components['oacs-networked-entity'].attach();
+    });
 
     //
     // When the page is closed, clear our stuff.
