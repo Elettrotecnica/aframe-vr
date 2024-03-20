@@ -662,8 +662,8 @@
 
 	      renderConnectionStatus(webRTCConnectionStatusElement, e);
 	  });
-      });
     </if>
+      });
     </script>
     <if @spawn_objects_p;literal@ true or @physics_p;literal@ true>
        <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
