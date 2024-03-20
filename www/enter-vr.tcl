@@ -129,6 +129,7 @@ security::csp::require script-src aframe.io
 security::csp::require img-src cdn.aframe.io
 security::csp::require connect-src cdn.aframe.io
 security::csp::require script-src cdn.jsdelivr.net
+security::csp::require connect-src cdn.jsdelivr.net
 security::csp::require script-src cdnjs.cloudflare.com
 
 security::csp::require script-src 'unsafe-eval'
