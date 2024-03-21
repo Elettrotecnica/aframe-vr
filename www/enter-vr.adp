@@ -3,7 +3,7 @@
 
   <div class="w3-panel w3-display-middle w3-border-top w3-border-bottom w3-border-green">
     <button class="w3-button w3-text-green" id="start" style="font-size:large;">Start the experience</button>
-  </dialog>
+  </div>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const startButton = document.querySelector('#start');
     startButton.addEventListener('click', () => {
