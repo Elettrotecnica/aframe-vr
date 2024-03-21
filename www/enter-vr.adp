@@ -20,7 +20,7 @@
     <template id="avatar-template-@user_id;literal@">
       <a-entity position="0 1.6 -3"
 		class="avatar"
-		readyplayerme-avatar="model: url(@avatar_url@); lookAt: a-camera">
+		readyplayerme-avatar="model: url(@avatar_url@); lookAt: a-camera, [oacs-networked-entity]">
 	<a-text data-name="value"
 		value=""
 		material="color: white"

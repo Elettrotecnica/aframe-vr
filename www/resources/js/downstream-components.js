@@ -375,8 +375,11 @@ window.AFRAME.registerComponent('mediastream-sound', {
 // The identity quaternion is used to calculate the rotation angle of
 // our eyes when we are looking at objects.
 //
-const IDENTITY_QUATERNION = new THREE.Quaternion();
-IDENTITY_QUATERNION.identity();
+const READYPLAYERME_IDENTITY_QUATERNION = new THREE.Quaternion();
+READYPLAYERME_IDENTITY_QUATERNION.identity();
+
+READYPLAYERME_WORLD_POSITION_THIS = new THREE.Vector3();
+READYPLAYERME_WORLD_POSITION_THAT = new THREE.Vector3();
 
 window.AFRAME.registerComponent('readyplayerme-avatar', {
   schema: {
@@ -389,7 +392,6 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     this.model = null;
     this.animations = null;
     this.isIdle = false;
-    this.identityQuaternion = IDENTITY_QUATERNION;
     this.eyes = [];
 
     this.el.addEventListener('mediastream-loud', e => {
@@ -506,8 +508,11 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
   },
 
   _compareDistance: function (a, b) {
-    const aDistance = a.object3D.position.distanceTo(this.el.object3D.position);
-    const bDistance = b.object3D.position.distanceTo(this.el.object3D.position);
+    this.el.object3D.getWorldPosition(READYPLAYERME_WORLD_POSITION_THIS);
+    const aDistance = a.getWorldPosition(READYPLAYERME_WORLD_POSITION_THAT)
+          .distanceTo(READYPLAYERME_WORLD_POSITION_THIS);
+    const bDistance = b.getWorldPosition(READYPLAYERME_WORLD_POSITION_THAT)
+          .distanceTo(READYPLAYERME_WORLD_POSITION_THIS);
     return aDistance - bDistance;
   },
 
@@ -517,7 +522,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     // that the closest entities have the precedence when deciding
     // what to look at.
     //
-    // Throttle this operation to max 1/300ms.
+    // Throttle this operation to once per second.
     //
     const lookArray = [];
     let fixation = 0;
@@ -525,10 +530,13 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       if (fixation <= 0) {
         lookArray.length = 0;
         for (const e of document.querySelectorAll(this.lookAt)) {
-          lookArray.push(e);
+          if (e.object3D && e.object3D.visible) {
+            lookArray.push(e.object3D);
+          }
         }
         lookArray.sort(this._compareDistance.bind(this));
-        fixation = 300;
+
+        fixation = 1000;
       }
       fixation -= delta;
       return lookArray;
@@ -555,10 +563,10 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
         // radians. When the angle is bigger, the entity is not in our
         // line of sight.
         //
-        eye.lookAt(lookAt.object3D.position);
-        inLineOfSight&&= eye.quaternion.angleTo(this.identityQuaternion) <= 0.8;
+        eye.lookAt(lookAt.getWorldPosition(READYPLAYERME_WORLD_POSITION_THAT));
+        inLineOfSight&&= eye.quaternion.angleTo(READYPLAYERME_IDENTITY_QUATERNION) <= 0.8;
         if (!inLineOfSight) {
-          eye.quaternion.copy(this.identityQuaternion);
+          eye.quaternion.copy(READYPLAYERME_IDENTITY_QUATERNION);
         }
         // Compensate a PI/2 offset in the X rotation.
         eye.rotateX(Math.PI / 2);
