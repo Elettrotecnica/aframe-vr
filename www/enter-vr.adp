@@ -7,8 +7,11 @@
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     const startButton = document.querySelector('#start');
     startButton.addEventListener('click', () => {
-	document.body.appendChild(document.querySelector('#all').content.cloneNode(true));
-	startButton.parentElement.remove();
+        const toolbar = document.querySelector('#toolbar');
+        toolbar.removeAttribute('style');
+        const scene = document.querySelector('#all').content.cloneNode(true);
+        document.body.insertBefore(scene, toolbar);
+        startButton.parentElement.remove();
     });
   </script>
 
@@ -121,105 +124,105 @@
     </a-entity>
   </template>
 
-  <template id="all">
+  <div id="toolbar" style="display: none;">
+    <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
+      <h5 class="w3-bar-item">Menu</h5>
+      <button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
+      <button class="w3-bar-item w3-button tablink" data-menu="connection">Connection</button>
+      <if @webrtc_p;literal@ true>
+	<button class="w3-bar-item w3-button tablink" data-menu="audio">Audio</button>
+      </if>
+      <if @spawn_objects_p;literal@ true>
+	<button class="w3-bar-item w3-button tablink" data-menu="models">Models</button>
+      </if>
+      <if @chat_p;literal@ true>
+	<button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
+      </if>
+    </div>
+    <div id="vr-menu" style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
 
+      <div data-menu="room">
+	<div class="w3-container w3-teal w3-light-grey">
+	  <h2>Room</h2>
+	</div>
+	<div class="w3-panel">
+	  <a id="enter-vr"
+	     class="w3-button w3-green w3-hover-green w3-margin-bottom">Enter VR</a>
+	  <br>
+	  <a id="return-to-main-menu" class="w3-button w3-red w3-hover-red w3-margin-bottom"
+	     href="@package_url@">Return to Main Menu</a>
+	</div>
+      </div>
+
+      <div data-menu="connection" style="display:none">
+	<div class="w3-container w3-teal w3-light-grey">
+	  <h2>Connection</h2>
+	</div>
+	<div class="w3-panel">
+	  <table>
+	    <tr>
+	      <td>Websocket:</td><td><span id="websocket-connection-status"></span></td>
+	    </tr>
+	    <if @webrtc_p;literal@ true>
+	      <tr>
+		<td>WebRTC:</td><td><span id="webrtc-connection-status"></span></td>
+	      </tr>
+	    </if>
+	  </table>
+	</div>
+      </div>
+
+      <if @webrtc_p;literal@ true>
+	<div data-menu="audio" style="display:none">
+	  <div class="w3-container w3-teal w3-light-grey">
+	    <h2>Audio</h2>
+	  </div>
+	  <div class="w3-panel w3-border" id="webrtc-status"></div>
+	  <div id="audiometer" class="w3-panel w3-center" style="display:none;">
+	    <div>
+	      <button id="mutebutton" class="w3-button w3-amber">Mute</button>
+	    </div>
+	    <div style="margin-left: auto; margin-right: auto; width:25px; height:150px;" class="w3-red">
+	      <div id="audio-level" class="w3-black"></div>
+	    </div>
+	    <div class="checkbox">
+	      <label>
+		<input type="checkbox" id="pushtotalk">Use PushToTalk
+		<audio id="pushtotalk-audio" style="display: none;" src="/aframe-vr/resources/audio/roger.mp3"></audio>
+	      </label>
+	    </div>
+	  </div>
+	</div>
+      </if>
+
+      <if @spawn_objects_p;literal@ true>
+	<div data-menu="models" style="display:none">
+	  <div class="w3-container w3-teal w3-light-grey">
+	    <h2>Models</h2>
+	  </div>
+	  <div class="w3-panel">
+	    <ul class="w3-ul w3-border w3-margin-bottom"></ul>
+	  </div>
+	</div>
+      </if>
+
+      <if @chat_p;literal@ true>
+	<div data-menu="chat" style="display:none; min-width: calc(50vw - 170px);">
+	  <div class="w3-container w3-teal w3-light-grey">
+	    <h2>Chat</h2>
+	  </div>
+	  <div class="w3-panel">
+	    <include src="/packages/chat/lib/chat" room_id="@chat_room_id;literal@">
+	  </div>
+	</div>
+      </if>
+
+    </div>
+  </div>
+
+  <template id="all">
     <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
-    <div id="toolbar">
-      <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
-	<h5 class="w3-bar-item">Menu</h5>
-	<button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
-	<button class="w3-bar-item w3-button tablink" data-menu="connection">Connection</button>
-	<if @webrtc_p;literal@ true>
-	  <button class="w3-bar-item w3-button tablink" data-menu="audio">Audio</button>
-	</if>
-	<if @spawn_objects_p;literal@ true>
-	  <button class="w3-bar-item w3-button tablink" data-menu="models">Models</button>
-	</if>
-	<if @chat_p;literal@ true>
-	  <button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
-	</if>
-      </div>
-      <div id="vr-menu" style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
-
-	<div data-menu="room">
-	  <div class="w3-container w3-teal w3-light-grey">
-	    <h2>Room</h2>
-	  </div>
-	  <div class="w3-panel">
-	    <a id="enter-vr"
-	       class="w3-button w3-green w3-hover-green w3-margin-bottom">Enter VR</a>
-	    <br>
-	    <a id="return-to-main-menu" class="w3-button w3-red w3-hover-red w3-margin-bottom"
-	       href="@package_url@">Return to Main Menu</a>
-	  </div>
-	</div>
-
-	<div data-menu="connection" style="display:none">
-	  <div class="w3-container w3-teal w3-light-grey">
-	    <h2>Connection</h2>
-	  </div>
-	  <div class="w3-panel">
-	    <table>
-	      <tr>
-		<td>Websocket:</td><td><span id="websocket-connection-status"></span></td>
-	      </tr>
-	      <if @webrtc_p;literal@ true>
-		<tr>
-		  <td>WebRTC:</td><td><span id="webrtc-connection-status"></span></td>
-		</tr>
-	      </if>
-	    </table>
-	  </div>
-	</div>
-
-	<if @webrtc_p;literal@ true>
-	  <div data-menu="audio" style="display:none">
-	    <div class="w3-container w3-teal w3-light-grey">
-	      <h2>Audio</h2>
-	    </div>
-	    <div class="w3-panel w3-border" id="webrtc-status"></div>
-	    <div id="audiometer" class="w3-panel w3-center" style="display:none;">
-	      <div>
-		<button id="mutebutton" class="w3-button w3-amber">Mute</button>
-	      </div>
-	      <div style="margin-left: auto; margin-right: auto; width:25px; height:150px;" class="w3-red">
-		<div id="audio-level" class="w3-black"></div>
-	      </div>
-	      <div class="checkbox">
-		<label>
-		  <input type="checkbox" id="pushtotalk">Use PushToTalk
-		  <audio id="pushtotalk-audio" style="display: none;" src="/aframe-vr/resources/audio/roger.mp3"></audio>
-		</label>
-	      </div>
-	    </div>
-	  </div>
-	</if>
-
-	<if @spawn_objects_p;literal@ true>
-	  <div data-menu="models" style="display:none">
-	    <div class="w3-container w3-teal w3-light-grey">
-	      <h2>Models</h2>
-	    </div>
-	    <div class="w3-panel">
-	      <ul class="w3-ul w3-border w3-margin-bottom"></ul>
-	    </div>
-	  </div>
-	</if>
-
-	<if @chat_p;literal@ true>
-	  <div data-menu="chat" style="display:none; min-width: calc(50vw - 170px);">
-	    <div class="w3-container w3-teal w3-light-grey">
-	      <h2>Chat</h2>
-	    </div>
-	    <div class="w3-panel">
-	      <include src="/packages/chat/lib/chat" room_id="@chat_room_id;literal@">
-	    </div>
-	  </div>
-	</if>
-
-      </div>
-    </div>
     <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
       function renderConnectionStatus(element, statusEvent) {
 	  let status;
