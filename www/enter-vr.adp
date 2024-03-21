@@ -12,117 +12,118 @@
     });
   </script>
 
-  <template id="all">
-
-    <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
-
-    <template id="vr-rig">
-      <if @avatar_p;literal@ true>
-	<!-- Avatar -->
-	<template id="avatar-template-@user_id;literal@">
-	  <a-entity position="0 1.6 -3"
-		    class="avatar"
-		    readyplayerme-avatar="model: url(@avatar_url@); lookAt: a-camera">
-	    <a-text data-name="value"
-		    value=""
-		    material="color: white"
-		    geometry="primitive: plane; width: auto; height: auto"
-		    color="black"
-		    align="center"
-		    width="1"
-		    position="0 -0.4 -0.5"
-		    rotation="0 180 0"></a-text>
-	  </a-entity>
-	</template>
-      </if>
-      <else>
-	<template id="avatar-template-@user_id;literal@">
-	  <a-entity class="avatar" scale="0.5 0.5 0.5" shadow>
-	    <a-sphere data-color
-		      class="head"
-		      color="#ffffff"
-		      scale="0.45 0.5 0.4">
+  <if @avatar_p;literal@ true>
+    <!-- Avatar -->
+    <template id="avatar-template-@user_id;literal@">
+      <a-entity position="0 1.6 -3"
+		class="avatar"
+		readyplayerme-avatar="model: url(@avatar_url@); lookAt: a-camera">
+	<a-text data-name="value"
+		value=""
+		material="color: white"
+		geometry="primitive: plane; width: auto; height: auto"
+		color="black"
+		align="center"
+		width="1"
+		position="0 -0.4 -0.5"
+		rotation="0 180 0"></a-text>
+      </a-entity>
+    </template>
+  </if>
+  <else>
+    <template id="avatar-template-@user_id;literal@">
+      <a-entity class="avatar" scale="0.5 0.5 0.5" shadow>
+	<a-sphere data-color
+		  class="head"
+		  color="#ffffff"
+		  scale="0.45 0.5 0.4">
+	</a-sphere>
+	<a-entity class="face"
+		  position="0 0.05 0">
+	  <a-sphere class="eye"
+		    color="#efefef"
+		    position="0.16 0.1 -0.35"
+		    scale="0.12 0.12 0.12">
+	    <a-sphere class="pupil"
+		      color="#000"
+		      position="0 0 -1"
+		      scale="0.2 0.2 0.2">
 	    </a-sphere>
-	    <a-entity class="face"
-		      position="0 0.05 0">
-	      <a-sphere class="eye"
-			color="#efefef"
-			position="0.16 0.1 -0.35"
-			scale="0.12 0.12 0.12">
-		<a-sphere class="pupil"
-			  color="#000"
-			  position="0 0 -1"
-			  scale="0.2 0.2 0.2">
-		</a-sphere>
-	      </a-sphere>
-	      <a-sphere class="eye"
-			color="#efefef"
-			position="-0.16 0.1 -0.35"
-			scale="0.12 0.12 0.12">
-		<a-sphere class="pupil"
-			  color="#000"
-			  position="0 0 -1"
-			  scale="0.2 0.2 0.2">
-		</a-sphere>
-	      </a-sphere>
-	      <a-text data-name="value"
-		      value=""
-		      material="color: white"
-		      geometry="primitive: plane; width: auto; height: auto"
-		      color="black"
-		      align="center"
-		      width="1"
-		      position="0 -0.4 -0.5"
-		      rotation="0 180 0">
-	      </a-text>
-	    </a-entity>
-	  </a-entity>
-	</template>
-      </else>
-      <template id="avatar-left-hand-@user_id;literal@">
-	<a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
-      </template>
-      <template id="avatar-right-hand-@user_id;literal@">
-	<a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
-      </template>
-
-      <a-entity id="myCameraRig">
-	<!-- camera -->
-	<a-camera id="client-@user_id;literal@"
-		  simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
-		  oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
-		  <if @webrtc_p;literal@ true>
-		    janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
-		  </if>>
-	</a-camera>
-	<!-- hand controls -->
-	<a-entity id="client-@user_id;literal@-left-hand"
-		  blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
-		  hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-		  oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
-	  <a-sphere color="black"
-		    radius="0.005"
-		    id="cursor"
-		    material="shader:flat"></a-sphere>
-	  <a-entity html="cursor:#cursor;html:#toolbar"
-		    position="-0.142 -0.0166 -0.02928"
-		    rotation="-80 90 0"
-		    scale="0.5 0.5 0.5"></a-entity>
-	  <!-- Kept around because one day I want to enable switching of the menu hand -->
-	  <!-- <a-entity cursor -->
-	  <!--           raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;" -->
-	  <!--           rotation="-90 0 90"></a-entity> -->
-	</a-entity>
-	<a-entity id="client-@user_id;literal@-right-hand"
-		  blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
-		  hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-		  oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
-	  <a-entity cursor
-		    raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;"
-		    rotation="-90 0 90"></a-entity>
+	  </a-sphere>
+	  <a-sphere class="eye"
+		    color="#efefef"
+		    position="-0.16 0.1 -0.35"
+		    scale="0.12 0.12 0.12">
+	    <a-sphere class="pupil"
+		      color="#000"
+		      position="0 0 -1"
+		      scale="0.2 0.2 0.2">
+	    </a-sphere>
+	  </a-sphere>
+	  <a-text data-name="value"
+		  value=""
+		  material="color: white"
+		  geometry="primitive: plane; width: auto; height: auto"
+		  color="black"
+		  align="center"
+		  width="1"
+		  position="0 -0.4 -0.5"
+		  rotation="0 180 0">
+	  </a-text>
 	</a-entity>
       </a-entity>
     </template>
+  </else>
+
+  <template id="avatar-left-hand-@user_id;literal@">
+    <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+  </template>
+  <template id="avatar-right-hand-@user_id;literal@">
+    <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+  </template>
+
+  <template id="vr-rig">
+    <a-entity id="myCameraRig">
+      <!-- camera -->
+      <a-camera id="client-@user_id;literal@"
+		simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
+		oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
+		<if @webrtc_p;literal@ true>
+		  janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
+		</if>>
+      </a-camera>
+      <!-- hand controls -->
+      <a-entity id="client-@user_id;literal@-left-hand"
+		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+	<a-sphere color="black"
+		  radius="0.005"
+		  id="cursor"
+		  material="shader:flat"></a-sphere>
+	<a-entity html="cursor:#cursor;html:#toolbar"
+		  position="-0.142 -0.0166 -0.02928"
+		  rotation="-80 90 0"
+		  scale="0.5 0.5 0.5"></a-entity>
+	<!-- Kept around because one day I want to enable switching of the menu hand -->
+	<!-- <a-entity cursor -->
+	<!--           raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;" -->
+	<!--           rotation="-90 0 90"></a-entity> -->
+      </a-entity>
+      <a-entity id="client-@user_id;literal@-right-hand"
+		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+	<a-entity cursor
+		  raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;"
+		  rotation="-90 0 90"></a-entity>
+      </a-entity>
+    </a-entity>
+  </template>
+
+  <template id="all">
+
+    <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
     <div id="toolbar">
       <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
