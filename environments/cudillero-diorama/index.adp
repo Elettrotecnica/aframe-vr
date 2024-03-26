@@ -4,16 +4,24 @@
   <a-assets>
     <a-asset-item id="environment" src="models/CudilleroDiorama.glb"></a-asset-item>
     <a-asset-item id="navmesh" src="models/CudilleroDioramaNavMesh.glb"></a-asset-item>
-    <img id="sky" src="images/sky.jpg"/>
-    <audio id="waves" src="audio/waves.m4a"></audio>
-    <audio id="waves-and-seagulls" src="audio/waves-and-seagulls.m4a"></audio>
-    <audio id="restaurant" src="audio/restaurant.m4a"></audio>
-    <audio id="shop" src="audio/photo-shop.m4a"></audio>
-    <audio id="shore" src="audio/shore.m4a"></audio>
-    <audio id="florist" src="audio/florist.m4a"></audio>
+    <audio id="waves" src="audio/waves.mp3"></audio>
+    <audio id="waves-and-seagulls" src="audio/waves-and-seagulls.mp3"></audio>
+    <audio id="restaurant" src="audio/restaurant.mp3"></audio>
+    <audio id="shop" src="audio/photo-shop.mp3"></audio>
+    <audio id="shore" src="audio/shore.mp3"></audio>
+    <audio id="florist" src="audio/florist.mp3"></audio>
   </a-assets>
 
-  <a-sky src="#sky" rotation="0 90 0"></a-sky>
+  <a-entity
+    environment="skyType: atmosphere; skyColor: #00eeff; preset: none; active: true; seed: 8; horizonColor: #eff9b7; fog: 0.8; ground: none; dressing: none;">
+  </a-entity>
+  <a-ocean
+    width="500"
+    depth="500"
+    density="400"
+    color="#498A95"
+    position="0 -3 0">
+  </a-ocean>
 
   <a-sound
     src="#shore"
