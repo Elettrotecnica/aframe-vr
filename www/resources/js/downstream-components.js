@@ -1694,20 +1694,12 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     // is attached to the scene, check if this has tracks belonging to
     // it and attach them.
     //
-    this.el.sceneEl.addEventListener('child-attached', function (e) {
-      const element = e.detail.el;
-      const tracks = self.remoteTracks[element.id];
-      if (tracks) {
-        if (element.hasLoaded) {
-          for (const track of tracks) {
-            self._attachTrack(element, track);
-          }
-        } else {
-          element.addEventListener('loaded', function (e) {
-            for (const track of tracks) {
-              self._attachTrack(element, track);
-            }
-          });
+    this.el.sceneEl.addEventListener('loaded', function (e) {
+      const element = e.target;
+      const elementTracks = self.remoteTracks[element.id];
+      if (elementTracks) {
+        for (const track of elementTracks) {
+          self._attachTrack(element, track);
         }
       }
     });
