@@ -103,7 +103,8 @@ if {$webrtc_p} {
     ::template::head::add_javascript -src "/resources/aframe-vr/js/janus.js" -order 1
 }
 
-::template::head::add_javascript -src "https://aframe.io/releases/1.5.0/aframe.min.js" -order 0
+#::template::head::add_javascript -src "https://aframe.io/releases/1.5.0/aframe.min.js" -order 0
+::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/aframevr/aframe@a14dc2a266218c65a869f4e8cbafe3c855be0cb4/dist/aframe-master.min.js" -order 0
 ::template::head::add_javascript -src "/resources/aframe-vr/js/downstream-components.js" -order 1
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "/resources/aframe-vr/js/simple-navmesh-constraint.js" -order 3
@@ -118,6 +119,26 @@ if {$spawn_objects_p || $physics_p} {
     ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js" -order 4
     ::template::head::add_javascript -src "/aframe-vr/resources/js/aframe-physics-system.js" -order 5
 }
+
+#
+# Painter
+#
+
+::template::head::add_javascript \
+    -src "/resources/aframe-vr/js/aframe-input-mapping-component.js" \
+    -order 3
+::template::head::add_javascript \
+    -src "/resources/aframe-vr/js/a-painter.js" \
+    -order 4
+::template::head::add_javascript \
+    -src "https://cdn.jsdelivr.net/npm/clipboard@1.5.12/dist/clipboard.min.js" \
+    -order 5
+::template::head::add_javascript \
+    -src "https://cdn.jsdelivr.net/npm/aframe-gltf-exporter-component@0.1.0/dist/aframe-gltf-exporter-component.min.js" \
+    -order 5
+
+
+###
 
 #
 # CSP Rules
