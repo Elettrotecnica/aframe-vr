@@ -771,4 +771,21 @@
 	   });
       </script>
     </if>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    const strokeUndoMessage = {
+        brush: {
+            undo: 1
+        }
+    };
+    vrScene.addEventListener('stroke-removed', (evt) => {
+        console.log(evt, `client-@user_id;literal@`);
+        if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+            // When a stroke from us is removed, we broadcast an undo
+            // operation over the network.
+            const hand = document.querySelector('[hand-controls][brush]');
+            vrScene.systems['oacs-networked-scene'].sendEntityUpdate(hand, strokeUndoMessage);
+            console.log('sent');
+        }
+    });
+    </script>
   </template>
