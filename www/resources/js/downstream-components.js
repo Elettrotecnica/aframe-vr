@@ -157,7 +157,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     const newValue = this.properties['scale']['new'];
     newValue.copy(this.el.object3D.scale);
   }
-
 });
 
 /**
@@ -1822,6 +1821,33 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     return true;
   },
 
+  sendEntityUpdate: function (entity, updateProperties) {
+    //
+    // Send an update message for an entity. Entity must be networked.
+    //
+    // The purpose of this method is to send custom updates that do
+    // not come from the change listener component, e.g. to react to
+    // events on the scene. By default, will behave as handler for the
+    // entityChanged event.
+    //
+    const component = entity.components['oacs-networked-entity'];
+    if (component) {
+      if (typeof updateProperties === 'undefined') {
+        const changeComponent = entity.components['oacs-change-listener'];
+        if (changeComponent) {
+          updateProperties = changeComponent.changedProperties;
+        }
+      }
+      if (typeof updateProperties !== 'undefined') {
+        const msg = this.msgObject();
+        msg.id = component.networkId;
+        msg.type = 'update';
+        Object.assign(msg, updateProperties);
+        this.send(msg);
+      }
+    }
+  },
+
   _clear: function () {
     //
     // Cleanup all our networked entities. Invoked before leaving a VR
@@ -1833,19 +1859,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _addDelegatedListeners: function () {
-    const self = this;
-    window.addEventListener('entityChanged', function (e) {
-      const component = e.target.components['oacs-networked-entity'];
-      if (component) {
-        const msg = self.msgObject();
-        msg.id = component.networkId;
-        msg.type = 'update';
-        const changedProperties = e.target.components['oacs-change-listener'].changedProperties;
-        Object.assign(msg, changedProperties);
-        self.send(msg);
-      }
+    window.addEventListener('entityChanged', (evt) => {
+      this.sendEntityUpdate(evt.target);
     });
-
 
     if (this.isHeadset) {
       //
