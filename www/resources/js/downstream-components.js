@@ -2748,6 +2748,37 @@ window.AFRAME.registerComponent('bound-to-entity', {
 });
 
 /**
+ * Ensure all sound entites set to autoplay do so as soon as the user
+ * interacted with the page.
+ */
+window.AFRAME.registerComponent('autoplay-on-click', {
+  schema: {
+    entities: {type: 'selectorAll', default: 'a-sound,[sound]'}
+  },
+  init: function () {
+    //
+    // Some browsers will autoplay on their own in some circumstances,
+    // but we stop them as well for consistency.
+    //
+    for (const entity of this.data.entities) {
+      const sound = entity.components.sound;
+      if (sound && sound.data.autoplay) {
+        sound.stopSound();
+      }
+    }
+    window.addEventListener('click', () => {
+      for (const entity of this.data.entities) {
+        const sound = entity.components.sound;
+        if (sound && sound.data.autoplay) {
+          sound.stopSound();
+          sound.playSound();
+        }
+      }
+    }, {once: true});
+  }
+});
+
+/**
  * StandardHands Component
  *
  * A component to be put on entities running hand-controls (aka your
