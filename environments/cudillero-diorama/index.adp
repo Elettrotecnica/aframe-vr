@@ -1,4 +1,7 @@
+<script src="/resources/aframe-vr/js/aframe-environment-component.min.js"></script>
+<script src="/resources/aframe-vr/js/aframe-extras.min.js"></script>
 <a-scene
+  autoplay-on-click
   renderer="alpha:true;physicallyCorrectLights:true;colorManagement:true;exposure:2;toneMapping:ACESFilmic;"
   >
   <a-assets>
