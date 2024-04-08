@@ -1848,6 +1848,20 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     }
   },
 
+  sendToOwner: function (id, message) {
+    //
+    // Send a message to the owner of a specified entity.
+    //
+    // This is used to send information that is relevant only to a
+    // specific user and that should not be broadcasted.
+    //
+    const msg = this.msgObject();
+    msg.id = id;
+    msg.type = 'send-to-owner';
+    msg.message = message;
+    this.send(msg);
+  },
+
   _clear: function () {
     //
     // Cleanup all our networked entities. Invoked before leaving a VR
@@ -1978,6 +1992,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         break;
       case 'grab':
         this._onRemoteGrab(m);
+        break;
+      case 'send-to-owner':
+        this.sceneEl.emit('owner-message', m.message);
         break;
       default:
         console.error('Invalid message type:', m.type);
