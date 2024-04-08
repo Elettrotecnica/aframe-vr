@@ -764,14 +764,43 @@
 	  undo: 1
       }
   };
-  vrScene.addEventListener('stroke-removed', (evt) => {
-      console.log(evt, `client-@user_id;literal@`);
-      if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+  vrScene.addEventListener('loaded', (evt) => {
+      const network = vrScene.systems['oacs-networked-scene'];
+      const brush = vrScene.systems.brush;
+      vrScene.addEventListener('stroke-removed', (evt) => {
+	  //
 	  // When a stroke from us is removed, we broadcast an undo
 	  // operation over the network.
-	  const hand = document.querySelector('[hand-controls][brush]');
-	  vrScene.systems['oacs-networked-scene'].sendEntityUpdate(hand, strokeUndoMessage);
-	  console.log('sent');
-      }
+	  //
+	  if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+	      const hand = document.querySelector('[hand-controls][brush]');
+	      network.sendEntityUpdate(hand, strokeUndoMessage);
+	      console.log('undo sent');
+	  }
+      });
+      vrScene.addEventListener('child-attached', (evt) => {
+	  //
+	  // When a new participants (avatar) arrives on the scene,
+	  // send them our current painrting.
+	  //
+	  const el = evt.detail.el;
+	  if (el.matches('.avatar')) {
+	      const painting = brush.getJSON(`client-@user_id;literal@`);
+	      console.log('sending painting:', painting);
+	      network.sendToOwner(el.id, painting);
+	  }
+      });
+      vrScene.addEventListener('owner-message', (evt) => {
+	  console.log('owner message', evt);
+	  //
+	  // When we get a message concerning a painting, we unwrap it
+	  // locally.
+	  //
+	  const painting = evt.detail;
+	  if (painting.strokes) {
+	      console.log('receiving painting:', painting);
+	      brush.loadJSON(painting);
+	  }
+      });
   });
   </script>
