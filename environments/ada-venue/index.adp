@@ -61,24 +61,6 @@ AFRAME.registerComponent('window-replace', {
     <img id="bake" src="models/venue-lightmap.webp">
     <img id="ball-texture" src="models/ball.jpg">
     <audio id="desert-loop" src="audio/desert-loop.mp3"></audio>
-
-    <img id="uinormal" src="/resources/aframe-vr/assets/images/ui-normal.png" crossorigin="anonymous">
-    <a-asset-item id="uiobj" src="/resources/aframe-vr/assets/models/ui.obj"></a-asset-item>
-    <a-asset-item id="tipObj" src="/resources/aframe-vr/assets/models/controller-tip.glb"></a-asset-item>
-    <audio crossorigin id="ui_click0"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_click0.ogg"></audio>
-    <audio crossorigin id="ui_click1"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_click1.ogg"></audio>
-    <audio crossorigin id="ui_menu"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_menu.ogg"></audio>
-    <audio crossorigin id="ui_undo"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_undo.ogg"></audio>
-    <audio crossorigin id="ui_tick"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_tick.ogg"></audio>
-    <audio crossorigin id="ui_paint"
-           src="https://cdn.aframe.io/a-painter/sounds/ui_paint.ogg"></audio>
-
-<!-- /Templates -->
   </a-assets>
 
   <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>

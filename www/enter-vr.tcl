@@ -117,22 +117,26 @@ if {$spawn_objects_p || $physics_p} {
     ::template::head::add_javascript -src "/aframe-vr/resources/js/aframe-physics-system.js" -order 5
 }
 
-#
-# Painter
-#
 
-::template::head::add_javascript \
-    -src "/resources/aframe-vr/js/aframe-input-mapping-component.js" \
-    -order 3
-::template::head::add_javascript \
-    -src "/resources/aframe-vr/js/a-painter.js" \
-    -order 4
-::template::head::add_javascript \
-    -src "https://cdn.jsdelivr.net/npm/clipboard@1.5.12/dist/clipboard.min.js" \
-    -order 5
-::template::head::add_javascript \
-    -src "https://cdn.jsdelivr.net/npm/aframe-gltf-exporter-component@0.1.0/dist/aframe-gltf-exporter-component.min.js" \
-    -order 5
+set painting_p true
+
+if {$painting_p} {
+    #
+    # Painter
+    #
+    ::template::head::add_javascript \
+        -src "/resources/aframe-vr/js/aframe-input-mapping-component.js" \
+        -order 3
+    ::template::head::add_javascript \
+        -src "/resources/aframe-vr/js/a-painter.js" \
+        -order 4
+    ::template::head::add_javascript \
+        -src "https://cdn.jsdelivr.net/npm/clipboard@1.5.12/dist/clipboard.min.js" \
+        -order 5
+    ::template::head::add_javascript \
+        -src "https://cdn.jsdelivr.net/npm/aframe-gltf-exporter-component@0.1.0/dist/aframe-gltf-exporter-component.min.js" \
+        -order 5
+}
 
 
 ###

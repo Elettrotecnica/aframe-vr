@@ -3,6 +3,69 @@
 
   <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
+  <template id="extra-assets">
+    <if @painting_p;literal@ true>
+      <img id="uinormal"
+           src="/resources/aframe-vr/assets/images/ui-normal.png"
+           crossorigin="anonymous">
+      <a-asset-item id="uiobj"
+                    src="/resources/aframe-vr/assets/models/ui.obj"></a-asset-item>
+      <a-asset-item id="tipObj"
+                    src="/resources/aframe-vr/assets/models/controller-tip.glb"></a-asset-item>
+      <audio crossorigin="anonymous"
+             id="ui_click0"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_click0.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_click1"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_click1.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_menu"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_menu.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_undo"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_undo.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_tick"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_tick.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_paint"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_paint.ogg"></audio>
+    </if>
+  </template>
+  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    let assets = document.querySelector('a-assets');
+    if (!assets) {
+        assets = document.createElement('a-assets');
+        document.querySelector('a-scene').appendChild(assets);
+    }
+
+    //
+    // Expand the assets from the environment with extra assets, e.g. to
+    // support extra features like painting.
+    //
+    for (const asset of document.querySelectorAll('#extra-assets > *')) {
+        assets.appendChild(asset);
+    }
+
+    <if @spawn_objects_p;literal@ true>
+    //
+    // Fetch all existing models from the JSON endpoint and append
+    // them to the page assets so they can be preloaded. This should
+    // reduce loading times when spawning, in particular if models do
+    // not change so much during the experience.
+    //
+    const assetsXml = new XMLHttpRequest();
+    assetsXml.responseType = 'json';
+    assetsXml.addEventListener('load', e => {
+        for (const m of assetsXml.response) {
+            assets.innerHTML += `<a-asset-item id="spawn-${m.live_revision}-model" src="${m.download_url}">`;
+        }
+    });
+    assetsXml.open('GET', './models/?format=json');
+    assetsXml.send();
+    </if>
+  </script>
+
   <if @avatar_p;literal@ true>
     <!-- Avatar -->
     <template id="avatar-template-@user_id;literal@">
@@ -328,28 +391,6 @@
 
       </if>
       <if @spawn_objects_p;literal@ true>
-
-	//
-	// Spawning an object.
-	//
-
-	//
-	// Fetch all existing models from the JSON endpoint and append them
-	// to the page assets so they can be preloaded. This should reduce
-	// loading times when spawning, in particular if models do not
-	// change so much during the experience.
-	//
-	const assetsXml = new XMLHttpRequest();
-	const assets = document.querySelector('a-assets');
-	assetsXml.responseType = 'json';
-	assetsXml.addEventListener('load', e => {
-	    for (const m of assetsXml.response) {
-		assets.innerHTML += `<a-asset-item id="spawn-${m.live_revision}-model" src="${m.download_url}">`;
-	    }
-	});
-	assetsXml.open('GET', './models/?format=json');
-	assetsXml.send();
-
 	//
 	// Whenever the models menu becomes visible, fetch the models from
 	// the JSON endpoint and display the spawning UI
@@ -767,6 +808,14 @@
   vrScene.addEventListener('loaded', (evt) => {
       const network = vrScene.systems['oacs-networked-scene'];
       const brush = vrScene.systems.brush;
+      window.addEventListener('exit-vr', () => {
+          //
+          // Exiting VR removes peers using a headset from the scene,
+          // which will clear their paintings remotely. We also clear
+          // them locally.
+          //
+          brush.clear(`client-@user_id;literal@`);
+      });
       vrScene.addEventListener('stroke-removed', (evt) => {
 	  //
 	  // When a stroke from us is removed, we broadcast an undo
@@ -786,8 +835,10 @@
 	  const el = evt.detail.el;
 	  if (el.matches('.avatar')) {
 	      const painting = brush.getJSON(`client-@user_id;literal@`);
-	      console.log('sending painting:', painting);
-	      network.sendToOwner(el.id, painting);
+              if (painting.strokes.length > 0) {
+	          console.log('sending painting:', painting);
+	          network.sendToOwner(el.id, painting);
+              }
 	  }
       });
       vrScene.addEventListener('owner-message', (evt) => {
