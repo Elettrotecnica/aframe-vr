@@ -1,8 +1,6 @@
 <master src="/www/blank-master">
   <property name="doc(title)">Enter VR</property>
 
-  <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
-
   <template id="extra-assets">
     <if @painting_p;literal@ true>
       <img id="uinormal"
@@ -31,40 +29,45 @@
              id="ui_paint"
              src="https://cdn.aframe.io/a-painter/sounds/ui_paint.ogg"></audio>
     </if>
+    <if @spawn_objects_p;literal@ true>
+      <include src="/packages/aframe-vr/lib/models" format="assets"/>
+    </if>
   </template>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-    let assets = document.querySelector('a-assets');
-    if (!assets) {
-        assets = document.createElement('a-assets');
-        document.querySelector('a-scene').appendChild(assets);
-    }
+    //
+    // Extend the assets on the scene with additional ones needed to
+    // support features such as painting or model spawning.
+    //
+    // We use a mutation observer to detect the exact moment when the
+    // scene is added to the page. This should happen before the scene
+    // starts to load, or assets may not be ready by the time the
+    // scene starts.
+    //
+    let observer;
+    function appendExtraAssets(scene) {
+	//
+	// Turn of the mutation observer, we do not need it anymore.
+	//
+        observer.disconnect();
 
-    //
-    // Expand the assets from the environment with extra assets, e.g. to
-    // support extra features like painting.
-    //
-    for (const asset of document.querySelectorAll('#extra-assets > *')) {
-        assets.appendChild(asset);
+        const assets = document.createElement('a-assets');
+        scene.appendChild(assets);
+	assets.innerHTML += document.querySelector('#extra-assets').innerHTML;
     }
-
-    <if @spawn_objects_p;literal@ true>
-    //
-    // Fetch all existing models from the JSON endpoint and append
-    // them to the page assets so they can be preloaded. This should
-    // reduce loading times when spawning, in particular if models do
-    // not change so much during the experience.
-    //
-    const assetsXml = new XMLHttpRequest();
-    assetsXml.responseType = 'json';
-    assetsXml.addEventListener('load', e => {
-        for (const m of assetsXml.response) {
-            assets.innerHTML += `<a-asset-item id="spawn-${m.live_revision}-model" src="${m.download_url}">`;
-        }
+    observer = new MutationObserver((records) => {
+	for (const record of records) {
+	    for (const node of record.addedNodes) {
+		if (node.nodeName === 'A-SCENE') {
+		    appendExtraAssets(node);
+		    return;
+		}
+	    }
+	}
     });
-    assetsXml.open('GET', './models/?format=json');
-    assetsXml.send();
-    </if>
+    observer.observe(document.body, { childList: true });
   </script>
+
+  <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
   <if @avatar_p;literal@ true>
     <!-- Avatar -->
