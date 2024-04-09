@@ -493,10 +493,6 @@
 		model.setAttribute('center', '');
 		model.setAttribute('clamp-size',
 				   'maxSize: @spawn_max_size;literal@; minSize: @spawn_min_size;literal@');
-		model.setAttribute(
-		    'oacs-networked-entity',
-		    `permanent: true; template: #${templateId}; properties: position, rotation, scale`
-		);
 		model.setAttribute('data-spawn', 'theirs');
 
 		//
@@ -507,13 +503,20 @@
 		const assetModel = document.querySelector(`a-asset-item#${spawnId}-model`);
 		model.setAttribute('src', assetModel ? `#${assetModel.id}` : `url(${modelURL})`);
 
-		model.flushToDOM(true);
-
 		template = document.createElement('template');
 		template.setAttribute('id', templateId);
 		template.content.appendChild(model);
-
 		vrScene.appendChild(template);
+
+		//
+		// The model is networked last, to make sure the
+		// template is on the page.
+		//
+		model.setAttribute(
+		    'oacs-networked-entity',
+		    `permanent: true; template: #${templateId}; properties: position, rotation, scale`
+		);
+		model.flushToDOM(true);
 	    }
 
 	    //
