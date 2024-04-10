@@ -109,6 +109,7 @@ if {$webrtc_p} {
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "/resources/aframe-vr/js/simple-navmesh-constraint.js" -order 3
 ::template::head::add_javascript -src "/resources/aframe-vr/js/aframe-html.min.js" -order 3
+::template::head::add_javascript -src "/resources/aframe-vr/js/aframe-input-mapping-component.js" -order 3
 
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 
@@ -119,14 +120,12 @@ if {$spawn_objects_p || $physics_p} {
 
 
 set painting_p true
+#set painting_p false
 
 if {$painting_p} {
     #
     # Painter
     #
-    ::template::head::add_javascript \
-        -src "/resources/aframe-vr/js/aframe-input-mapping-component.js" \
-        -order 3
     ::template::head::add_javascript \
         -src "/resources/aframe-vr/js/a-painter.js" \
         -order 4

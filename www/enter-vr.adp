@@ -34,37 +34,33 @@
     </if>
   </template>
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-    //
-    // Extend the assets on the scene with additional ones needed to
-    // support features such as painting or model spawning.
-    //
-    // We use a mutation observer to detect the exact moment when the
-    // scene is added to the page. This should happen before the scene
-    // starts to load, or assets may not be ready by the time the
-    // scene starts.
-    //
-    let observer;
-    function appendExtraAssets(scene) {
-	//
-	// Turn of the mutation observer, we do not need it anymore.
-	//
-        observer.disconnect();
+    window.addEventListener('DOMContentLoaded', () => {
+	const scene = document.querySelector('a-scene');
 
-        const assets = document.createElement('a-assets');
-        scene.appendChild(assets);
-	assets.innerHTML += document.querySelector('#extra-assets').innerHTML;
-    }
-    observer = new MutationObserver((records) => {
-	for (const record of records) {
-	    for (const node of record.addedNodes) {
-		if (node.nodeName === 'A-SCENE') {
-		    appendExtraAssets(node);
-		    return;
-		}
-	    }
+	//
+	// Extend the assets on the scene with additional ones needed to
+	// support features such as painting or model spawning.
+	//
+	let assets = document.querySelector('a-assets');
+	if (!assets) {
+	    assets = document.createElement('a-assets');
+	    scene.appendChild(assets);
 	}
+	assets.innerHTML += document.querySelector('#extra-assets').innerHTML;
+
+	//
+	// Set attributes on the scene
+	//
+	const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
+	scene.setAttribute('oacs-networked-scene', wsURI);
+	scene.setAttribute('webxr', 'overlayElement:#toolbar;');
+	scene.setAttribute('xr-mode-ui', 'enabled: false;');
+
+	//
+	// Append our rig to the scene
+	//
+	scene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
     });
-    observer.observe(document.body, { childList: true });
   </script>
 
   <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
@@ -163,7 +159,7 @@
       </a-camera>
       <!-- hand controls -->
       <a-entity id="client-@user_id;literal@-left-hand"
-		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   brush="hand: left; owner: client-@user_id;literal@;"
@@ -185,7 +181,7 @@
 	<!--           rotation="-90 0 90"></a-entity> -->
       </a-entity>
       <a-entity id="client-@user_id;literal@-right-hand"
-		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   brush="hand: right; owner: client-@user_id;literal@;"
@@ -296,6 +292,50 @@
     </div>
   </div>
 
+  <if @painting_p;literal@ false>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+      //
+      // a-painter comes with its own input mappings. We we do not
+      // paint, we map aiming and teleporting the same as they do for
+      // consistency.
+      //
+      const mappings = {
+	behaviours: {},
+	mappings: {
+	  movement: {
+	    common: {},
+
+	    'vive-controls': {
+	      // Teleport
+	      'trackpad.down': 'aim',
+	      'trackpad.up': 'teleport'
+	    },
+
+	    'oculus-touch-controls': {
+	      // Teleport
+	      'ybutton.down': 'aim',
+	      'ybutton.up': 'teleport',
+
+	      'bbutton.down': 'aim',
+	      'bbutton.up': 'teleport'
+	    },
+
+	    'windows-motion-controls': {
+	      // Teleport
+	      'trackpad.down': 'aim',
+	      'trackpad.up': 'teleport'
+	    },
+	  }
+	}
+      };
+
+      document.querySelector('a-scene').addEventListener('loaded', function() {
+	AFRAME.registerInputMappings(mappings);
+	AFRAME.currentInputMapping = 'movement';
+      });
+    </script>
+  </if>
+
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     function renderConnectionStatus(element, statusEvent) {
 	let status;
@@ -320,15 +360,10 @@
 	}
 	element.textContent = status;
     }
+
     const vrScene = document.querySelector('a-scene');
 
     vrScene.addEventListener('loaded', () => {
-	const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
-	vrScene.setAttribute('oacs-networked-scene', wsURI);
-	vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
-	vrScene.setAttribute('xr-mode-ui', 'enabled: false;');
-	vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
-
 	const websocketConnectionStatusElement = document.querySelector('#websocket-connection-status');
 	vrScene.addEventListener('connectionstatuschange', function (e) {
 	    renderConnectionStatus(websocketConnectionStatusElement, e);
@@ -816,59 +851,61 @@
 	 });
     </script>
   </if>
-  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-  const strokeUndoMessage = {
-      brush: {
-	  undo: 1
-      }
-  };
-  vrScene.addEventListener('loaded', (evt) => {
-      const network = vrScene.systems['oacs-networked-scene'];
-      const brush = vrScene.systems.brush;
-      window.addEventListener('exit-vr', () => {
-          //
-          // Exiting VR removes peers using a headset from the scene,
-          // which will clear their paintings remotely. We also clear
-          // them locally.
-          //
-          brush.clear(`client-@user_id;literal@`);
-      });
-      vrScene.addEventListener('stroke-removed', (evt) => {
-	  //
-	  // When a stroke from us is removed, we broadcast an undo
-	  // operation over the network.
-	  //
-	  if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
-	      const hand = document.querySelector('[hand-controls][brush]');
-	      network.sendEntityUpdate(hand, strokeUndoMessage);
-	      console.log('undo sent');
-	  }
-      });
-      vrScene.addEventListener('child-attached', (evt) => {
-	  //
-	  // When a new participants (avatar) arrives on the scene,
-	  // send them our current painrting.
-	  //
-	  const el = evt.detail.el;
-	  if (el.matches('.avatar')) {
-	      const painting = brush.getJSON(`client-@user_id;literal@`);
-              if (painting.strokes.length > 0) {
-	          console.log('sending painting:', painting);
-	          network.sendToOwner(el.id, painting);
-              }
-	  }
-      });
-      vrScene.addEventListener('owner-message', (evt) => {
-	  console.log('owner message', evt);
-	  //
-	  // When we get a message concerning a painting, we unwrap it
-	  // locally.
-	  //
-	  const painting = evt.detail;
-	  if (painting.strokes) {
-	      console.log('receiving painting:', painting);
-	      brush.loadJSON(painting);
-	  }
-      });
-  });
-  </script>
+  <if @painting_p;literal@ true>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    const strokeUndoMessage = {
+	brush: {
+	    undo: 1
+	}
+    };
+    vrScene.addEventListener('loaded', (evt) => {
+	const network = vrScene.systems['oacs-networked-scene'];
+	const brush = vrScene.systems.brush;
+	window.addEventListener('exit-vr', () => {
+	    //
+	    // Exiting VR removes peers using a headset from the scene,
+	    // which will clear their paintings remotely. We also clear
+	    // them locally.
+	    //
+	    brush.clear(`client-@user_id;literal@`);
+	});
+	vrScene.addEventListener('stroke-removed', (evt) => {
+	    //
+	    // When a stroke from us is removed, we broadcast an undo
+	    // operation over the network.
+	    //
+	    if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+		const hand = document.querySelector('[hand-controls][brush]');
+		network.sendEntityUpdate(hand, strokeUndoMessage);
+		console.log('undo sent');
+	    }
+	});
+	vrScene.addEventListener('child-attached', (evt) => {
+	    //
+	    // When a new participants (avatar) arrives on the scene,
+	    // send them our current painrting.
+	    //
+	    const el = evt.detail.el;
+	    if (el.matches('.avatar')) {
+		const painting = brush.getJSON(`client-@user_id;literal@`);
+		if (painting.strokes.length > 0) {
+		    console.log('sending painting:', painting);
+		    network.sendToOwner(el.id, painting);
+		}
+	    }
+	});
+	vrScene.addEventListener('owner-message', (evt) => {
+	    console.log('owner message', evt);
+	    //
+	    // When we get a message concerning a painting, we unwrap it
+	    // locally.
+	    //
+	    const painting = evt.detail;
+	    if (painting.strokes) {
+		console.log('receiving painting:', painting);
+		brush.loadJSON(painting);
+	    }
+	});
+    });
+    </script>
+  </if>
