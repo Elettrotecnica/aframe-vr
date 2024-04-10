@@ -135,11 +135,19 @@
   <template id="avatar-left-hand-@user_id;literal@">
     <a-entity
       remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+      <if @painting_p;literal@ true>
+        brush="hand: left; owner: client-@user_id;literal@;"
+        paint-controls="hand: left; tooltips: false; hideController: true;"
+      </if>
       ></a-entity>
   </template>
   <template id="avatar-right-hand-@user_id;literal@">
     <a-entity
       remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+      <if @painting_p;literal@ true>
+        brush="hand: right; owner: client-@user_id;literal@;"
+        paint-controls="hand: right; tooltips: false; hideController: true;"
+      </if>
       ></a-entity>
   </template>
 
@@ -157,10 +165,12 @@
       <a-entity id="client-@user_id;literal@-left-hand"
 		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-                brush="hand: left; owner: client-@user_id;literal@;"
-                paint-controls="hand: left; tooltips: false; hideController: true;"
-                ui
-		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture, brush, paint-controls">
+                <if @painting_p;literal@ true>
+                  brush="hand: left; owner: client-@user_id;literal@;"
+                  paint-controls="hand: left; tooltips: false; hideController: true;"
+                  ui
+                </if>
+		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-sphere color="black"
 		  radius="0.005"
 		  id="cursor"
@@ -177,10 +187,12 @@
       <a-entity id="client-@user_id;literal@-right-hand"
 		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-                brush="hand: right; owner: client-@user_id;literal@;"
-                paint-controls="hand: right; tooltips: false; hideController: true;"
-                ui
-		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture, brush, paint-controls">
+                <if @painting_p;literal@ true>
+                  brush="hand: right; owner: client-@user_id;literal@;"
+                  paint-controls="hand: right; tooltips: false; hideController: true;"
+                  ui
+                </if>
+		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-entity cursor
 		  raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;"
 		  rotation="-90 0 90"></a-entity>
@@ -188,7 +200,7 @@
     </a-entity>
   </template>
 
-  <div id="toolbar" style="display: none;">
+  <div id="toolbar">
     <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
       <h5 class="w3-bar-item">Menu</h5>
       <button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
@@ -311,7 +323,6 @@
     const vrScene = document.querySelector('a-scene');
 
     vrScene.addEventListener('loaded', () => {
-	document.querySelector('#toolbar').removeAttribute('style');
 	const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
 	vrScene.setAttribute('oacs-networked-scene', wsURI);
 	vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
