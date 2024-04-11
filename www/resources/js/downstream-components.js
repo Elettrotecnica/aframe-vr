@@ -1808,7 +1808,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         !el.components ||
         !el.components['oacs-networked-entity'] ||
         el.tagName === 'A-CAMERA' ||
-        el.components['local-hand-controls']) {
+        el.components['hand-controls']) {
       return false;
     }
 
