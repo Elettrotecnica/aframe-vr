@@ -133,7 +133,7 @@
       remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
       <if @painting_p;literal@ true>
         brush="hand: left; owner: client-@user_id;literal@;"
-        paint-controls="hand: left; tooltips: false; hideController: true;"
+        paint-controls="hand: left;  controller: default; tooltips: false; hideController: true;"
       </if>
       ></a-entity>
   </template>
@@ -142,7 +142,7 @@
       remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
       <if @painting_p;literal@ true>
         brush="hand: right; owner: client-@user_id;literal@;"
-        paint-controls="hand: right; tooltips: false; hideController: true;"
+        paint-controls="hand: right; controller: default; tooltips: false; hideController: true;"
       </if>
       ></a-entity>
   </template>
@@ -210,7 +210,11 @@
       <if @chat_p;literal@ true>
 	<button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
       </if>
+      <if @painting_p;literal@ true>
+        <button class="w3-bar-item w3-button tablink" data-menu="paint">Paint</button>
+      </if>
     </div>
+
     <div id="vr-menu" style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
 
       <div data-menu="room">
@@ -286,6 +290,19 @@
 	  <div class="w3-panel">
 	    <include src="/packages/chat/lib/chat" room_id="@chat_room_id;literal@">
 	  </div>
+	</div>
+      </if>
+
+      <if @painting_p;literal@ true>
+	<div data-menu="paint" style="display:none;">
+	  <div class="w3-container w3-teal w3-light-grey">
+	    <h2>Paint</h2>
+	  </div>
+	  <div class="w3-panel">
+	    <button id="toggle-painting" class="w3-button w3-green w3-hover-green w3-margin-bottom">
+              Start Painting
+            </button>
+          </div>
 	</div>
       </if>
 
@@ -853,59 +870,107 @@
   </if>
   <if @painting_p;literal@ true>
     <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-    const strokeUndoMessage = {
-	brush: {
-	    undo: 1
-	}
-    };
-    vrScene.addEventListener('loaded', (evt) => {
-	const network = vrScene.systems['oacs-networked-scene'];
-	const brush = vrScene.systems.brush;
-	window.addEventListener('exit-vr', () => {
-	    //
-	    // Exiting VR removes peers using a headset from the scene,
-	    // which will clear their paintings remotely. We also clear
-	    // them locally.
-	    //
-	    brush.clear(`client-@user_id;literal@`);
-	});
-	vrScene.addEventListener('stroke-removed', (evt) => {
-	    //
-	    // When a stroke from us is removed, we broadcast an undo
-	    // operation over the network.
-	    //
-	    if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
-		const hand = document.querySelector('[hand-controls][brush]');
-		network.sendEntityUpdate(hand, strokeUndoMessage);
-		console.log('undo sent');
-	    }
-	});
-	vrScene.addEventListener('child-attached', (evt) => {
-	    //
-	    // When a new participants (avatar) arrives on the scene,
-	    // send them our current painrting.
-	    //
-	    const el = evt.detail.el;
-	    if (el.matches('.avatar')) {
-		const painting = brush.getJSON(`client-@user_id;literal@`);
-		if (painting.strokes.length > 0) {
-		    console.log('sending painting:', painting);
-		    network.sendToOwner(el.id, painting);
-		}
-	    }
-	});
-	vrScene.addEventListener('owner-message', (evt) => {
-	    console.log('owner message', evt);
-	    //
-	    // When we get a message concerning a painting, we unwrap it
-	    // locally.
-	    //
-	    const painting = evt.detail;
-	    if (painting.strokes) {
-		console.log('receiving painting:', painting);
-		brush.loadJSON(painting);
-	    }
-	});
-    });
+      if (!window.AFRAME.utils.device.checkHeadsetConnected()) {
+          //
+          // Painting is not supported on desktop for now (but people
+          // on desktop will be able to see other people paintings).
+          //
+          for (const menuItem of document.querySelectorAll('[data-menu=paint]')) {
+              menuItem.remove();
+          }
+      } else {
+          const strokeUndoMessage = {
+              brush: {
+                  undo: 1
+              }
+          };
+          const paintingButton = document.querySelector('#toggle-painting');
+          const paintConf = {
+              hideTip: true,
+              hideController: false
+          }
+          let isPlaying = true;
+          function togglePainting(hands) {
+              for (const hand of hands) {
+                  const brush = hand.components.brush;
+                  const paintControls = hand.components['paint-controls'];
+                  const ui = hand.components.ui;
+                  isPlaying ? brush.pause() : brush.play();
+                  hand.setAttribute('paint-controls', {
+                      hideTip: isPlaying,
+                      hideController: !isPlaying
+                  });
+                  isPlaying ? paintControls.pause() : paintControls.play();
+                  isPlaying ? ui.pause() : ui.play();
+              }
+	      paintingButton.textContent = isPlaying ? 'Start Painting' : 'Stop Painting';
+	      paintingButton.classList.replace(
+                  isPlaying ? 'w3-red' : 'w3-green',
+                  isPlaying ? 'w3-green' : 'w3-red'
+              );
+              paintingButton.classList.replace(
+                  isPlaying ? 'w3-hover-red' : 'w3-hover-green',
+                  isPlaying ? 'w3-hover-green' : 'w3-hover-red'
+              );
+              isPlaying = !isPlaying;
+          }
+          vrScene.addEventListener('loaded', () => {
+              const hands = document.querySelectorAll('[hand-controls][brush][paint-controls]');
+              togglePainting(hands);
+              paintingButton.addEventListener('click', () => {
+                  togglePainting(hands);
+              });
+          });
+          window.addEventListener('exit-vr', () => {
+              //
+              // Exiting VR removes peers using a headset from the scene,
+              // which will clear their paintings remotely. We also clear
+              // them locally.
+              //
+              const brush = vrScene.systems.brush;
+              brush.clear(`client-@user_id;literal@`);
+          });
+          vrScene.addEventListener('stroke-removed', (evt) => {
+              //
+              // When a stroke from us is removed, we broadcast an undo
+              // operation over the network.
+              //
+              if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+                  const network = vrScene.systems['oacs-networked-scene'];
+                  const hand = document.querySelector('[hand-controls][brush]');
+                  network.sendEntityUpdate(hand, strokeUndoMessage);
+                  console.log('undo sent');
+              }
+          });
+          vrScene.addEventListener('child-attached', (evt) => {
+              //
+              // When a new participants (avatar) arrives on the scene,
+              // send them our current painrting.
+              //
+              const el = evt.detail.el;
+              if (el.matches('.avatar')) {
+                  const brush = vrScene.systems.brush;
+                  const painting = brush.getJSON(`client-@user_id;literal@`);
+                  if (painting.strokes.length > 0) {
+                      const network = vrScene.systems['oacs-networked-scene'];
+                      console.log('sending painting:', painting);
+                      network.sendToOwner(el.id, painting);
+                  }
+              }
+          });
+      }
+
+      vrScene.addEventListener('owner-message', (evt) => {
+          console.log('owner message', evt);
+          const painting = evt.detail;
+          if (painting.strokes) {
+              //
+              // Somebody sent us their painting. Display it locally.
+              //
+              console.log('receiving painting:', painting);
+              const brush = vrScene.systems.brush;
+              brush.loadJSON(painting);
+          }
+      });
     </script>
   </if>
