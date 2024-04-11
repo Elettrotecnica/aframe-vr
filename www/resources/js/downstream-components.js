@@ -813,6 +813,7 @@ window.AFRAME.registerComponent('remote-hand-controls', {
         });
         mesh.position.set(0, 0, 0);
         mesh.rotation.set(handModelOrientationX, 0, handModelOrientationZ);
+        el.emit('model-loaded', {format: 'gltf', model: mesh});
       });
     }
 
