@@ -82,6 +82,7 @@ In the VR menu, we provide the UI to mute/unmute, check our own volume
 and enable push-to-talk.
 
 ### Shared interactive networked entities with physics
+![Schermata del 2024-04-12 17-02-49](https://github.com/Elettrotecnica/aframe-vr/assets/3331940/24a56dad-7efd-4e54-a312-7e54f4b53342)
 
 Depending on your client (headset or desktop), you will be able to
 interact with entities in the room together with your friends.
@@ -109,6 +110,7 @@ When using a headset is currently only possible to reply to the chat
 while outside of immersive mode.
 
 ### In-VR collaborative painting
+![Schermata del 2024-04-12 16-59-29](https://github.com/Elettrotecnica/aframe-vr/assets/3331940/532dbafe-be08-4b90-ba70-2731a43bf50b)
 
 Based on a fork of the excellent
 [A-Painter](https://github.com/aframevr/a-painter), we allow peers to
