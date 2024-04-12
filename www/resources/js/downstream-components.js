@@ -3188,6 +3188,70 @@ window.AFRAME.registerComponent('standard-eyes', {
 });
 
 /**
+ * StandardPainting Component
+ *
+ * This component makes sure painting behavior on hands can be turned
+ * on and off consistently.
+ *
+ */
+window.AFRAME.registerComponent('standard-painting', {
+  schema: {
+    owner: { type: 'string', default: 'local' },
+    active: { type: 'boolean', default: false }
+  },
+  dependencies: ['hand-controls'],
+  init: function () {
+    const hand = this.el.components['hand-controls'].data.hand;
+
+    this.el.setAttribute('brush', {
+      hand: hand,
+      owner: this.data.owner
+    });
+    this.el.setAttribute('paint-controls', {
+      hand: hand,
+      tooltips: false,
+      hideTip: false,
+      hideController: true
+    });
+    this.el.setAttribute('ui', '');
+
+    this.components = [
+      this.el.components['brush'],
+      this.el.components['paint-controls'],
+      this.el.components['ui']
+    ];
+    this.visibility = {};
+
+    //
+    // Wait for the component to start, then apply the "active" property.
+    //
+    this.el.addEventListener('play', this.update.bind(this), {once: true});
+  },
+
+  update: function () {
+    this.data.active ? this.play() : this.pause();
+  },
+
+  play: function () {
+    this.visibility.hideTip = false;
+    this.visibility.hideController = true;
+    this.el.setAttribute('paint-controls', this.visibility);
+    for (const component of this.components) {
+      component.play();
+    }
+  },
+
+  pause: function () {
+    this.visibility.hideTip = true;
+    this.visibility.hideController = false;
+    this.el.setAttribute('paint-controls', this.visibility);
+    for (const component of this.components) {
+      component.pause();
+    }
+  }
+});
+
+/**
  * Force Pushable component.
  *
  * Applies behavior to the current entity such that cursor clicks will

@@ -162,9 +162,7 @@
 		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
-                  brush="hand: left; owner: client-@user_id;literal@;"
-                  paint-controls="hand: left; tooltips: false; hideController: true;"
-                  ui
+                  standard-painting="owner: client-@user_id;literal@; active: false;"
                 </if>
 		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-sphere color="black"
@@ -184,9 +182,7 @@
 		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
-                  brush="hand: right; owner: client-@user_id;literal@;"
-                  paint-controls="hand: right; tooltips: false; hideController: true;"
-                  ui
+                  standard-painting="owner: client-@user_id;literal@; active: false;"
                 </if>
 		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-entity cursor
@@ -889,19 +885,10 @@
               hideTip: true,
               hideController: false
           }
-          let isPlaying = true;
+          let isPlaying = false;
           function togglePainting(hands) {
               for (const hand of hands) {
-                  const brush = hand.components.brush;
-                  const paintControls = hand.components['paint-controls'];
-                  const ui = hand.components.ui;
-                  isPlaying ? brush.pause() : brush.play();
-                  hand.setAttribute('paint-controls', {
-                      hideTip: isPlaying,
-                      hideController: !isPlaying
-                  });
-                  isPlaying ? paintControls.pause() : paintControls.play();
-                  isPlaying ? ui.pause() : ui.play();
+                  hand.setAttribute('standard-painting', {active: !isPlaying});
               }
 	      paintingButton.textContent = isPlaying ? 'Start Painting' : 'Stop Painting';
 	      paintingButton.classList.replace(
@@ -915,8 +902,7 @@
               isPlaying = !isPlaying;
           }
           vrScene.addEventListener('loaded', () => {
-              const hands = document.querySelectorAll('[hand-controls][brush][paint-controls]');
-              togglePainting(hands);
+              const hands = document.querySelectorAll('[standard-painting]');
               paintingButton.addEventListener('click', () => {
                   togglePainting(hands);
               });
