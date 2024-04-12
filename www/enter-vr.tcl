@@ -119,8 +119,7 @@ if {$spawn_objects_p || $physics_p} {
 }
 
 
-set painting_p true
-#set painting_p false
+set painting_p [parameter::get -package_id $package_id -parameter painting_p -default 0]
 
 if {$painting_p} {
     #
