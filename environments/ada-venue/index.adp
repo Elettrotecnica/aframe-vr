@@ -61,7 +61,6 @@ AFRAME.registerComponent('window-replace', {
     <img id="bake" src="models/venue-lightmap.webp">
     <img id="ball-texture" src="models/ball.jpg">
     <audio id="desert-loop" src="audio/desert-loop.mp3"></audio>
-    <!-- /Templates -->
   </a-assets>
 
   <a-light id="dirlight" intensity="0.8" light="castShadow:true;type:directional" position="0 3 -6"></a-light>

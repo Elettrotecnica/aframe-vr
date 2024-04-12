@@ -157,7 +157,6 @@ window.AFRAME.registerComponent('oacs-change-listener', {
     const newValue = this.properties['scale']['new'];
     newValue.copy(this.el.object3D.scale);
   }
-
 });
 
 /**
@@ -814,6 +813,7 @@ window.AFRAME.registerComponent('remote-hand-controls', {
         });
         mesh.position.set(0, 0, 0);
         mesh.rotation.set(handModelOrientationX, 0, handModelOrientationZ);
+        el.emit('model-loaded', {format: 'gltf', model: mesh});
       });
     }
 
@@ -1808,7 +1808,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         !el.components ||
         !el.components['oacs-networked-entity'] ||
         el.tagName === 'A-CAMERA' ||
-        el.components['local-hand-controls']) {
+        el.components['hand-controls']) {
       return false;
     }
 
@@ -1822,6 +1822,47 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     return true;
   },
 
+  sendEntityUpdate: function (entity, updateProperties) {
+    //
+    // Send an update message for an entity. Entity must be networked.
+    //
+    // The purpose of this method is to send custom updates that do
+    // not come from the change listener component, e.g. to react to
+    // events on the scene. By default, will behave as handler for the
+    // entityChanged event.
+    //
+    const component = entity.components['oacs-networked-entity'];
+    if (component) {
+      if (typeof updateProperties === 'undefined') {
+        const changeComponent = entity.components['oacs-change-listener'];
+        if (changeComponent) {
+          updateProperties = changeComponent.changedProperties;
+        }
+      }
+      if (typeof updateProperties !== 'undefined') {
+        const msg = this.msgObject();
+        msg.id = component.networkId;
+        msg.type = 'update';
+        Object.assign(msg, updateProperties);
+        this.send(msg);
+      }
+    }
+  },
+
+  sendToOwner: function (id, message) {
+    //
+    // Send a message to the owner of a specified entity.
+    //
+    // This is used to send information that is relevant only to a
+    // specific user and that should not be broadcasted.
+    //
+    const msg = this.msgObject();
+    msg.id = id;
+    msg.type = 'send-to-owner';
+    msg.message = message;
+    this.send(msg);
+  },
+
   _clear: function () {
     //
     // Cleanup all our networked entities. Invoked before leaving a VR
@@ -1833,19 +1874,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   },
 
   _addDelegatedListeners: function () {
-    const self = this;
-    window.addEventListener('entityChanged', function (e) {
-      const component = e.target.components['oacs-networked-entity'];
-      if (component) {
-        const msg = self.msgObject();
-        msg.id = component.networkId;
-        msg.type = 'update';
-        const changedProperties = e.target.components['oacs-change-listener'].changedProperties;
-        Object.assign(msg, changedProperties);
-        self.send(msg);
-      }
+    window.addEventListener('entityChanged', (evt) => {
+      this.sendEntityUpdate(evt.target);
     });
-
 
     if (this.isHeadset) {
       //
@@ -1962,6 +1993,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
         break;
       case 'grab':
         this._onRemoteGrab(m);
+        break;
+      case 'send-to-owner':
+        this.sceneEl.emit('owner-message', m.message);
         break;
       default:
         console.error('Invalid message type:', m.type);
@@ -3149,6 +3183,70 @@ window.AFRAME.registerComponent('standard-eyes', {
 	intersectedEl.removeAttribute(`ammo-constraint__${this.hand.id}`);
       }
       break;
+    }
+  }
+});
+
+/**
+ * StandardPainting Component
+ *
+ * This component makes sure painting behavior on hands can be turned
+ * on and off consistently.
+ *
+ */
+window.AFRAME.registerComponent('standard-painting', {
+  schema: {
+    owner: { type: 'string', default: 'local' },
+    active: { type: 'boolean', default: false }
+  },
+  dependencies: ['hand-controls'],
+  init: function () {
+    const hand = this.el.components['hand-controls'].data.hand;
+
+    this.el.setAttribute('brush', {
+      hand: hand,
+      owner: this.data.owner
+    });
+    this.el.setAttribute('paint-controls', {
+      hand: hand,
+      tooltips: false,
+      hideTip: false,
+      hideController: true
+    });
+    this.el.setAttribute('ui', '');
+
+    this.components = [
+      this.el.components['brush'],
+      this.el.components['paint-controls'],
+      this.el.components['ui']
+    ];
+    this.visibility = {};
+
+    //
+    // Wait for the component to start, then apply the "active" property.
+    //
+    this.el.addEventListener('play', this.update.bind(this), {once: true});
+  },
+
+  update: function () {
+    this.data.active ? this.play() : this.pause();
+  },
+
+  play: function () {
+    this.visibility.hideTip = false;
+    this.visibility.hideController = true;
+    this.el.setAttribute('paint-controls', this.visibility);
+    for (const component of this.components) {
+      component.play();
+    }
+  },
+
+  pause: function () {
+    this.visibility.hideTip = true;
+    this.visibility.hideController = false;
+    this.el.setAttribute('paint-controls', this.visibility);
+    for (const component of this.components) {
+      component.pause();
     }
   }
 });

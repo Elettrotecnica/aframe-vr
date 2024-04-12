@@ -9,15 +9,22 @@ to [Mozilla Hubs](https://hubs.mozilla.com/) in spirit, based on
 [Networked-Aframe](https://github.com/networked-aframe/networked-aframe).
 
 ## Why implementing a worse Mozilla Hubs?
-Hubs is great, but also quite complex. The process to host an own
-installation on premise is quite involved [as of right
-now](https://hubs.mozilla.com/labs/welcoming-community-edition/)
-because it depends on many subsystems.
+Hubs is great and mature, but also quite complex. The process to host
+an own installation [is not
+straightforward](https://github.com/mozilla/hubs-cloud/tree/master/community-edition)
+because it depends on many tools and subsystems.
 
-The focus of this implementation is on keeping it simple: NaviServer
-does the Websocket stuff needed to move things around on the scene and
-Janus does the WebRTC stuff for multimedia. This VR you can definitely
-host on premise! ;-)
+To make matters more complicated, in February 2024 Mozilla has
+[discontinued new development on the
+product](https://hubs.mozilla.com/labs/sunset/), just a few months
+after embarking in a [complete rewrite of the client
+code](https://hubs.mozilla.com/labs/the-new-hubs-client/).
+
+Although there is overlapping both in terms of features and technology
+with Hubs, the focus of this implementation is on keeping it simple:
+NaviServer does the Websocket stuff needed to move things around on
+the scene and Janus does the WebRTC stuff for multimedia. This VR you
+can definitely host on premise! ;-)
 
 ## Main features
 
@@ -101,6 +108,13 @@ a chat room id in the configuration parameters of your VR experience.
 When using a headset is currently only possible to reply to the chat
 while outside of immersive mode.
 
+### In-VR collaborative painting
+
+Based on a fork of the excellent
+[A-Painter](https://github.com/aframevr/a-painter), we allow peers to
+paint collaboratively in the experience. This can be used for art or
+as a communication tool.
+
 ### Environments
 
 The package provides common features and boilerplate for different VR
@@ -133,13 +147,54 @@ These examples can also be used as a reference to provide new ones.
 * "application based" server-side validation of the networked
   actions. This makes it currently unsuitable for "low trust"
   scenarios such as competitive games
-* further hybrid participation support
+* jumping?
 * ...
 
-## How to use
-1. Install the package on your OpenACS instance
-2. Access the package index page as administrator to configure your
-   virtual environment.
-3. If you plan on using audio chat or to stream multimedia in your
-   virtual environment, also provide the configuration to a Janus
-   instance.
+## Installation
+
+### Install OpenACS
+To have OpenACS running on your machine, follow the instructions at
+https://openacs.org/xowiki/naviserver-openacs
+
+### Install the package
+
+In your OpenACS packages folder:
+```
+cd /<your-openacs-path>/packages/
+git clone https://github.com/Elettrotecnica/aframe-vr.git
+```
+
+Then on a browser:
+1. Go to the homepage of your server
+2. Log in as administrator
+3. Click on "Install more packages"
+4. In the section "Install from Local File System", click on Install
+5. Select aframe-vr for installation
+6. In the next page, click on "Install packages"
+7. Restart your instance
+
+The package can be instantiated multiple times. Each instance carries
+its own parameters and configuration, so it is possible to host
+different kinds of experiences and to target different user groups.
+
+### (Optional) Install Janus
+
+In order to support streaming multimedia content to the VR experience
+and audio chat among peers, we integrate with [Janus WebRTC
+Server](https://janus.conf.meetecho.com/).
+
+Follow the intructions at https://github.com/meetecho/janus-gateway
+and ensure that the (multistream) [VideoRoom
+plugin](https://janus.conf.meetecho.com/docs/videoroom.html) is
+enabled.
+
+aframe-vr will automatically require a Janus video room for every
+mounted package instance that is configured to utilize WebRTC. The
+room can also be configured in advance in case we do not want or
+cannot create rooms dynamically. See the "Room Settings" page of any
+package instance and refer to the code in
+[janus-videoroom-procs.tcl](https://github.com/Elettrotecnica/aframe-vr/blob/main/tcl/janus-videoroom-procs.tcl)
+and
+[room-procs.tcl](https://github.com/Elettrotecnica/aframe-vr/blob/main/tcl/room-procs.tcl)
+for more information.
+

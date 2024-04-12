@@ -1,6 +1,68 @@
 <master src="/www/blank-master">
   <property name="doc(title)">Enter VR</property>
 
+  <template id="extra-assets">
+    <if @painting_p;literal@ true>
+      <img id="uinormal"
+           src="/resources/aframe-vr/assets/images/ui-normal.png"
+           crossorigin="anonymous">
+      <a-asset-item id="uiobj"
+                    src="/resources/aframe-vr/assets/models/ui.obj"></a-asset-item>
+      <a-asset-item id="tipObj"
+                    src="/resources/aframe-vr/assets/models/controller-tip.glb"></a-asset-item>
+      <audio crossorigin="anonymous"
+             id="ui_click0"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_click0.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_click1"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_click1.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_menu"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_menu.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_undo"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_undo.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_tick"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_tick.ogg"></audio>
+      <audio crossorigin="anonymous"
+             id="ui_paint"
+             src="https://cdn.aframe.io/a-painter/sounds/ui_paint.ogg"></audio>
+    </if>
+    <if @spawn_objects_p;literal@ true>
+      <include src="/packages/aframe-vr/lib/models" format="assets"/>
+    </if>
+  </template>
+  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    window.addEventListener('DOMContentLoaded', () => {
+	const scene = document.querySelector('a-scene');
+
+	//
+	// Extend the assets on the scene with additional ones needed to
+	// support features such as painting or model spawning.
+	//
+	let assets = document.querySelector('a-assets');
+	if (!assets) {
+	    assets = document.createElement('a-assets');
+	    scene.appendChild(assets);
+	}
+	assets.innerHTML += document.querySelector('#extra-assets').innerHTML;
+
+	//
+	// Set attributes on the scene
+	//
+	const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
+	scene.setAttribute('oacs-networked-scene', wsURI);
+	scene.setAttribute('webxr', 'overlayElement:#toolbar;');
+	scene.setAttribute('xr-mode-ui', 'enabled: false;');
+
+	//
+	// Append our rig to the scene
+	//
+	scene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
+    });
+  </script>
+
   <include src="/packages/aframe-vr/environments/@environment;literal@/index"/>
 
   <if @avatar_p;literal@ true>
@@ -67,10 +129,22 @@
   </else>
 
   <template id="avatar-left-hand-@user_id;literal@">
-    <a-entity remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+    <a-entity
+      remote-hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
+      <if @painting_p;literal@ true>
+        brush="hand: left; owner: client-@user_id;literal@;"
+        paint-controls="hand: left;  controller: default; tooltips: false; hideController: true;"
+      </if>
+      ></a-entity>
   </template>
   <template id="avatar-right-hand-@user_id;literal@">
-    <a-entity remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"></a-entity>
+    <a-entity
+      remote-hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
+      <if @painting_p;literal@ true>
+        brush="hand: right; owner: client-@user_id;literal@;"
+        paint-controls="hand: right; controller: default; tooltips: false; hideController: true;"
+      </if>
+      ></a-entity>
   </template>
 
   <template id="vr-rig">
@@ -85,9 +159,12 @@
       </a-camera>
       <!-- hand controls -->
       <a-entity id="client-@user_id;literal@-left-hand"
-		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
-		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+                <if @painting_p;literal@ true>
+                  standard-painting="owner: client-@user_id;literal@; active: false;"
+                </if>
+		oacs-networked-entity="template: #avatar-left-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-sphere color="black"
 		  radius="0.005"
 		  id="cursor"
@@ -102,9 +179,12 @@
 	<!--           rotation="-90 0 90"></a-entity> -->
       </a-entity>
       <a-entity id="client-@user_id;literal@-right-hand"
-		blink-controls="cameraRig: #myCameraRig; teleportOrigin: a-camera; button: thumbstick; collisionEntities: .collision; cancelEvents: gripdown, squeeze;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
-		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture">
+                <if @painting_p;literal@ true>
+                  standard-painting="owner: client-@user_id;literal@; active: false;"
+                </if>
+		oacs-networked-entity="template: #avatar-right-hand-@user_id;literal@; color: #ffcccc; properties: rotation, position, gesture,<if @painting_p;literal@ true>brush, paint-controls</if>">
 	<a-entity cursor
 		  raycaster="showLine: false; far: 0.6; lineColor: black; objects: [html]; interval:100;"
 		  rotation="-90 0 90"></a-entity>
@@ -112,7 +192,7 @@
     </a-entity>
   </template>
 
-  <div id="toolbar" style="display: none;">
+  <div id="toolbar">
     <div class="w3-sidebar w3-bar-block w3-light-grey w3-card" style="width:130px; height: max-content;">
       <h5 class="w3-bar-item">Menu</h5>
       <button class="w3-bar-item w3-button tablink w3-dark-grey" data-menu="room">Room</button>
@@ -126,7 +206,11 @@
       <if @chat_p;literal@ true>
 	<button class="w3-bar-item w3-button tablink" data-menu="chat">Chat</button>
       </if>
+      <if @painting_p;literal@ true>
+        <button class="w3-bar-item w3-button tablink" data-menu="paint">Paint</button>
+      </if>
     </div>
+
     <div id="vr-menu" style="background-color: white; margin-left:130px; width: max-content; max-width: calc(100vw - 170px); height: max-content;">
 
       <div data-menu="room">
@@ -205,8 +289,65 @@
 	</div>
       </if>
 
+      <if @painting_p;literal@ true>
+	<div data-menu="paint" style="display:none;">
+	  <div class="w3-container w3-teal w3-light-grey">
+	    <h2>Paint</h2>
+	  </div>
+	  <div class="w3-panel">
+	    <button id="toggle-painting" class="w3-button w3-green w3-hover-green w3-margin-bottom">
+              Start Painting
+            </button>
+          </div>
+	</div>
+      </if>
+
     </div>
   </div>
+
+  <if @painting_p;literal@ false>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+      //
+      // a-painter comes with its own input mappings. We we do not
+      // paint, we map aiming and teleporting the same as they do for
+      // consistency.
+      //
+      const mappings = {
+	behaviours: {},
+	mappings: {
+	  movement: {
+	    common: {},
+
+	    'vive-controls': {
+	      // Teleport
+	      'trackpad.down': 'aim',
+	      'trackpad.up': 'teleport'
+	    },
+
+	    'oculus-touch-controls': {
+	      // Teleport
+	      'ybutton.down': 'aim',
+	      'ybutton.up': 'teleport',
+
+	      'bbutton.down': 'aim',
+	      'bbutton.up': 'teleport'
+	    },
+
+	    'windows-motion-controls': {
+	      // Teleport
+	      'trackpad.down': 'aim',
+	      'trackpad.up': 'teleport'
+	    },
+	  }
+	}
+      };
+
+      document.querySelector('a-scene').addEventListener('loaded', function() {
+	AFRAME.registerInputMappings(mappings);
+	AFRAME.currentInputMapping = 'movement';
+      });
+    </script>
+  </if>
 
   <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
     function renderConnectionStatus(element, statusEvent) {
@@ -232,16 +373,10 @@
 	}
 	element.textContent = status;
     }
+
     const vrScene = document.querySelector('a-scene');
 
     vrScene.addEventListener('loaded', () => {
-	document.querySelector('#toolbar').removeAttribute('style');
-	const wsURI = `wsURI: ${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/aframe-vr/connect/@package_id@`;
-	vrScene.setAttribute('oacs-networked-scene', wsURI);
-	vrScene.setAttribute('webxr', 'overlayElement:#toolbar;');
-	vrScene.setAttribute('xr-mode-ui', 'enabled: false;');
-	vrScene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
-
 	const websocketConnectionStatusElement = document.querySelector('#websocket-connection-status');
 	vrScene.addEventListener('connectionstatuschange', function (e) {
 	    renderConnectionStatus(websocketConnectionStatusElement, e);
@@ -318,28 +453,6 @@
 
       </if>
       <if @spawn_objects_p;literal@ true>
-
-	//
-	// Spawning an object.
-	//
-
-	//
-	// Fetch all existing models from the JSON endpoint and append them
-	// to the page assets so they can be preloaded. This should reduce
-	// loading times when spawning, in particular if models do not
-	// change so much during the experience.
-	//
-	const assetsXml = new XMLHttpRequest();
-	const assets = document.querySelector('a-assets');
-	assetsXml.responseType = 'json';
-	assetsXml.addEventListener('load', e => {
-	    for (const m of assetsXml.response) {
-		assets.innerHTML += `<a-asset-item id="spawn-${m.live_revision}-model" src="${m.download_url}">`;
-	    }
-	});
-	assetsXml.open('GET', './models/?format=json');
-	assetsXml.send();
-
 	//
 	// Whenever the models menu becomes visible, fetch the models from
 	// the JSON endpoint and display the spawning UI
@@ -439,10 +552,6 @@
 		model.setAttribute('center', '');
 		model.setAttribute('clamp-size',
 				   'maxSize: @spawn_max_size;literal@; minSize: @spawn_min_size;literal@');
-		model.setAttribute(
-		    'oacs-networked-entity',
-		    `permanent: true; template: #${templateId}; properties: position, rotation, scale`
-		);
 		model.setAttribute('data-spawn', 'theirs');
 
 		//
@@ -453,13 +562,20 @@
 		const assetModel = document.querySelector(`a-asset-item#${spawnId}-model`);
 		model.setAttribute('src', assetModel ? `#${assetModel.id}` : `url(${modelURL})`);
 
-		model.flushToDOM(true);
-
 		template = document.createElement('template');
 		template.setAttribute('id', templateId);
 		template.content.appendChild(model);
-
 		vrScene.appendChild(template);
+
+		//
+		// The model is networked last, to make sure the
+		// template is on the page.
+		//
+		model.setAttribute(
+		    'oacs-networked-entity',
+		    `permanent: true; template: #${templateId}; properties: position, rotation, scale`
+		);
+		model.flushToDOM(true);
 	    }
 
 	    //
@@ -650,6 +766,7 @@
 
 	    webRTCStatusElement.style.display = e.detail.stream ? 'none' : 'block';
 	    audioMeterElement.style.display = e.detail.stream ? 'block' : 'none'
+
 	    renderConnectionStatus(webRTCConnectionStatusElement, e);
 	});
   </if>
@@ -745,5 +862,101 @@
 		 camera.setAttribute('standard-eyes', '');
 	     }
 	 });
+    </script>
+  </if>
+  <if @painting_p;literal@ true>
+    <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+      if (!window.AFRAME.utils.device.checkHeadsetConnected()) {
+          //
+          // Painting is not supported on desktop for now (but people
+          // on desktop will be able to see other people paintings).
+          //
+          for (const menuItem of document.querySelectorAll('[data-menu=paint]')) {
+              menuItem.remove();
+          }
+      } else {
+          const strokeUndoMessage = {
+              brush: {
+                  undo: 1
+              }
+          };
+          const paintingButton = document.querySelector('#toggle-painting');
+          const paintConf = {
+              hideTip: true,
+              hideController: false
+          }
+          let isPlaying = false;
+          function togglePainting(hands) {
+              for (const hand of hands) {
+                  hand.setAttribute('standard-painting', {active: !isPlaying});
+              }
+	      paintingButton.textContent = isPlaying ? 'Start Painting' : 'Stop Painting';
+	      paintingButton.classList.replace(
+                  isPlaying ? 'w3-red' : 'w3-green',
+                  isPlaying ? 'w3-green' : 'w3-red'
+              );
+              paintingButton.classList.replace(
+                  isPlaying ? 'w3-hover-red' : 'w3-hover-green',
+                  isPlaying ? 'w3-hover-green' : 'w3-hover-red'
+              );
+              isPlaying = !isPlaying;
+          }
+          vrScene.addEventListener('loaded', () => {
+              const hands = document.querySelectorAll('[standard-painting]');
+              paintingButton.addEventListener('click', () => {
+                  togglePainting(hands);
+              });
+          });
+          window.addEventListener('exit-vr', () => {
+              //
+              // Exiting VR removes peers using a headset from the scene,
+              // which will clear their paintings remotely. We also clear
+              // them locally.
+              //
+              const brush = vrScene.systems.brush;
+              brush.clear(`client-@user_id;literal@`);
+          });
+          vrScene.addEventListener('stroke-removed', (evt) => {
+              //
+              // When a stroke from us is removed, we broadcast an undo
+              // operation over the network.
+              //
+              if (evt.detail.stroke.data.owner === `client-@user_id;literal@`) {
+                  const network = vrScene.systems['oacs-networked-scene'];
+                  const hand = document.querySelector('[hand-controls][brush]');
+                  network.sendEntityUpdate(hand, strokeUndoMessage);
+                  console.log('undo sent');
+              }
+          });
+          vrScene.addEventListener('child-attached', (evt) => {
+              //
+              // When a new participants (avatar) arrives on the scene,
+              // send them our current painrting.
+              //
+              const el = evt.detail.el;
+              if (el.matches('.avatar')) {
+                  const brush = vrScene.systems.brush;
+                  const painting = brush.getJSON(`client-@user_id;literal@`);
+                  if (painting.strokes.length > 0) {
+                      const network = vrScene.systems['oacs-networked-scene'];
+                      console.log('sending painting:', painting);
+                      network.sendToOwner(el.id, painting);
+                  }
+              }
+          });
+      }
+
+      vrScene.addEventListener('owner-message', (evt) => {
+          console.log('owner message', evt);
+          const painting = evt.detail;
+          if (painting.strokes) {
+              //
+              // Somebody sent us their painting. Display it locally.
+              //
+              console.log('receiving painting:', painting);
+              const brush = vrScene.systems.brush;
+              brush.loadJSON(painting);
+          }
+      });
     </script>
   </if>

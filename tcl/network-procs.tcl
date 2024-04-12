@@ -78,14 +78,14 @@ namespace eval ws::aframevr {
 
                 set opNode [$s selectNodes /type/text()]
 
-                if {$op ne "release" &&
+                if {$op ni {"release" "send-to-owner"} &&
                     $owner ne $channel &&
                     [::ws::send $owner ""]
                 } {
                     #
-                    # For any operation except "release", we deny
-                    # acting on an existing object unless we are the
-                    # owners.
+                    # For any operation except "release" and
+                    # "send-to-owner", we deny acting on an existing
+                    # object unless we are the owners.
                     #
                     # The peer issuing the request will be asked to
                     # release control over this object.
@@ -175,6 +175,19 @@ namespace eval ws::aframevr {
                     $opNode nodeValue "grab"
                     ::ws::send $channel \
                         [ns_connchan wsencode -opcode text [$s asJSON]]
+                    return
+                }
+
+                if {$op eq "send-to-owner"} {
+                    #
+                    # We want this message to be sent only to the
+                    # object's owner.
+                    #
+
+                    if {$owner ne $channel} {
+                        ::ws::send $owner \
+                            [ns_connchan wsencode -opcode text $msg]
+                    }
                     return
                 }
 
