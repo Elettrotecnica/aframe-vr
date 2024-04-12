@@ -2933,6 +2933,11 @@ window.AFRAME.registerComponent('standard-hands', {
     // If we're already grabbing something you can't grab again.
     if (!hitEl || !this.grabbing || this.hitEl || this.stretchInterval) { return; }
 
+    //
+    // Ensure the object we touch wakes up.
+    //
+    hitEl?.components['ammo-body'].body.activate(true);
+
     if (hitEl.is(this.GRABBED_STATE)) {
       //
       // Entity is already grabbed by another hand. we are going to
