@@ -52,10 +52,39 @@
   </if>
   <if @avatar_exists_p;literal@ true>
     <div class="flex-12">
-      You already have an avatar
-      <a id="download" href="@avatar_url@">Download</a>
+      <h3>You already have an avatar</h3>
+      <button
+        id="avatar-download"
+        class="btn btn-success"
+        data-href="@avatar_url@">
+        Download
+      </button>
+      <button
+        id="avatar-delete"
+        class="btn btn-danger"
+        data-href="@delete_url@">
+        Delete
+      </button>
     </div>
   </if>
   <div class="flex-12">
+    <h3>
+      <if @avatar_exists_p;literal@ true>
+        Replace avatar
+      </if>
+      <else>
+        Add avatar
+      </else>
+    </h3>
     <formtemplate id="avatar"></formtemplate>
   </div>
+  <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+    document.querySelector('#avatar-delete').addEventListener('click', e => {
+        if (confirm('Dou you really want to delete your current avatar?')) {
+            window.location.href = e.target.dataset.href;
+        }
+    });
+    document.querySelector('#avatar-download').addEventListener('click', e => {
+        window.location.href = e.target.dataset.href;
+    });
+  </script>

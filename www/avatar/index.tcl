@@ -13,6 +13,8 @@ ad_page_contract {
 
     It is currently possible to generate an avatar only for our own
     user.
+} {
+    {delete_p:boolean false}
 }
 
 set user_id [ad_conn user_id]
@@ -29,6 +31,14 @@ set avatar_url [ad_conn package_url]${avatar_path}
 set avatar_image_path avatars/[ad_conn user_id].png
 set avatar_image_file [acs_package_root_dir [ad_conn package_key]]/www/$avatar_image_path
 set avatar_image_url [ad_conn package_url]${avatar_image_path}
+
+set delete_url [ns_conn url]?delete_p=true
+
+if {$delete_p} {
+    file delete -- $avatar_file $avatar_image_file
+    ad_returnredirect [ns_conn url]
+    ad_script_abort
+}
 
 ad_form \
     -name avatar \
