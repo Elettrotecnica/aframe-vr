@@ -1695,7 +1695,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     // it and attach them.
     //
     this.el.sceneEl.addEventListener('child-attached', function (e) {
-      const element = e.target;
+      const element = e.detail.el;
       const elementTracks = self.remoteTracks[element.id];
       if (elementTracks) {
         for (const track of elementTracks) {
