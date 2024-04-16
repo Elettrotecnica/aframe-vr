@@ -2922,6 +2922,7 @@ window.AFRAME.registerComponent('standard-hands', {
       // We move the constraint to hand B.
       //
       this.otherHand.components['standard-hands'].hitEl = this.hitEl;
+      this.hitEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
       this.hitEl.setAttribute(`ammo-constraint__${this.otherHand.id}`,
                               { target: `#${this.otherHand.id}` });
     } else {
@@ -2929,6 +2930,7 @@ window.AFRAME.registerComponent('standard-hands', {
       // When this was the only hand grabbing the item, then this is
       // not grabbed anymore.
       //
+      this.hitEl.setAttribute('ammo-body', {activationState: 'active'});
       this.hitEl.removeState(this.GRABBED_STATE);
     }
 
@@ -2967,11 +2969,6 @@ window.AFRAME.registerComponent('standard-hands', {
     // If we're already grabbing something you can't grab again.
     if (!hitEl || !this.grabbing || this.hitEl || this.stretchInterval) { return; }
 
-    //
-    // Ensure the object we touch wakes up.
-    //
-    hitEl?.components['ammo-body'].body.activate(true);
-
     if (hitEl.is(this.GRABBED_STATE)) {
       //
       // Entity is already grabbed by another hand. we are going to
@@ -3004,6 +3001,7 @@ window.AFRAME.registerComponent('standard-hands', {
       //
       hitEl.addState(this.GRABBED_STATE);
       this.hitEl = hitEl;
+      this.hitEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
       this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
                               { target: `#${this.el.id}` });
     }
@@ -3124,13 +3122,8 @@ window.AFRAME.registerComponent('standard-eyes', {
       //
       if (this.cursor.components.raycaster.getIntersection(intersectedEl) &&
 	  !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
-        //
-        // Default bodies will go to sleep shortly after they stop
-        // moving. As we do not really touch them, they won't wake up
-        // on their own. We need to do it manually.
-        //
-	intersectedEl.components['ammo-body'].body.activate(true);
-	intersectedEl.setAttribute(`ammo-constraint__${this.hand.id}`,
+        intersectedEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
+        intersectedEl.setAttribute(`ammo-constraint__${this.hand.id}`,
 				   { target: `#${this.hand.id}` });
       }
       break;
@@ -3180,6 +3173,7 @@ window.AFRAME.registerComponent('standard-eyes', {
       //
       if (intersectedEl &&
 	  intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+        intersectedEl.setAttribute('ammo-body', {activationState: 'active'});
 	intersectedEl.removeAttribute(`ammo-constraint__${this.hand.id}`);
       }
       break;
