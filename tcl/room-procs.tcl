@@ -23,7 +23,7 @@ ad_proc -private aframe_vr::room::require {
     #
     # Check if room exists in the nsd
     #
-    if {![nsv_get aframe-vr-janus-rooms $package_id janus_room]} {
+    if {$force_p || ![nsv_get aframe-vr-janus-rooms $package_id janus_room]} {
         #
         # We have to create the room. Lock this operations so that
         # other threads don't get in the way.
@@ -34,7 +34,7 @@ ad_proc -private aframe_vr::room::require {
             # case we are one of those threads that were blocked
             # before.
             #
-            if {[nsv_get aframe-vr-janus-rooms $package_id janus_room]} {
+            if {!$force_p && [nsv_get aframe-vr-janus-rooms $package_id janus_room]} {
                 return $janus_room
             }
 
