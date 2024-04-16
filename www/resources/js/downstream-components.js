@@ -193,7 +193,6 @@ window.AFRAME.registerComponent('mediastream-sound', {
     this.stream = null;
     this.sound = null;
     this.audioEl = null;
-    this._setupSound = this._setupSound.bind(this);
   },
 
   update (oldData) {
@@ -211,8 +210,14 @@ window.AFRAME.registerComponent('mediastream-sound', {
   },
 
   setMediaStream (stream) {
-    this.destroySound();
-    this._setupSound(stream);
+    if (this.initialized) {
+      this.destroySound();
+      this._setupSound(stream);
+    } else {
+      this.el.addEventListener('loaded', () => {
+        this.setMediaStream(stream);
+      });
+    }
   },
 
   _setPannerProperties () {
