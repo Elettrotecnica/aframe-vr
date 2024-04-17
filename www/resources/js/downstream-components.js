@@ -558,21 +558,27 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
     //
     for (const lookAt of this._lookAtEntities(delta)) {
       let inLineOfSight = true;
-      for (let eye of this.eyes) {
-        if (!inLineOfSight) {
-          break;
-        }
+      for (const eye of this.eyes) {
         //
-        // Look at the object, but constrain the eyes rotation to 0.8
+        // Look at the object, but constrain the eyes rotation to 0.3
         // radians. When the angle is bigger, the entity is not in our
         // line of sight.
         //
         eye.lookAt(lookAt.getWorldPosition(READYPLAYERME_WORLD_POSITION_THAT));
-        inLineOfSight&&= eye.quaternion.angleTo(READYPLAYERME_IDENTITY_QUATERNION) <= 0.8;
+        const eyeRotation = eye.quaternion.angleTo(READYPLAYERME_IDENTITY_QUATERNION);
+        inLineOfSight&&= window.Math.abs(eyeRotation) <= 0.3;
+      }
+      for (const eye of this.eyes) {
         if (!inLineOfSight) {
+          //
+          // If one or both eyes would rotate too much, they will both
+          // look straight ahead instead.
+          //
           eye.quaternion.copy(READYPLAYERME_IDENTITY_QUATERNION);
         }
+        //
         // Compensate a PI/2 offset in the X rotation.
+        //
         eye.rotateX(Math.PI / 2);
       }
       if (inLineOfSight) {
