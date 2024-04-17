@@ -214,8 +214,10 @@ window.AFRAME.registerComponent('mediastream-sound', {
       this.destroySound();
       this._setupSound(stream);
     } else {
-      this.el.addEventListener('loaded', () => {
-        this.setMediaStream(stream);
+      this.el.addEventListener('componentinitialized', (evt) => {
+        if (evt.detail.name === this.name && evt.detail.id === this.id) {
+          this.setMediaStream(stream);
+        }
       });
     }
   },
