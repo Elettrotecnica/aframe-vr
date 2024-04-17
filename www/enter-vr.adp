@@ -60,6 +60,18 @@
 	// Append our rig to the scene
 	//
 	scene.insertAdjacentHTML('beforeend', document.querySelector('#vr-rig').innerHTML);
+
+        //
+        // HTML UI should not occlude transparent materials.
+        //
+        for (const htmlUI of scene.querySelectorAll('a-entity[html]')) {
+            htmlUI.addEventListener('object3dset', function (evt) {
+                if (evt.detail.type === 'html') {
+                    const mesh = evt.detail.object;
+                    mesh.material.alphaHash = true;
+                }
+            });
+        }
     });
   </script>
 
