@@ -699,7 +699,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
       self.mesh.traverse((o) => {
         if ( o.morphTargetInfluences && o.userData.targetNames ) {
           //
-          // When morph targets are defines for this node, collect
+          // When morph targets are defined for this node, collect
           // them, together with a quick mapping from name to
           // position.
           //
