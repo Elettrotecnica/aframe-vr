@@ -27,6 +27,61 @@ namespace eval ws::aframevr {
         }
     }
 
+    nsf::proc sweep_connections {} {
+        #
+        # This sweeper checks whether we have items in a VR room owned
+        # by a peer that is currently disconnected.
+        #
+        # In this case, the first available connected peer will be
+        # notified of the situation. Their expected behavior will be
+        # to issue a deletion to the backend if the item is not meant
+        # to be permanent.
+        #
+        # The purpose is to ensure that peers that did not disconnect
+        # properly (e.g., after a browser crash) do not let their
+        # avatars lying around.
+        #
+
+        ns_log debug {::ws::aframevr::sweep_connections START}
+        #
+        # Sweep all of the subscriptions.
+        #
+        foreach chat_array [nsv_names vrchat-*] {
+            ns_log debug "::ws::aframevr::sweep_connections - Sweeping '$chat_array'"
+            #
+            # For each item...
+            #
+            foreach {id status} [nsv_array get $chat_array] {
+                ns_log debug ::ws::aframevr::sweep_connections \
+                    '$chat_array' '$id' '$status'
+                dom parse -json $status s
+                set owner [[$s selectNodes /owner/text()] nodeValue]
+                if {![::ws::send $owner ""]} {
+                    #
+                    # ...if the owner is not connected anymore, notify
+                    # the first connected peer we find.
+                    #
+                    # The client should react by issuing a server-side
+                    # deletion.
+                    #
+                    set chat [string range $chat_array 7 end]
+                    set msg [subst -nocommands {
+                        {"type": "disconnect", "id": "$id"}
+                    }]
+                    set msg [ns_connchan wsencode -opcode text $msg]
+                    foreach c [::ws::subscribers $chat] {
+                        if {[::ws::send $c $msg]} {
+                            ns_log debug ::ws::aframevr::sweep_connections \
+                                '$chat_array' '$id' '$status' "sent disconnect"
+                            break
+                        }
+                    }
+                }
+            }
+        }
+        ns_log debug {::ws::aframevr::sweep_connections END}
+    }
+
     nsf::proc handle_message {
         {-chat "chat"}
         channel msg

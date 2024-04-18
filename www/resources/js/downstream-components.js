@@ -1814,14 +1814,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     const el = document.getElementById(id);
 
     //
-    // Check that only existing networked entities are deleted. Also
-    // prevent deleting ourselves.
+    // Prevent deleting ourselves.
     //
-    if (!el ||
-        !el.components ||
-        !el.components['oacs-networked-entity'] ||
-        el.tagName === 'A-CAMERA' ||
-        el.components['hand-controls']) {
+    if (!el || el.matches('a-camera, [camera], [hand-controls]')) {
       return false;
     }
 
@@ -2007,6 +2002,9 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       case 'grab':
         this._onRemoteGrab(m);
         break;
+      case 'disconnect':
+        this._onDisconnect(m);
+        break;
       case 'send-to-owner':
         this.sceneEl.emit('owner-message', m.message);
         break;
@@ -2071,6 +2069,29 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       releasedEntity.setAttribute('visible', true);
       this._update(releasedEntity, data);
       releasedEntity.dispatchEvent(this.releaseEvent);
+    }
+  },
+
+  _onDisconnect: function (data) {
+    //
+    // The backend informs us that the owner of an entity is now
+    // unreachable.
+    //
+    const entity = document.getElementById(data.id);
+    if (entity) {
+      const networkedEntity = entity.getAttribute('oacs-networked-entity');
+      if (!networkedEntity || !networkedEntity.permanent) {
+        //
+        // Entity not networked (e.g. remote avatars) or non-permanent
+        // entity: delete.
+        //
+        this.deleteEntity(data.id);
+      } else if (networkedEntity && networkedEntity.permanent) {
+        //
+        // Permanent network entity: grab.
+        //
+        this.grab(data.id);
+      }
     }
   },
 
