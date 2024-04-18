@@ -1079,10 +1079,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
   _removeTrack: function (element, track) {
     if (track.kind === 'video') {
       element.setAttribute('material', 'src', null);
-      const v = element.querySelector('video');
-      if (v) {
-        v.parentElement.removeChild(v);
-      }
+      element.querySelector('video')?.remove();
     } else {
       element.removeAttribute('mediastream-sound');
     }
@@ -1820,7 +1817,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
       return false;
     }
 
-    el.parentElement.removeChild(el);
+    el.remove();
 
     const msg = this.msgObject();
     msg.id = id;
@@ -1975,9 +1972,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
 
   _delete: function (data) {
     // Delete an item locally
-    const el = document.getElementById(data.id);
-    if (!el) return;
-    el.parentElement.removeChild(el);
+    document.getElementById(data.id)?.remove();
   },
 
   _onMessage: function (e) {
