@@ -2723,53 +2723,39 @@ window.AFRAME.registerComponent('bound-to-entity', {
     //
     // Default respawn position is the element's position right now.
     //
+    const respawnPosition = this.data.respawnPosition.x ?
+          this.data.respawnPosition : this.el.object3D.position;
     this.respawnPosition = new THREE.Vector3();
-    if (this.data.respawnPosition.x) {
-      this.respawnPosition.copy(this.data.respawnPosition);
-    } else {
-      this.respawnPosition.copy(this.el.object3D.position);
-    }
+    this.respawnPosition.copy(respawnPosition);
 
     this.entity = this.data.entity;
 
-    //
-    // We only check once per second to not weight too much on the
-    // system.
-    //
-    this.interval = 1000;
-
-    //
-    // Compute the bounding box of the entity as soon as it is ready.
-    //
-    if (this.entity.object3DMap.mesh) {
-      this.bounds = _getBoundinBox(this.entity.object3D).clone();
-    } else {
-      this.entity.addEventListener("object3dset", e => {
-	if (e.detail.type === "mesh") {
-          this.bounds = _getBoundinBox(this.entity.object3D).clone();
-	}
-      }, {once: true});
-    }
+    this.tick = AFRAME.utils.throttleTick(this.tick, 200, this);
   },
-  tick: function (time, delta) {
-    //
-    // Every interval, if the component entity is out of bounds,
-    // reposition it.
-    //
-    this.wait -= delta;
-    if (!this.wait || this.wait <= 0) {
-      if (this.bounds &&
-          !this.bounds.containsPoint(this.el.object3D.position)) {
-        this.el.object3D.position.copy(this.respawnPosition);
-        //
-        // On an entity that is physics-enabled, we also need to
-        // resync the body to the new position.
-        //
-        if (this.el.components['ammo-body']) {
-          this.el.components['ammo-body'].syncToPhysics();
-        }
-      }
-      this.wait = this.interval;
+  tick: function () {
+    if (!this.entity.object3DMap.mesh) {
+      //
+      // Wait for the entity to have a mesh.
+      //
+      return;
+    }
+    if (!this.bounds) {
+      //
+      // Compute the bounding box of our entity.
+      //
+      this.bounds = _getBoundinBox(this.entity.object3D).clone();
+    }
+    if (!this.bounds.containsPoint(this.el.object3D.position)) {
+      //
+      // Reposition the entity at the respawn point when it lies
+      // outside the boundary.
+      //
+      this.el.object3D.position.copy(this.respawnPosition);
+      //
+      // On an entity that is physics-enabled, we also need to
+      // resync the body to the new position.
+      //
+      this.el.components['ammo-body']?.syncToPhysics();
     }
   }
 });
