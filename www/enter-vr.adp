@@ -486,38 +486,31 @@
 			<span class="spawn-controls"
 			      data-id="spawn-${m.live_revision}"
 			      data-model_url="${m.download_url}">
-			  <button class="w3-button w3-green w3-hover-green spawn">Spawn</button>
-			  <button class="w3-button w3-red w3-hover-red despawn">Despawn</button>
+			  <button class="w3-button w3-green w3-hover-green"
+                                  data-class-spawn="w3-button w3-green w3-hover-green"
+                                  data-text-spawn="Spawn"
+                                  data-class-despawn="w3-button w3-red w3-hover-red"
+                                  data-text-despawn="Despawn">
+                            Spawn
+                          </button>
 			</span>
 			<span class="w3-margin-left">${m.name}</span>
 		      </li>`;
 		    modelsList.innerHTML += template;
 		}
 
-		for (const s of document.querySelectorAll('.spawn-controls')) {
-		    const spawnId = s.dataset['id'];
-		    const modelURL = s.dataset['model_url'];
-		    const spawn = s.querySelector('.spawn');
-		    const despawn = s.querySelector('.despawn');
-
-		    spawn.addEventListener('click', function (e) {
-			e.preventDefault();
-			if(spawnObject(spawnId, modelURL)) {
-			    spawn.style.display = 'none';
-			    despawn.style.display = null;
-			}
+		for (const spawnButton of document.querySelectorAll('.spawn-controls button')) {
+                    const spawnId = spawnButton.parentElement.dataset['id'];
+                    const modelURL = spawnButton.parentElement.dataset['model_url'];
+		    spawnButton.addEventListener('click', function (evt) {
+                        evt.preventDefault();
+                        if (isSpawned(spawnId)) {
+                            despawnObject(spawnId);
+                        } else {
+                            spawnObject(spawnId, modelURL);
+                        }
 		    });
-		    despawn.addEventListener('click', function (e) {
-			e.preventDefault();
-			if(despawnObject(spawnId)) {
-			    spawn.style.display = null;
-			    despawn.style.display = 'none';
-			}
-		    });
-
-		    const spawned = isSpawned(spawnId);
-		    spawn.style.display = spawned ? 'none' : null;
-		    despawn.style.display = spawned ? null : 'none';
+                    updateSpawnUI(spawnId);
 		}
 	    });
 	    xml.open('GET', './models/?format=json');
@@ -606,19 +599,24 @@
 	    return true;
 	}
 
-	function updateSpawnUI(e) {
-	    const spawnId = e.detail.el.id;
-	    const s = document.querySelector(`.spawn-controls[data-id='${spawnId}'`);
-	    if (s) {
-		const spawn = s.querySelector('.spawn');
-		const despawn = s.querySelector('.despawn');
-		const spawned = isSpawned(spawnId);
-		spawn.style.display = spawned ? 'none' : null;
-		despawn.style.display = spawned ? null : 'none';
+	function updateSpawnUI(spawnId) {
+	    const spawnButton = document.querySelector(`.spawn-controls[data-id='${spawnId}'] button`);
+	    if (spawnButton) {
+                if (isSpawned(spawnId)) {
+                    spawnButton.setAttribute('class', spawnButton.getAttribute('data-class-despawn'));
+                    spawnButton.textContent = spawnButton.getAttribute('data-text-despawn');
+                } else {
+                    spawnButton.setAttribute('class', spawnButton.getAttribute('data-class-spawn'));
+                    spawnButton.textContent = spawnButton.getAttribute('data-text-spawn');
+                }
 	    }
 	}
-	vrScene.addEventListener('child-attached', updateSpawnUI);
-	vrScene.addEventListener('child-detached', updateSpawnUI);
+	vrScene.addEventListener('child-attached', (evt) => {
+            updateSpawnUI(evt.detail.el.id);
+        });
+	vrScene.addEventListener('child-detached', (evt) => {
+            updateSpawnUI(evt.detail.el.id);
+        });
 
       </if>
       <if @webrtc_p;literal@ true>
