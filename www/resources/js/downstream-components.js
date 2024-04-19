@@ -2396,7 +2396,7 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
 const _getBoundinBox = (function () {
   const box = new THREE.Box3();
   return function (object) {
-    return box.setFromObject(object, false);
+    return box.setFromObject(object, true);
   };
 })();
 const _getBoundinBoxSize = (function () {
@@ -2773,6 +2773,34 @@ window.AFRAME.registerComponent('bound-to-entity', {
       //
       this.el.components['ammo-body']?.syncToPhysics();
     }
+  }
+});
+
+/**
+ * Utility component to deal with models arbitrarily located with
+ * respect to the origin. It will make sure that the model min point
+ * of its bounding box is located at 0 0 0. Optionally, will apply the
+ * same offset also to other entites that are supposed to be
+ * positioned together, such as the navmesh.
+ */
+window.AFRAME.registerComponent('bbox-min-to-zero', {
+  schema: {
+    otherEntities: {type: 'selectorAll', default: null}
+  },
+  init: function () {
+    this.el.addEventListener('object3dset', (evt) => {
+      if (evt.detail.type === 'mesh') {
+        const bounds = _getBoundinBox(this.el.object3D);
+        for (const entity of this.data.otherEntities) {
+          entity.object3D.position.
+            add(this.el.object3D.position).
+            sub(bounds.min);
+        }
+        this.el.object3D.position.
+          add(this.el.object3D.position).
+          sub(bounds.min);
+      }
+    });
   }
 });
 
