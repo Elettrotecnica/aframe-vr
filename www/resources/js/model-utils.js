@@ -28,33 +28,17 @@ AFRAME.registerComponent('lightmap', {
     this.texture = texture;
 
     this.el.addEventListener('object3dset', this.update.bind(this));
-    this.materials = new Map();
   },
   update() {
     const filters = this.data.filter.trim().split(',');
-    this.el.object3D.traverse(function (o) {
-      if (o.material) {
-        if (filters.some(filter => o.material.name.includes(filter))) {
-          const sceneEl = this.el.sceneEl;
-          const m = o.material;
-          o.material = this.materials.has(m) ? this.materials.get(m) : new THREE.MeshPhongMaterial({
-            name: 'phong_' + m.name,
-            lightMap: this.texture,
-            lightMapIntensity: this.data.intensity,
-            color: m.color,
-            map: m.map,
-            transparent: m.transparent,
-            side: m.side,
-            depthWrite: m.depthWrite,
-            reflectivity: m.metalness,
-            toneMapped: m.toneMapped,
-            get envMap() {return sceneEl.object3D.environment}
-          });
-          
-          this.materials.set(m, o.material);
-        }
+    const sceneEl = this.el.sceneEl;
+    this.el.object3D.traverse((o) => {
+      if (o.material && filters.some(filter => o.material.name.includes(filter))) {
+        o.material.lightMap = this.texture;
+        o.material.lightMapIntensity = this.data.intensity;
+        o.material.envMap = () => {return sceneEl.object3D.environment};
       }
-    }.bind(this));
+    });
   }
 });
 
