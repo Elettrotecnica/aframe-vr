@@ -24,7 +24,28 @@ AFRAME.registerComponent('simple-navmesh-constraint', {
       default: ''
     }
   },
-  
+
+  init: function () {
+    this.updateNavmeshEntities = this.updateNavmeshEntities.bind(this);
+  },
+
+  play: function () {
+    this.el.sceneEl.addEventListener('child-attached', this.updateNavmeshEntities);
+    this.el.sceneEl.addEventListener('child-detached', this.updateNavmeshEntities);
+  },
+
+  pause: function () {
+    this.el.sceneEl.removeEventListener('child-attached', this.updateNavmeshEntities);
+    this.el.sceneEl.removeEventListener('child-detached', this.updateNavmeshEntities);
+  },
+
+  updateNavmeshEntities: function (evt) {
+    // Don't bother updating if the entity is not relevant to us
+    if (evt.detail.el.matches(`${this.data.navmesh}, ${this.data.exclude}`)) {
+      this.update();
+    }
+  },
+
   update: function () {
     this.lastPosition = null;
     this.excludes = this.data.exclude ? Array.from(document.querySelectorAll(this.data.exclude)):[];
