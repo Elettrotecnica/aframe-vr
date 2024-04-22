@@ -72,7 +72,7 @@
   </a-sound>
 
   <a-gltf-model
-    class="collision"
+    class="navmesh"
     src="#navmesh"
     visible="false">
   </a-gltf-model>

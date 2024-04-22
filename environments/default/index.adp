@@ -19,7 +19,7 @@
   <a-entity
     geometry="primitive: plane; width: 250; height: 250;" rotation="-90 0 0" position="0 0 110"
     visible="false"
-    class="collision"></a-entity>
+    class="navmesh"></a-entity>
 
   <a-entity light="color: #ccccff; intensity: 1; type: ambient;" visible=""></a-entity>
   <a-entity light="color: #ffaaff; intensity: 1.5" position="5 5 5"></a-entity>

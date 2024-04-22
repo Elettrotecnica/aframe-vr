@@ -103,7 +103,7 @@ AFRAME.registerComponent('window-replace', {
   </a-gltf-model>
 
   <a-gltf-model
-    class="collision"
+    class="navmesh"
     src="#navmesh"
     visible="false">
   </a-gltf-model>

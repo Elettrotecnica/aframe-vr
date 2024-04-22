@@ -163,7 +163,7 @@
     <a-entity id="myCameraRig">
       <!-- camera -->
       <a-camera id="client-@user_id;literal@"
-		simple-navmesh-constraint="navmesh:.collision; fall:0.5; height:1.65;"
+		simple-navmesh-constraint="navmesh:.navmesh; fall:0.5; height:1.65;"
 		oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
 		<if @webrtc_p;literal@ true>
 		  janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
@@ -171,7 +171,7 @@
       </a-camera>
       <!-- hand controls -->
       <a-entity id="client-@user_id;literal@-left-hand"
-		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   standard-painting="owner: client-@user_id;literal@; active: false;"
@@ -191,7 +191,7 @@
 	<!--           rotation="-90 0 90"></a-entity> -->
       </a-entity>
       <a-entity id="client-@user_id;literal@-right-hand"
-		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .collision; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   standard-painting="owner: client-@user_id;literal@; active: false;"
