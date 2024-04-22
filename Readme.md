@@ -113,12 +113,12 @@ while outside of immersive mode.
 ![Schermata del 2024-04-12 16-59-29](https://github.com/Elettrotecnica/aframe-vr/assets/3331940/532dbafe-be08-4b90-ba70-2731a43bf50b)
 
 Based on a fork of the excellent
-[A-Painter](https://github.com/aframevr/a-painter), we allow peers to
+[A-Painter](https://github.com/Elettrotecnica/a-painter), we allow peers to
 paint collaboratively in the experience. This can be used for art or
 as a communication tool.
 
 ### Mozilla Hubs scene models support
-Based on a [custom build of the gltf-model-plus
+Based on a custom build of the [gltf-model-plus
 component](https://github.com/Elettrotecnica/aframe-gltf-model-plus/tree/elettrotecnica),
 it is possible to load scenes created for Mozilla Hubs as environments
 for your experience.
