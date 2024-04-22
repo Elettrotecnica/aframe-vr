@@ -117,6 +117,18 @@ Based on a fork of the excellent
 paint collaboratively in the experience. This can be used for art or
 as a communication tool.
 
+### Mozilla Hubs scene models support
+Based on a [custom build of the gltf-model-plus
+component](https://github.com/Elettrotecnica/aframe-gltf-model-plus/tree/elettrotecnica),
+it is possible to load scenes created for Mozilla Hubs as environments
+for your experience.
+
+There are limitations to what we can support out fo the box, but
+things that will work include lightmaps and spawn points.
+
+See the mozilla-atrium environment for an example of a model exported
+directly from Spoke without any further intervention.
+
 ### Environments
 
 The package provides common features and boilerplate for different VR
@@ -140,6 +152,10 @@ We currently provide 3 environments out of the box:
                         MozillaHubs, this model has a complex navmesh
                         and uses multiple spatial audio sources to
                         recreate that vacation feeling.
+3. mozilla-atrium - Another Mozilla Hubs model, suitable for casual
+                    meetups. It showcases the use of the
+                    gltf-model-plus component to load models exported
+                    from Spoke.
 
 These examples can also be used as a reference to provide new ones.
 
