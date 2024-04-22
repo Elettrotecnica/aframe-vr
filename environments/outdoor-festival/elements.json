@@ -1,0 +1,7 @@
+{
+  "sceneTitle": "Outdoor festival",
+  "sceneModel": "Outdoor_Festival.glb",
+  "components": {
+    "environment": "playArea:400;preset:arches;dressing:none;ground:none;shadow:false;fog:0"
+  }
+}
