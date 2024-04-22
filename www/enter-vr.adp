@@ -171,7 +171,7 @@
       </a-camera>
       <!-- hand controls -->
       <a-entity id="client-@user_id;literal@-left-hand"
-		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #cameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: left; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   standard-painting="owner: client-@user_id;literal@; active: false;"
@@ -191,7 +191,7 @@
 	<!--           rotation="-90 0 90"></a-entity> -->
       </a-entity>
       <a-entity id="client-@user_id;literal@-right-hand"
-		blink-controls="rotateOnTeleport:false; cameraRig: #myCameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
+		blink-controls="rotateOnTeleport:false; cameraRig: #cameraRig; teleportOrigin: a-camera; collisionEntities: .navmesh; startEvents: aim; endEvents: teleport;"
 		hand-controls="hand: right; handModelStyle: highPoly; color: #ffcccc"
                 <if @painting_p;literal@ true>
                   standard-painting="owner: client-@user_id;literal@; active: false;"
