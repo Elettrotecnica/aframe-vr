@@ -124,10 +124,11 @@ it is possible to load scenes created for Mozilla Hubs as environments
 for your experience.
 
 There are limitations to what we can support out fo the box, but
-things that will work include lightmaps and spawn points.
+things that will work include lightmaps, spawn points, particle
+effects and animations.
 
-See the mozilla-atrium environment for an example of a model exported
-directly from Spoke without any further intervention.
+See the mozilla-atrium or the outdoor-festival environments for an
+example of models from Mozilla Hubs in action.
 
 ### Environments
 
@@ -136,7 +137,7 @@ use cases such as videoconference, casual chat and lectures. The
 actual looks of the space where your experience will take place is
 defined by the "environments".
 
-We currently provide 3 environments out of the box:
+We currently provide 5 environments out of the box:
 1. default - A simple vaporwave space with a couple of cinema
              screens. A simple flat sufface that can potentially
              accomodate larger groups.
@@ -152,10 +153,13 @@ We currently provide 3 environments out of the box:
                         MozillaHubs, this model has a complex navmesh
                         and uses multiple spatial audio sources to
                         recreate that vacation feeling.
-3. mozilla-atrium - Another Mozilla Hubs model, suitable for casual
+4. mozilla-atrium - Another Mozilla Hubs model, suitable for casual
                     meetups. It showcases the use of the
                     gltf-model-plus component to load models exported
                     from Spoke.
+5. outdoor-festival - Another Mozilla Hubs model, showcasing a big
+                      outdoor space with particle effects, sound
+                      effects and animations loaded from the model.
 
 These examples can also be used as a reference to provide new ones.
 
