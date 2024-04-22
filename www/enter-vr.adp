@@ -160,7 +160,7 @@
   </template>
 
   <template id="vr-rig">
-    <a-entity id="myCameraRig">
+    <a-entity id="cameraRig" move-to-spawn-point>
       <!-- camera -->
       <a-camera id="client-@user_id;literal@"
 		simple-navmesh-constraint="navmesh:.navmesh; fall:0.5; height:1.65;"
