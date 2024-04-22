@@ -163,8 +163,8 @@
     <a-entity id="cameraRig" move-to-spawn-point>
       <!-- camera -->
       <a-camera id="client-@user_id;literal@"
-		simple-navmesh-constraint="navmesh:.navmesh; fall:0.5; height:1.65;"
-		oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
+                simple-navmesh-constraint="navmesh:.navmesh; fall:0.5; height:1.6; exclude:.navmesh-hole;"
+                oacs-networked-entity="template: #avatar-template-@user_id;literal@; name: @username@; randomColor: true"
 		<if @webrtc_p;literal@ true>
 		  janus-videoroom-entity="room: @janus_room@; URI: @janus_url@; pin: @janus_room_pin@"
 		</if>>
