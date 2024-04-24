@@ -341,6 +341,187 @@ window.AFRAME.registerComponent('mediastream-sound', {
 });
 
 /**
+ * A component to be placed on video surfaces, that will take a stream
+ * and use it as the surface material.
+ *
+ * This is a local fork of the video-texture-target component by
+ * Mozilla, reworked to not depend on NAF. It maintains the same
+ * contract of the original implementation so that Hubs scene inflated
+ * by gltf-model-plus can setup video surfaces automatically.
+ */
+window.AFRAME.registerComponent('video-texture-target', {
+  schema: {
+    fakeAlphaEnabled: { default: false }
+  },
+
+  dependencies: ['material'],
+
+  init() {
+    console.log('Init component');
+    this.videoTexture = null;
+    this.video = null;
+    this.stream = null;
+  },
+
+  setMediaStream(newStream) {
+    if (!this.initialized) {
+      this.el.addEventListener('componentinitialized', (evt) => {
+        if (evt.detail.name === this.name && evt.detail.id === this.id) {
+          this.setMediaStream(stream);
+        }
+      });
+      return;
+    }
+
+    if (!this.mesh) {
+      const fakeAlphaEnabled = this.data.fakeAlphaEnabled;
+      const material = new THREE.ShaderMaterial({
+        uniforms: { map: { type: 't', value: null } },
+        defines: {
+          FAKE_ALPHA_ENABLED: fakeAlphaEnabled ? 1 : 0,
+        },
+        vertexShader: /* glsl */ `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          varying vec2 vUv;
+          uniform sampler2D map;
+          void main() {
+            vec4 diffuseColor = texture2D(map, vUv);
+            gl_FragColor = vec4(diffuseColor.rgb, 1.0);
+            #if FAKE_ALPHA_ENABLED == 1
+            if (diffuseColor.g - diffuseColor.r > 0.15) {
+              gl_FragColor.a = 0.0;
+            }
+            #endif
+          }
+        `,
+      });
+      if (fakeAlphaEnabled) {
+        material.transparent = true;
+      }
+
+      let width = 1;
+      let height = 1;
+      const planeGeometry = this.el.getObject3D('mesh')?.geometry;
+      if (planeGeometry) {
+        width = planeGeometry.parameters.width;
+        height = planeGeometry.parameters.height;
+      } else {
+        const mediaFrame = this.el.getAttribute('media-frame');
+        if (mediaFrame) {
+          width = mediaFrame.bounds.x;
+          height = mediaFrame.bounds.y;
+        }
+      }
+
+      const size = Math.max(width, height);
+      const geometry = new THREE.PlaneGeometry(size, size, 1, 1);
+      material.side = THREE.DoubleSide;
+      this.mesh = new THREE.Mesh(geometry, material);
+      this.el.setObject3D('screen', this.mesh);
+    }
+
+    if (!this.video) {
+      this.setupVideo();
+    }
+
+    if (newStream !== this.stream) {
+      if (this.stream) {
+        this._clearMediaStream();
+      }
+
+      if (newStream) {
+        this.video.srcObject = newStream;
+
+        const playResult = this.video.play();
+        if (playResult instanceof Promise) {
+          playResult.catch((e) => console.error('Error play video stream', e));
+        }
+
+        this.videoTexture = new THREE.VideoTexture(this.video);
+
+        const previousMesh = this.el.getObject3D('mesh');
+        if (previousMesh) {
+          previousMesh.visible = false;
+        }
+        // this.mesh.visible = true; // set in scaleToAspectRatio
+        this.mesh.material.uniforms.map.value = this.videoTexture;
+        this.mesh.material.needsUpdate = true;
+      }
+
+      this.stream = newStream;
+    }
+  },
+
+  _clearMediaStream() {
+    this.stream = null;
+
+    if (this.videoTexture) {
+      if (this.videoTexture.image instanceof HTMLVideoElement) {
+        // Note: this.videoTexture.image === this.video
+        const video = this.videoTexture.image;
+        video.pause();
+        video.srcObject = null;
+        video.load();
+      }
+
+      this.videoTexture.dispose();
+      this.videoTexture = null;
+      const previousMesh = this.el.getObject3D('mesh');
+      if (previousMesh) {
+        previousMesh.visible = true;
+      }
+      if (this.mesh) {
+        this.mesh.visible = false;
+        this.mesh.material.map = null;
+        this.mesh.material.needsUpdate = true;
+        this.mesh.scale.set(1, 1, 1);
+        this.mesh.matrixNeedsUpdate = true;
+      }
+    }
+  },
+
+  remove() {
+    this._clearMediaStream();
+    if (this.mesh) {
+      this.mesh.material.dispose();
+      this.mesh.geometry.dispose();
+      this.mesh = null;
+      this.el.removeObject3D('screen');
+    }
+    if (this.video) {
+      this.video.remove();
+      this.video = null;
+    }
+  },
+
+  scaleToAspectRatio(ratio) {
+    const width = Math.min(1.0, 1.0 / ratio);
+    const height = Math.min(1.0, ratio);
+    if (this.mesh) {
+      this.mesh.scale.set(width, height, 1);
+      this.mesh.matrixNeedsUpdate = true;
+      this.mesh.visible = true;
+    }
+  },
+
+  setupVideo() {
+    if (!this.video) {
+      const video = document.createElement('video');
+      video.setAttribute('autoplay', true);
+      video.setAttribute('playsinline', true);
+      video.setAttribute('muted', true);
+      this.video = video;
+    }
+  }
+});
+
+/**
  * A component providing a bit of facility to VR halfbody avatars from
  * https://readyplayer.me/
  *
@@ -1024,62 +1205,73 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     }
   },
 
-  _feedToHTMLId: function (feed) {
-    return this.stringIds ? feed.id : feed.display;
-  },
-
-  tick: function (time, delta) {
-    this.time = time;
+  _feedToEntity: function (feed) {
+    //
+    // Maps the feed information to an entity on the scene. By default
+    // it will look for the entity with the same id as the feed is,
+    // but also supports a syntax compatible with Hubs inflated
+    // models.
+    //
+    const id = this.stringIds ? feed.id : feed.display;
+    const entity = document.querySelector(`#${id}, .mediaframe.${id}`);
+    if (entity.object3D) {
+      return entity;
+    } else {
+      console.warn('Feed does not map to an entity', feed);
+      return null;
+    }
   },
 
   _attachTrack: function (element, track) {
     const stream = new MediaStream([track]);
     if (track.kind === 'video') {
-      // Track is a video: we require a video element that will
-      // become the material of our object.
-      let v = element.querySelector('video');
-      if (!v) {
-        v = document.createElement('video');
-        v.autoplay = true;
-        // We create an element with a unique id so that aframe won't
-        // try to reuse old video elements from the cache.
-        v.id = `${track.id}-${this.time}`;
-        element.appendChild(v);
-      }
-      v.srcObject = stream;
-      element.setAttribute('material', 'src', `#${v.id}`);
+      element.setAttribute('video-texture-target', '');
+      element.components['video-texture-target'].setMediaStream(stream);
     } else if (track.kind === 'audio') {
-      // Track is audio: we attach it to the element.
       // TODO: right now we assume audio to be positional.
       element.setAttribute('mediastream-sound', '');
       element.components['mediastream-sound'].setMediaStream(stream);
     }
   },
 
-  // Adds a track to the scene
-  _addTrack: function (feed, track) {
-    if (!feed) {
-      return;
+  _getRemoteTracks: function (feed) {
+    if (!this.remoteTracks[feed]) {
+      this.remoteTracks[feed] = [];
     }
-
-    const id = this._feedToHTMLId(feed);
-
-    if (!this.remoteTracks[id]) {
-      this.remoteTracks[id] = [];
-    }
-    this.remoteTracks[id].push(track);
-
-    const element = document.getElementById(id);
-    if (element && element.object3D) {
-      this._attachTrack(element, track);
-    }
+    return this.remoteTracks[feed];
   },
 
-  // Deletes a track from the scene
+  _addTrack: function (feed, track) {
+    //
+    // Adds a track to the scene.
+    //
+    if (!feed) { return; }
+
+    const element = this._feedToEntity(feed);
+    if (!element) { return; }
+
+    //
+    // See if we already have this track.
+    //
+    const remoteTracks = this._getRemoteTracks(feed);
+
+    if (remoteTracks.includes(track)) {
+      console.log('This track is already known', feed, track);
+      return;
+    } else {
+      remoteTracks.push(track);
+    }
+
+    this._attachTrack(element, track);
+  },
+
   _removeTrack: function (element, track) {
+    //
+    // Deletes a track from the scene.
+    //
+
     if (track.kind === 'video') {
-      element.setAttribute('material', 'src', null);
-      element.querySelector('video')?.remove();
+      element.removeAttribute('video-texture-target');
     } else {
       element.removeAttribute('mediastream-sound');
     }
@@ -1092,17 +1284,17 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       return;
     }
 
-    console.debug(`Feed ${id} (${feed.display}) has left the room, detaching`);
+    console.debug('Feed has left the room, detaching', id, feed);
 
-    const htmlId = this._feedToHTMLId(feed);
-    const element = document.getElementById(htmlId);
-    if (element && element.object3D) {
-      for (track of this.remoteTracks[htmlId]) {
-        console.log('removing track from element', element, track);
-        this._removeTrack(element, track);
-      }
+    const element = this._feedToEntity(feed);
+    if (!element) { return; }
+
+    const remoteTracks = this._getRemoteTracks(feed);
+    for (const track of remoteTracks) {
+      console.debug('removing track from element', element, track);
+      this._removeTrack(element, track);
     }
-    delete this.remoteTracks[htmlId];
+    remoteTracks.length = 0;
 
     if (this.bitrateTimer[id]) {
       clearInterval(this.bitrateTimer[id]);
@@ -1329,7 +1521,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
               }
             }
           } else {
-            console.log('What has just happened?');
+            console.log('Unhandled message', msg);
           }
         }
         if (msg['streams']) {
@@ -1377,7 +1569,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
             console.log('This is us, skipping...');
           }
 
-          console.log('We have a track!', sub, track);
+          console.log('We have a track!', sub, track, feed);
 
           self._addTrack(feed, track);
         }
