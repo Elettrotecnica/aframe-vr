@@ -1,8 +1,5 @@
 /* global AFRAME, THREE */
 
-/* Constrain an object to a navmesh, for example place this element after wasd-controls like so:
-`wasd-controls navmesh-physics="#navmesh-el"`
-*/
 AFRAME.registerComponent('simple-navmesh-constraint', {
   schema: {
     enabled: {
@@ -26,37 +23,57 @@ AFRAME.registerComponent('simple-navmesh-constraint', {
   },
 
   init: function () {
-    this.updateNavmeshEntities = this.updateNavmeshEntities.bind(this);
+    this.onSceneUpdated = this.onSceneUpdated.bind(this);
+
+    this.el.sceneEl.addEventListener('child-attached', this.onSceneUpdated);
+    this.el.sceneEl.addEventListener('child-detached', this.onSceneUpdated);
+
+    this.objects = [];
+    this.excludes = [];
   },
 
-  play: function () {
-    this.el.sceneEl.addEventListener('child-attached', this.updateNavmeshEntities);
-    this.el.sceneEl.addEventListener('child-detached', this.updateNavmeshEntities);
+  remove: function () {
+    this.el.sceneEl.removeEventListener('child-attached', this.onSceneUpdated);
+    this.el.sceneEl.removeEventListener('child-detached', this.onSceneUpdated);
   },
 
-  pause: function () {
-    this.el.sceneEl.removeEventListener('child-attached', this.updateNavmeshEntities);
-    this.el.sceneEl.removeEventListener('child-detached', this.updateNavmeshEntities);
-  },
+  onSceneUpdated: function (evt) {
+    // We already have an update on the way
+    if (this.entitiesChanged) { return; }
 
-  updateNavmeshEntities: function (evt) {
     // Don't bother updating if the entity is not relevant to us
-    if (evt.detail.el.matches(`${this.data.navmesh}, ${this.data.exclude}`)) {
-      this.update();
+    if (evt.detail.el.matches(this.data.navmesh) || evt.detail.el.matches(this.data.exclude)) {
+      this.entitiesChanged = true;
     }
+  },
+
+  updateNavmeshEntities: function () {
+    this.objects.length = 0;
+    this.excludes.length = 0;
+
+    if (this.data.navmesh.length > 0) {
+      for (const navmesh of document.querySelectorAll(this.data.navmesh)) {
+	this.objects.push(navmesh.object3D);
+      }
+    }
+
+    if (this.objects.length === 0) {
+      console.warn('simple-navmesh-constraint: Did not match any elements');
+    } else if (this.data.exclude.length > 0) {
+      for (const excluded of document.querySelectorAll(this.data.exclude)) {
+        this.objects.push(excluded.object3D);
+        this.excludes.push(excluded);
+      }
+    }
+
+    this.entitiesChanged = false;
   },
 
   update: function () {
     this.lastPosition = null;
-    this.excludes = this.data.exclude ? Array.from(document.querySelectorAll(this.data.exclude)):[];
-    const els = Array.from(document.querySelectorAll(this.data.navmesh));
-    if (els === null) {
-      console.warn('navmesh-physics: Did not match any elements');
-      this.objects = [];
-    } else {
-      this.objects = els.map(el => el.object3D).concat(this.excludes.map(el => el.object3D));
-    }
     this.xzOrigin = this.data.xzOrigin ? this.el.querySelector(this.data.xzOrigin) : this.el;
+
+    this.updateNavmeshEntities();
   },
 
   tick: (function () {
@@ -82,6 +99,9 @@ AFRAME.registerComponent('simple-navmesh-constraint', {
     
     return function tick(time, delta) {
       if (this.data.enabled === false) return;
+      if (this.entitiesChanged) {
+	this.updateNavmeshEntities();
+      }
       if (this.lastPosition === null) {
         firstTry = true;
         this.lastPosition = new THREE.Vector3();
