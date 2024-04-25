@@ -516,6 +516,9 @@ window.AFRAME.registerComponent('video-texture-target', {
       video.setAttribute('autoplay', true);
       video.setAttribute('playsinline', true);
       video.setAttribute('muted', true);
+      video.addEventListener('loadedmetadata', (evt) => {
+        this.scaleToAspectRatio(video.videoHeight / video.videoWidth);
+      });
       this.video = video;
     }
   }
