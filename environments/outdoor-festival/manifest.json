@@ -2,5 +2,24 @@
   "name": "outdoor-festival",
   "title": "Mozilla Hubs Outdoor Festival",
   "physics": true,
-  "surfaces": []
+  "surfaces": [
+    {
+      "name": "Jumbotron1",
+      "title": "Stage (left)",
+      "audio": true,
+      "video": true
+    },
+    {
+      "name": "Jumbotron2",
+      "title": "Stage (right)",
+      "audio": true,
+      "video": true
+    },
+    {
+      "name": "Jumbotron3",
+      "title": "Backstage",
+      "audio": true,
+      "video": true
+    }
+  ]
 }
