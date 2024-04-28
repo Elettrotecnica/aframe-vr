@@ -168,7 +168,7 @@ window.AFRAME.registerComponent('oacs-change-listener', {
  * The MediaStream can be specified via javascript using the
  * setMediaStream method.
  *
- * Much of this code is actually a port of
+ * Started from a port of
  * https://github.com/networked-aframe/networked-aframe/blob/master/src/components/networked-audio-source.js
  * without dependencies on networked-aframe.
  */
@@ -190,36 +190,80 @@ window.AFRAME.registerComponent('mediastream-sound', {
   },
 
   init: function () {
-    this.stream = null;
-    this.sound = null;
-    this.audioEl = null;
+    //
+    // Require a listener on the scene, set to track our camera.
+    //
+    const sceneEl = this.el.sceneEl;
+    if (!sceneEl.audioListener) {
+      sceneEl.audioListener = new THREE.AudioListener();
+      sceneEl.camera && sceneEl.camera.add(sceneEl.audioListener);
+      sceneEl.addEventListener('camera-set-active', function (evt) {
+        evt.detail.cameraEl.getObject3D('camera').add(sceneEl.audioListener);
+      });
+    }
+
+    this._setupSound();
+    this._setupAudio();
+    this._setupListener();
   },
 
   update (oldData) {
-    this.emitSoundEvents = this.data.emitSoundEvents;
-
-    if (!this.sound) {
-      return;
+    if (this.data.emitSoundEvents && !this.analyser) {
+      this._setupListener();
     }
+
     if (oldData.positional !== this.data.positional) {
-      this.destroySound();
-      this._setupSound(this.stream);
+      if (this.stream) {
+        this.sound.disconnect();
+      }
+      this._setupSound();
+      if (this.stream) {
+        this.soundSource = this.sound.context.createMediaStreamSource(this.stream);
+        this.sound.setNodeSource(this.soundSource);
+      }
     } else if (this.data.positional) {
       this._setPannerProperties();
     }
   },
 
   setMediaStream (stream) {
-    if (this.initialized) {
-      this.destroySound();
-      this._setupSound(stream);
-    } else {
-      this.el.addEventListener('componentinitialized', (evt) => {
-        if (evt.detail.name === this.name && evt.detail.id === this.id) {
-          this.setMediaStream(stream);
-        }
-      });
+    if (this.soundSource) {
+      this.sound.disconnect();
     }
+    this.soundSource = this.sound.context.createMediaStreamSource(stream);
+    this.sound.setNodeSource(this.soundSource);
+
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.srcObject = stream;
+      this.audioEl.load();
+    }
+
+    if (this.analyser) {
+      this.audioEventSource?.disconnect(this.analyser);
+      this.audioEventSource = this.analyser.context.createMediaStreamSource(stream);
+      this.audioEventSource.connect(this.analyser);
+    }
+
+    this.stream = stream;
+  },
+
+  unSetMediaStream () {
+    if (this.soundSource) {
+      this.sound.disconnect();
+      this.soundSource = null;
+    }
+
+    if (this.audioEl) {
+      this.audioEl.pause();
+      this.audioEl.srcObject = null;
+      this.audioEl.load();
+    }
+
+    this.audioEventSource?.disconnect(this.analyser);
+    this.audioEventSource = null;
+
+    this.stream = null;
   },
 
   _setPannerProperties () {
@@ -229,92 +273,49 @@ window.AFRAME.registerComponent('mediastream-sound', {
     this.sound.setRolloffFactor(this.data.rolloffFactor);
   },
 
-  remove () {
-    this.destroySound();
-  },
-
-  destroySound () {
-    if (this.sound) {
-      // this.el.emit('sound-source-removed', { soundSource: this.soundSource });
-      this.sound.disconnect();
-      this.el.removeObject3D(this.attrName);
-      this.sound = null;
-    }
-
-    if (this.audioEl) {
-      this.audioEl.pause();
-      this.audioEl.srcObject = null;
-      this.audioEl.load();
-      this.audioEl = null;
-    }
-
-    if (this.audioEventSource) {
-      this.audioEventSource.disconnect(this.analyser);
-      this.audioEventSource = null;
-    }
-  },
-
-  _setupSound (newStream) {
-    if (!newStream) return;
-    const isRemoved = !this.el.parentNode;
-    if (isRemoved) return;
-    const el = this.el;
-    const sceneEl = el.sceneEl;
-
-    if (!sceneEl.audioListener) {
-      sceneEl.audioListener = new THREE.AudioListener();
-      sceneEl.camera && sceneEl.camera.add(sceneEl.audioListener);
-      sceneEl.addEventListener('camera-set-active', function (evt) {
-        evt.detail.cameraEl.getObject3D('camera').add(sceneEl.audioListener);
-      });
-    }
-
+  _setupSound () {
+    const sceneEl = this.el.sceneEl;
     this.sound = this.data.positional
       ? new THREE.PositionalAudio(sceneEl.audioListener)
       : new THREE.Audio(sceneEl.audioListener);
-    el.setObject3D(this.attrName, this.sound);
+    this.el.setObject3D(this.attrName, this.sound);
     if (this.data.positional) {
       this._setPannerProperties();
     }
+  },
 
-    // Chrome seems to require a MediaStream be attached to an AudioElement before AudioNodes work correctly
-    // We don't want to do this in other browsers, particularly in Safari, which actually plays the audio despite
-    // setting the volume to 0.
+  _setupAudio() {
+    //
+    // Chrome seems to require a MediaStream be attached to an
+    // AudioElement before AudioNodes work correctly. We don't want to
+    // do this in other browsers, particularly in Safari, which
+    // actually plays the audio despite setting the volume to 0.
+    //
     if (/chrome/i.test(navigator.userAgent)) {
       this.audioEl = new window.Audio();
       this.audioEl.setAttribute('autoplay', 'autoplay');
       this.audioEl.setAttribute('playsinline', 'playsinline');
-      this.audioEl.srcObject = newStream;
       this.audioEl.volume = 0; // we don't actually want to hear audio from this element
-    }
-
-    this.soundSource = this.sound.context.createMediaStreamSource(newStream);
-    this.sound.setNodeSource(this.soundSource);
-    // this.el.emit('sound-source-set', { soundSource: this.soundSource });
-
-    this.stream = newStream;
-
-    if (this.emitSoundEvents) {
-      this._setupListener();
     }
   },
 
   _setupListener() {
-    if (!this.analyser) {
-      //
-      // Create a low-resolution analyser that will report about the
-      // volume of our stream.
-      //
-      const audioContext = new window.AudioContext();
-      this.analyser = audioContext.createAnalyser();
-      this.analyser.minDecibels = -80;
-      this.analyser.maxDecibels = -20;
-      this.analyser.fftSize = 32;
-      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-      this.ratio = 0;
-    }
-    this.audioEventSource = this.analyser.context.createMediaStreamSource(this.stream);
-    this.audioEventSource.connect(this.analyser);
+    //
+    // Create a low-resolution analyser that will report about the
+    // volume of our stream.
+    //
+    const audioContext = new window.AudioContext();
+    this.analyser = audioContext.createAnalyser();
+    this.analyser.minDecibels = -80;
+    this.analyser.maxDecibels = -20;
+    this.analyser.fftSize = 32;
+    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+    this.ratio = 0;
+  },
+
+  remove () {
+    this.unSetMediaStream();
+    this.el.removeObject3D(this.attrName);
   },
 
   tick: function (time, delta) {
@@ -1283,7 +1284,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     if (track.kind === 'video') {
       element.components['video-texture-target']?.clearMediaStream();
     } else {
-      element.components['mediastream-sound']?.destroySound();
+      element.components['mediastream-sound']?.unSetMediaStream();
     }
   },
 
