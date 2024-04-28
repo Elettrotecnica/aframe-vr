@@ -247,6 +247,11 @@ window.AFRAME.registerComponent('mediastream-sound', {
       this.audioEl.load();
       this.audioEl = null;
     }
+
+    if (this.audioEventSource) {
+      this.audioEventSource.disconnect(this.analyser);
+      this.audioEventSource = null;
+    }
   },
 
   _setupSound (newStream) {
@@ -295,23 +300,25 @@ window.AFRAME.registerComponent('mediastream-sound', {
   },
 
   _setupListener() {
-    //
-    // Create a low-resolution analyser that will report about the
-    // volume of our stream.
-    //
-    const audioContext = new window.AudioContext();
-    this.analyser = audioContext.createAnalyser();
-    this.analyser.minDecibels = -80;
-    this.analyser.maxDecibels = -20;
-    this.analyser.fftSize = 32;
-    const source = audioContext.createMediaStreamSource(this.stream);
-    source.connect(this.analyser);
-    this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
-    this.ratio = 0;
+    if (!this.analyser) {
+      //
+      // Create a low-resolution analyser that will report about the
+      // volume of our stream.
+      //
+      const audioContext = new window.AudioContext();
+      this.analyser = audioContext.createAnalyser();
+      this.analyser.minDecibels = -80;
+      this.analyser.maxDecibels = -20;
+      this.analyser.fftSize = 32;
+      this.dataArray = new Uint8Array(this.analyser.frequencyBinCount);
+      this.ratio = 0;
+    }
+    this.audioEventSource = this.analyser.context.createMediaStreamSource(this.stream);
+    this.audioEventSource.connect(this.analyser);
   },
 
   tick: function (time, delta) {
-    if (!this.emitSoundEvents) {
+    if (!this.audioEventSource) {
       return;
     }
 
@@ -432,7 +439,7 @@ window.AFRAME.registerComponent('video-texture-target', {
 
     if (newStream !== this.stream) {
       if (this.stream) {
-        this._clearMediaStream();
+        this.clearMediaStream();
       }
 
       if (newStream) {
@@ -458,7 +465,7 @@ window.AFRAME.registerComponent('video-texture-target', {
     }
   },
 
-  _clearMediaStream() {
+  clearMediaStream() {
     this.stream = null;
 
     if (this.videoTexture) {
@@ -487,7 +494,7 @@ window.AFRAME.registerComponent('video-texture-target', {
   },
 
   remove() {
-    this._clearMediaStream();
+    this.clearMediaStream();
     if (this.mesh) {
       this.mesh.material.dispose();
       this.mesh.geometry.dispose();
@@ -1274,9 +1281,9 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     //
 
     if (track.kind === 'video') {
-      element.removeAttribute('video-texture-target');
+      element.components['video-texture-target']?.clearMediaStream();
     } else {
-      element.removeAttribute('mediastream-sound');
+      element.components['mediastream-sound']?.destroySound();
     }
   },
 
