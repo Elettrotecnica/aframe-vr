@@ -1184,7 +1184,6 @@ const _finishCollisionShape = function(collisionShape, options, scale) {
 
 const iterateGeometries = (function() {
   const inverse = new three__WEBPACK_IMPORTED_MODULE_0__.Matrix4();
-  const vertices = [];
   return function(root, options, cb) {
     inverse.copy(root.matrixWorld).invert();
     root.traverse(mesh => {
@@ -1213,7 +1212,7 @@ const iterateGeometries = (function() {
             // regular array here to not carry this logic around in
             // the shape api.
             //
-            vertices.length = 0;
+	    const vertices = [];
             for (let i = 0; i < verticesAttribute.count; i += 3) {
               vertices.push(verticesAttribute.getX(i));
               vertices.push(verticesAttribute.getY(i));
