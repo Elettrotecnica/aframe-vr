@@ -732,7 +732,7 @@ window.AFRAME.registerComponent('readyplayerme-avatar', {
             lookArray.push(e.object3D);
           }
         }
-        lookArray.sort(this._compareDistance.bind(this));
+        lookArray.sort(this._compareDistance);
 
         fixation = 1000;
       }
