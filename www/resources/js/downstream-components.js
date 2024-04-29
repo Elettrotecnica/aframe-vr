@@ -1184,6 +1184,8 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
       this.room = window.parseInt(this.room, 10);
     }
 
+    this._connect = this._connect.bind(this);
+
     this._connect();
     this._attachTracksOnNewEntities();
     this._notifyConnectionStatus('warning', 'Waiting for connection...');
@@ -1622,7 +1624,7 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
     console.log('Destroying current connection...');
     this.janus.destroy({cleanupHandles: true});
     console.log('Attempting reconnection in 2s...');
-    setTimeout(this._connect.bind(this), 2000);
+    setTimeout(this._connect, 2000);
   },
 
   _connect: function () {
@@ -1939,10 +1941,12 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
     }
     this.sceneEl = this.el.sceneEl;
 
+    this._connect = this._connect.bind(this);
+
     //
     // We connect to the backend once the scene has completely loaded.
     //
-    this.sceneEl.addEventListener('loaded', this._connect.bind(this), {once: true});
+    this.sceneEl.addEventListener('loaded', this._connect, {once: true});
 
     this.isHeadset = window.AFRAME.utils.device.checkHeadsetConnected();
 
@@ -2307,7 +2311,7 @@ window.AFRAME.registerSystem('oacs-networked-scene', {
   _reconnectOnError: function (error) {
     this._notifyConnectionStatus('danger', error);
     console.log('Attempting reconnection in 2s...');
-    setTimeout(this._connect.bind(this), 2000);
+    setTimeout(this._connect, 2000);
   },
 
   _connect: function () {
