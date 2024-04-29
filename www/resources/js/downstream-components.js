@@ -1386,12 +1386,6 @@ window.AFRAME.registerComponent('janus-videoroom-entity', {
         const streams = sources[s];
         for (const i in streams) {
           const stream = streams[i];
-          // If the publisher is VP8/VP9 and this is an older Safari, let's avoid video
-          if (stream.type === 'video' && window.Janus.webRTCAdapter.browserDetails.browser === 'safari' &&
-             (stream.codec === 'vp9' || (stream.codec === 'vp8' && !window.Janus.safariVp8))) {
-            console.warn(`Publisher is using ${stream.codec.toUpperCase}, but Safari does not support it: disabling video stream #${stream.mindex}`);
-            continue;
-          }
           if (stream.disabled) {
             console.log('Disabled stream:', stream);
             // TODO Skipping for now, we should unsubscribe
