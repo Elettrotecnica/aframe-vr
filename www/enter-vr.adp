@@ -345,6 +345,15 @@
 	      'bbutton.up': 'teleport'
 	    },
 
+	    'pico-controls': {
+	      // Teleport
+	      'ybutton.down': 'aim',
+	      'ybutton.up': 'teleport',
+
+	      'bbutton.down': 'aim',
+	      'bbutton.up': 'teleport'
+	    },
+
 	    'windows-motion-controls': {
 	      // Teleport
 	      'trackpad.down': 'aim',
