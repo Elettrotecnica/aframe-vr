@@ -7,13 +7,11 @@
 
 const ENTITY_CHANGED_EVENT = new Event('entityChanged', {bubbles: true});
 
-const _getAbsoluteRotationEuler = (function() {
+const _getAbsoluteRotationQuaternion = (function() {
   const absoluteRotationQuaternion = new THREE.Quaternion();
-  const absoluteRotationEuler = new THREE.Euler();
   return function (object) {
     object.getWorldQuaternion(absoluteRotationQuaternion);
-    absoluteRotationEuler.setFromQuaternion(absoluteRotationQuaternion);
-    return absoluteRotationEuler;
+    return absoluteRotationQuaternion;
   };
 })();
 
@@ -142,10 +140,11 @@ window.AFRAME.registerComponent('oacs-change-listener', {
 
   _getAbsoluteRotation: function () {
     const newValue = this.properties['rotation']['new'];
-    const absoluteRotationEuler = _getAbsoluteRotationEuler(this.el.object3D);
-    newValue.x = absoluteRotationEuler.x;
-    newValue.y = absoluteRotationEuler.y;
-    newValue.z = absoluteRotationEuler.z;
+    const absoluteRotationQuaternion = _getAbsoluteRotationQuaternion(this.el.object3D);
+    newValue.x = absoluteRotationQuaternion.x;
+    newValue.y = absoluteRotationQuaternion.y;
+    newValue.z = absoluteRotationQuaternion.z;
+    newValue.w = absoluteRotationQuaternion.w;
   },
 
   _getAbsolutePosition: function () {
@@ -2538,10 +2537,18 @@ window.AFRAME.registerComponent('oacs-updated-entity', {
     }
 
     //
-    // Position and rotation are applied directly on the object3D.
+    // Position, rotation and scale are applied directly on the
+    // object3D.
     //
-    if ((property === 'rotation' ||
-         property === 'position' ||
+    if (property === 'rotation' &&
+        el.object3D) {
+      return function (value) {
+        el.object3D.quaternion.set(
+          value.x, value.y, value.z, value.w
+        );
+      };
+    }
+    if ((property === 'position' ||
          property === 'scale') &&
         el.object3D) {
       return function (value) {
