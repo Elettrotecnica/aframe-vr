@@ -793,6 +793,7 @@
   </script>
   <if @spawn_objects_p;literal@ true or @physics_p;literal@ true>
      <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
+         vrScene.setAttribute('physics', 'driver: ammo');
 	 vrScene.addEventListener('loaded', () => {
 	     //
 	     // When objects requiring physics finish to load, attach physics to them
