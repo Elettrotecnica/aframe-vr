@@ -22,7 +22,7 @@
   <a-entity
     gltf-model-plus="#room"
     class="environment-settings"
-    ammo-body="type: static"
-    ammo-shape="type: mesh">
+    rapier-body="type: Fixed"
+    rapier-shape="shape: TriMesh">
   </a-entity>
 </a-scene>

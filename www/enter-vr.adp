@@ -793,7 +793,7 @@
   </script>
   <if @spawn_objects_p;literal@ true or @physics_p;literal@ true>
      <script <if @::__csp_nonce@ not nil> nonce="@::__csp_nonce;literal@"</if>>
-         vrScene.setAttribute('physics', 'driver: ammo');
+         vrScene.setAttribute('rapier-physics', 'debug: false; @gravity@');
 	 vrScene.addEventListener('loaded', () => {
 	     //
 	     // When objects requiring physics finish to load, attach physics to them
@@ -804,9 +804,16 @@
 		     // Objects spawned by peers
 		     //
 		     const spawn = e.target.getAttribute('data-spawn');
-		     const type = spawn === 'mine' ? 'type: dynamic@damping@' : 'type: kinematic; emitCollisionEvents: true';
-		     e.target.setAttribute('ammo-body', type);
-		     e.target.setAttribute('ammo-shape', 'type: hull');
+                     let type;
+                     let shape = 'shape: ConvexHull;';
+                     if (spawn === 'mine') {
+                         type = 'type: Dynamic; @damping@';
+                         shape+= 'emitCollisionEvents: true;'
+                     } else {
+                         type = 'type: KinematicPositionBased';
+                     }
+                     e.target.setAttribute('rapier-body', type);
+		     e.target.setAttribute('rapier-shape', shape);
 		 }
 	     });
 
@@ -815,39 +822,20 @@
 	     // object's owner.
 	     //
 	     vrScene.addEventListener('collidestart', function (e) {
-		 if (e.target.matches('[oacs-networked-entity][ammo-body]') &&
+		 if (e.target.matches('[oacs-networked-entity][rapier-body]') &&
 		     !e.target.matches('a-camera, [hand-controls]') &&
 		     e.detail.targetEl.matches('a-camera, [hand-controls]')) {
 		     e.target.components['oacs-networked-entity'].networkedScene.grab(e.target.id);
 		 }
 	     });
 
-	     //
-	     // Switch entities physics when they are grabbed/released from
-	     // dynamic (local) to kinematic (remote).
-	     //
-	     function switchBodyType(e, type) {
-		 const shape = e.getAttribute('ammo-shape');
-		 if (e.components['ammo-body'].addedToSystem) {
-		     e.removeAttribute('ammo-shape');
-		     e.removeAttribute('ammo-body');
-		 }
-		 e.setAttribute('ammo-body', type);
-		 e.setAttribute('ammo-shape', shape);
-	     }
 	     vrScene.addEventListener('release', function (e) {
-		 if (e.target.components['ammo-body'] &&
-		     e.target.components['ammo-shape'] &&
-		     e.target.components['ammo-body'].data.type === 'dynamic') {
-		     switchBodyType(e.target, 'type: kinematic; emitCollisionEvents: true');
-		 }
+                 e.target.setAttribute('rapier-body', 'type: KinematicPositionBased');
+                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: true');
 	     });
 	     vrScene.addEventListener('grab', function (e) {
-		 if (e.target.components['ammo-body'] &&
-		     e.target.components['ammo-shape'] &&
-		     e.target.components['ammo-body'].data.type === 'kinematic') {
-		     switchBodyType(e.target, 'type: dynamic@damping@');
-		 }
+                 e.target.setAttribute('rapier-body', 'type: Dynamic');
+                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: false');
 	     });
 
 	     if (window.AFRAME.utils.device.checkHeadsetConnected()) {

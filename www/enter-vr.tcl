@@ -61,9 +61,11 @@ set physics_p [expr {
                      [string is true -strict [dict get $manifest physics]]
                  }]
 if {$physics_p} {
+    set gravity ""
     set damping ""
 } else {
-    set damping "; gravity: 0 0 0; linearDamping: 1; angularDamping: 1"
+    set gravity "gravity: 0 0 0;"
+    set damping "linearDamping: 1; angularDamping: 1;"
 }
 
 #
@@ -99,7 +101,7 @@ if {$webrtc_p} {
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/hls.js@latest" -order 0
 
 if {$webrtc_p} {
-    ::template::head::add_javascript -src "https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/8.1.1/adapter.min.js" -order 0
+    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/webrtc-adapter@8.1.1/out/adapter.min.js" -order 0
     ::template::head::add_javascript -src "/resources/aframe-vr/js/janus.js" -order 1
 }
 
@@ -113,8 +115,9 @@ if {$webrtc_p} {
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 
 if {$spawn_objects_p || $physics_p} {
-    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js" -order 4
-    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/@c-frame/aframe-physics-system@4.2.3/dist/aframe-physics-system.min.js" -order 5
+    #::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js" -order 4
+    #::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/@c-frame/aframe-physics-system@4.2.3/dist/aframe-physics-system.min.js" -order 5
+    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-rapier-physics@3.0.0/aframe-rapier.js" -order 4
 }
 
 
@@ -150,7 +153,7 @@ security::csp::require img-src cdn.aframe.io
 security::csp::require connect-src cdn.aframe.io
 security::csp::require script-src cdn.jsdelivr.net
 security::csp::require connect-src cdn.jsdelivr.net
-security::csp::require script-src cdnjs.cloudflare.com
+security::csp::require script-src cdn.skypack.dev
 
 security::csp::require script-src 'unsafe-eval'
 security::csp::require -force script-src 'unsafe-inline'

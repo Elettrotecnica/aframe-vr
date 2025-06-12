@@ -91,15 +91,15 @@ AFRAME.registerComponent('window-replace', {
     radius="0.5"
     bound-to-entity="entity: #venue-model"
     material="src: #ball-texture"
-    ammo-body="type: dynamic"
-    ammo-shape="type: sphere">
+    rapier-body="type: Dynamic"
+    rapier-shape="shape: Ball">
   </a-sphere>
 
   <a-gltf-model
     src="#venue-physics"
     visible="false"
-    ammo-body="type: static"
-    ammo-shape="type: mesh">
+    rapier-body="type: Fixed"
+    rapier-shape="shape: TriMesh">
   </a-gltf-model>
 
   <a-gltf-model

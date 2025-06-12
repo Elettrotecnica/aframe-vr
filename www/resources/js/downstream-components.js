@@ -2979,7 +2979,7 @@ window.AFRAME.registerComponent('bound-to-entity', {
       // On an entity that is physics-enabled, we also need to
       // resync the body to the new position.
       //
-      this.el.components['ammo-body']?.syncToPhysics();
+      this.el.components['rapier-body']?.syncToPhysics();
     }
   }
 });
@@ -3048,7 +3048,7 @@ window.AFRAME.registerComponent('autoplay-on-click', {
  *
  * A component to be put on entities running hand-controls (aka your
  * hands) that enables actions such as grabbing and stretching on
- * physics objects. Depends on ammo.
+ * physics objects. Depends on rapier.
  *
  * Requires: physics
  *
@@ -3056,13 +3056,13 @@ window.AFRAME.registerComponent('autoplay-on-click', {
  * https://github.com/c-frame/aframe-physics-system and extended to
  * mimick some of the features by
  * https://github.com/c-frame/aframe-super-hands-component, but with
- * Ammo support and limited focus to the use cases in this package.
+ * Rapier support and limited focus to the use cases in this package.
  *
  */
 window.AFRAME.registerComponent('standard-hands', {
   init: function () {
-    this.el.setAttribute('ammo-body', 'type: kinematic; emitCollisionEvents: true');
-    this.el.setAttribute('ammo-shape', 'type: sphere; fit: manual; sphereRadius: 0.08;');
+    this.el.setAttribute('rapier-body', 'type: KinematicPositionBased;');
+    this.el.setAttribute('rapier-shape', 'shape: sphere; fit: false; radius: 0.08; emitCollisionEvents: true;');
 
     this.GRABBED_STATE = 'grabbed';
 
@@ -3073,7 +3073,7 @@ window.AFRAME.registerComponent('standard-hands', {
     this.stretchInterval = null;
 
     // Bind event handlers
-    this.onHitAmmo = this.onHitAmmo.bind(this);
+    this.onHit = this.onHit.bind(this);
     this.onGripOpen = this.onGripOpen.bind(this);
     this.onGripClose = this.onGripClose.bind(this);
     this.onThumbstickMoved = this.onThumbstickMoved.bind(this);
@@ -3081,7 +3081,7 @@ window.AFRAME.registerComponent('standard-hands', {
 
   play: function () {
     const el = this.el;
-    el.addEventListener('collidestart', this.onHitAmmo);
+    el.addEventListener('collidestart', this.onHit);
     el.addEventListener('gripdown', this.onGripClose);
     el.addEventListener('gripup', this.onGripOpen);
     el.addEventListener('trackpaddown', this.onGripClose);
@@ -3093,7 +3093,7 @@ window.AFRAME.registerComponent('standard-hands', {
 
   pause: function () {
     var el = this.el;
-    el.removeEventListener('collidestart', this.onHitAmmo);
+    el.removeEventListener('collidestart', this.onHit);
     el.removeEventListener('gripdown', this.onGripClose);
     el.removeEventListener('gripup', this.onGripOpen);
     el.removeEventListener('trackpaddown', this.onGripClose);
@@ -3163,21 +3163,19 @@ window.AFRAME.registerComponent('standard-hands', {
     //
     // Item will be detached from hand A.
     //
-    this.hitEl.removeAttribute(`ammo-constraint__${this.el.id}`)
+    this.hitEl.removeAttribute(`rapier-constraint__${this.el.id}`)
     if (otherHandIsGrabbing) {
       //
       // We move the constraint to hand B.
       //
       this.otherHand.components['standard-hands'].hitEl = this.hitEl;
-      this.hitEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
-      this.hitEl.setAttribute(`ammo-constraint__${this.otherHand.id}`,
+      this.hitEl.setAttribute(`rapier-constraint__${this.otherHand.id}`,
                               { target: `#${this.otherHand.id}` });
     } else {
       //
       // When this was the only hand grabbing the item, then this is
       // not grabbed anymore.
       //
-      this.hitEl.setAttribute('ammo-body', {activationState: 'active'});
       this.hitEl.removeState(this.GRABBED_STATE);
     }
 
@@ -3210,7 +3208,7 @@ window.AFRAME.registerComponent('standard-hands', {
     return this.el.object3D.position.distanceTo(this.otherHand.object3D.position);
   },
 
-  onHitAmmo: function (evt) {
+  onHit: function (evt) {
     const hitEl = evt.detail.targetEl;
     // If the hand is not grabbing the element does not stick.
     // If we're already grabbing something you can't grab again.
@@ -3248,8 +3246,7 @@ window.AFRAME.registerComponent('standard-hands', {
       //
       hitEl.addState(this.GRABBED_STATE);
       this.hitEl = hitEl;
-      this.hitEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
-      this.hitEl.setAttribute(`ammo-constraint__${this.el.id}`,
+      this.hitEl.setAttribute(`rapier-constraint__${this.el.id}`,
                               { target: `#${this.el.id}` });
     }
   }
@@ -3259,7 +3256,7 @@ window.AFRAME.registerComponent('standard-hands', {
  * StandardEyes Component
  *
  * A component for the camera that enables actions such as grabbing,
- * scaling and rotating on physics objects. Depends on ammo.
+ * scaling and rotating on physics objects. Depends on rapier.
  *
  */
 window.AFRAME.registerComponent('standard-eyes', {
@@ -3290,7 +3287,7 @@ window.AFRAME.registerComponent('standard-eyes', {
     // The cursor should interact only with physics bodies.
     //
     this.cursor.setAttribute('far', this.data.far);
-    this.cursor.setAttribute('objects', '[ammo-body]');
+    this.cursor.setAttribute('objects', '[rapier-body]');
     this.el.appendChild(this.cursor);
 
     //
@@ -3303,8 +3300,8 @@ window.AFRAME.registerComponent('standard-eyes', {
     this.hand.id = 'a-camera-a-cursor-standard-eyes-hand';
     this.hand.setAttribute('visible', false);
     this.hand.setAttribute('radius', 0.01);
-    this.hand.setAttribute('ammo-body', 'type: kinematic; activationState: disableSimulation;');
-    this.hand.setAttribute('ammo-shape', 'type: sphere');
+    this.hand.setAttribute('rapier-body', 'type: KinematicPositionBased;');
+    this.hand.setAttribute('rapier-shape', 'type: Ball; sensor: true;');
     this.cursor.appendChild(this.hand);
 
     //
@@ -3331,18 +3328,18 @@ window.AFRAME.registerComponent('standard-eyes', {
   },
 
   onMouseEnter: function (evt) {
-    if (!this.intersectedEl?.hasAttribute(`ammo-constraint__${this.hand.id}`) &&
-	evt.detail.intersectedEl.components['ammo-body'].data.type !== 'static') {
+    if (!this.intersectedEl?.hasAttribute(`rapier-constraint__${this.hand.id}`) &&
+	evt.detail.intersectedEl.components['rapier-body'].data.type !== 'Fixed') {
       this.intersectedEl = evt.detail.intersectedEl;
       //
       // We fake collide with the intersected element.
       //
-      this.intersectedEl.emit('collidestart', {targetEl: this.el});
+      this.intersectedEl.emit('collisionstart', {targetEl: this.el});
     }
   },
 
   onMouseLeave: function (evt) {
-    if (!this.intersectedEl?.hasAttribute(`ammo-constraint__${this.hand.id}`)) {
+    if (!this.intersectedEl?.hasAttribute(`rapier-constraint__${this.hand.id}`)) {
       this.intersectedEl = null;
     }
   },
@@ -3356,22 +3353,24 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Scale up
       //
       intersectedEl?.object3D.scale.multiplyScalar(1.1);
+      intersectedEl?.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
       break;
     case this.data.scaleDownCode:
       //
       // Scale down
       //
       intersectedEl?.object3D.scale.multiplyScalar(0.9);
+      intersectedEl?.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
       break;
     case this.data.grabCode:
       //
       // Grabbing
       //
       if (this.cursor.components.raycaster.getIntersection(intersectedEl) &&
-	  !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
-        intersectedEl.setAttribute('ammo-body', {activationState: 'disableDeactivation'});
-        intersectedEl.setAttribute(`ammo-constraint__${this.hand.id}`,
+	  !intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
+        intersectedEl.setAttribute(`rapier-constraint__${this.hand.id}`,
 				   { target: `#${this.hand.id}` });
+        console.log('GRABBED', this.el, intersectedEl);
       }
       break;
     case this.data.rotateXcode:
@@ -3379,10 +3378,10 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Rotate on the X axis
       //
       if (intersectedEl &&
-          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+          !intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
         const rotation = intersectedEl.object3D.rotation.x;
         intersectedEl.object3D.rotateX(Math.PI / 2);
-        intersectedEl.components['ammo-body'].syncToPhysics();
+        intersectedEl.components['rapier-body'].syncToPhysics();
       }
       break;
     case this.data.rotateYcode:
@@ -3390,10 +3389,10 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Rotate on the Y axis
       //
       if (intersectedEl &&
-          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+          !intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
         const rotation = intersectedEl.object3D.rotation.y;
         intersectedEl.object3D.rotateY(Math.PI / 2);
-        intersectedEl.components['ammo-body'].syncToPhysics();
+        intersectedEl.components['rapier-body'].syncToPhysics();
       }
       break;
     case this.data.rotateZcode:
@@ -3401,10 +3400,10 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Rotate on the Z axis
       //
       if (intersectedEl &&
-          !intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
+          !intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
         const rotation = intersectedEl.object3D.rotation.z;
         intersectedEl.object3D.rotateZ(Math.PI / 2);
-        intersectedEl.components['ammo-body'].syncToPhysics();
+        intersectedEl.components['rapier-body'].syncToPhysics();
       }
       break;
     }
@@ -3419,9 +3418,8 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Releasing
       //
       if (intersectedEl &&
-	  intersectedEl.components[`ammo-constraint__${this.hand.id}`]) {
-        intersectedEl.setAttribute('ammo-body', {activationState: 'active'});
-	intersectedEl.removeAttribute(`ammo-constraint__${this.hand.id}`);
+	  intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
+	intersectedEl.removeAttribute(`rapier-constraint__${this.hand.id}`);
       }
       break;
     }
@@ -3489,65 +3487,6 @@ window.AFRAME.registerComponent('standard-painting', {
     for (const component of this.components) {
       component.pause();
     }
-  }
-});
-
-/**
- * Force Pushable component.
- *
- * Applies behavior to the current entity such that cursor clicks will
- * apply a strong impulse, pushing the entity away from the viewer.
- *
- * Requires: physics
- *
- * Lifted from https://github.com/c-frame/aframe-physics-system.
- */
-window.AFRAME.registerComponent('force-pushable', {
-  schema: {
-    force: { default: 10 }
-  },
-  init: function () {
-
-    this.pStart = new THREE.Vector3();
-    this.sourceEl = this.el.sceneEl.querySelector('[camera]');
-
-    this.el.addEventListener('click', this.forcePushAmmo.bind(this));
-
-    this.force = new THREE.Vector3();
-    this.pos = new THREE.Vector3();
-
-    this.el.addEventListener("body-loaded", e => {
-      this.impulseBtVector = new Ammo.btVector3();
-      this.posBtVector = new Ammo.btVector3();
-    });
-  },
-
-  forcePushAmmo: function (e) {
-
-    if (!this.impulseBtVector) return;
-
-    const el = this.el
-    const force = this.force
-    const impulseBt = this.impulseBtVector
-    const pusher = e.detail.cursorEl.object3D
-    force.copy(pusher.position)
-    pusher.localToWorld(force)
-    force.copy(el.object3D.position.sub(force))
-    force.normalize();
-
-    force.multiplyScalar(this.data.force);
-    impulseBt.setValue(force.x, force.y, force.z)
-
-    // use data from intersection to determine point at which to apply
-    // impulse.
-    const pos = this.pos
-    const posBt = this.posBtVector
-    pos.copy(e.detail.intersection.point)
-    el.object3D.worldToLocal(pos)
-    posBt.setValue(pos.x, pos.y, pos.z)
-
-    el.body.activate()
-    el.body.applyImpulse(impulseBt, posBt);
   }
 });
 
