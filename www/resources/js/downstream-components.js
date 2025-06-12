@@ -3370,7 +3370,6 @@ window.AFRAME.registerComponent('standard-eyes', {
 	  !intersectedEl.components[`rapier-constraint__${this.hand.id}`]) {
         intersectedEl.setAttribute(`rapier-constraint__${this.hand.id}`,
 				   { target: `#${this.hand.id}` });
-        console.log('GRABBED', this.el, intersectedEl);
       }
       break;
     case this.data.rotateXcode:
