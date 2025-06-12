@@ -830,12 +830,18 @@
 	     });
 
 	     vrScene.addEventListener('release', function (e) {
-                 e.target.setAttribute('rapier-body', 'type: KinematicPositionBased');
-                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: true');
+                 if (e.target.components['rapier-body'] &&
+                     e.target.components['rapier-body'].data.type === 'Dynamic') {
+                     e.target.setAttribute('rapier-body', 'type: KinematicPositionBased');
+                     e.target.setAttribute('rapier-shape', 'emitCollisionEvents: true');
+                 }
 	     });
 	     vrScene.addEventListener('grab', function (e) {
-                 e.target.setAttribute('rapier-body', 'type: Dynamic');
-                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: false');
+                 if (e.target.components['rapier-body'] &&
+                     e.target.components['rapier-body'].data.type === 'KinematicPositionBased') {
+                     e.target.setAttribute('rapier-body', 'type: Dynamic');
+                     e.target.setAttribute('rapier-shape', 'emitCollisionEvents: false');
+                 }
 	     });
 
 	     if (window.AFRAME.utils.device.checkHeadsetConnected()) {

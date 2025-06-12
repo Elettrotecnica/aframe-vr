@@ -3334,7 +3334,7 @@ window.AFRAME.registerComponent('standard-eyes', {
       //
       // We fake collide with the intersected element.
       //
-      this.intersectedEl.emit('collisionstart', {targetEl: this.el});
+      this.intersectedEl.emit('collidestart', {targetEl: this.el});
     }
   },
 
