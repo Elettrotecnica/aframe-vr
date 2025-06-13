@@ -115,9 +115,7 @@ if {$webrtc_p} {
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 
 if {$spawn_objects_p || $physics_p} {
-    #::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/MozillaReality/ammo.js@8bbc0ea/builds/ammo.wasm.js" -order 4
-    #::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/@c-frame/aframe-physics-system@4.2.3/dist/aframe-physics-system.min.js" -order 5
-    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-rapier-physics@3.0.0/aframe-rapier.js" -order 4
+    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-rapier-physics@3.0.1/aframe-rapier.js" -order 4
 }
 
 
