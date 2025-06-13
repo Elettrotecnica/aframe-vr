@@ -115,7 +115,7 @@ if {$webrtc_p} {
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
 
 if {$spawn_objects_p || $physics_p} {
-    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-rapier-physics@3.0.3/aframe-rapier.js" -order 4
+    ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-rapier-physics@4.0.0/aframe-rapier.js" -order 4
 }
 
 
@@ -151,7 +151,6 @@ security::csp::require img-src cdn.aframe.io
 security::csp::require connect-src cdn.aframe.io
 security::csp::require script-src cdn.jsdelivr.net
 security::csp::require connect-src cdn.jsdelivr.net
-security::csp::require script-src cdn.skypack.dev
 
 security::csp::require script-src 'unsafe-eval'
 security::csp::require -force script-src 'unsafe-inline'
