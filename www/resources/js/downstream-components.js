@@ -3118,12 +3118,14 @@ window.AFRAME.registerComponent('standard-hands', {
       // Down
       //
       this.hitEl.object3D.scale.multiplyScalar(0.9);
+      this.hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
     }
     if (evt.detail.y < -0.95) {
       //
       // Up
       //
       this.hitEl.object3D.scale.multiplyScalar(1.1);
+      this.hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
     }
 
     //
@@ -3238,6 +3240,7 @@ window.AFRAME.registerComponent('standard-hands', {
         const handsDistance = this._calcHandsDistance();
         const ratio = handsDistance / startHandsDistance;
         hitEl.object3D.scale.copy(this.startScale).multiplyScalar(ratio);
+        hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
       }, 200);
 
     } else {
