@@ -3062,7 +3062,7 @@ window.AFRAME.registerComponent('autoplay-on-click', {
 window.AFRAME.registerComponent('standard-hands', {
   init: function () {
     this.el.setAttribute('rapier-body', 'type: KinematicPositionBased;');
-    this.el.setAttribute('rapier-shape', 'shape: sphere; fit: false; radius: 0.08; emitCollisionEvents: true;');
+    this.el.setAttribute('rapier-shape', 'shape: Ball; fit: false; radius: 0.08; emitCollisionEvents: true;');
 
     this.GRABBED_STATE = 'grabbed';
 
@@ -3301,7 +3301,7 @@ window.AFRAME.registerComponent('standard-eyes', {
     this.hand.setAttribute('visible', false);
     this.hand.setAttribute('radius', 0.01);
     this.hand.setAttribute('rapier-body', 'type: KinematicPositionBased;');
-    this.hand.setAttribute('rapier-shape', 'type: Ball; sensor: true;');
+    this.hand.setAttribute('rapier-shape', 'shape: Ball; sensor: true;');
     this.cursor.appendChild(this.hand);
 
     //
