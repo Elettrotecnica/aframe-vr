@@ -3118,14 +3118,14 @@ window.AFRAME.registerComponent('standard-hands', {
       // Down
       //
       this.hitEl.object3D.scale.multiplyScalar(0.9);
-      this.hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
+      this.hitEl.components['rapier-shape']?.updateShape();
     }
     if (evt.detail.y < -0.95) {
       //
       // Up
       //
       this.hitEl.object3D.scale.multiplyScalar(1.1);
-      this.hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
+      this.hitEl.components['rapier-shape']?.updateShape();
     }
 
     //
@@ -3240,7 +3240,7 @@ window.AFRAME.registerComponent('standard-hands', {
         const handsDistance = this._calcHandsDistance();
         const ratio = handsDistance / startHandsDistance;
         hitEl.object3D.scale.copy(this.startScale).multiplyScalar(ratio);
-        hitEl.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
+        hitEl.components['rapier-shape']?.updateShape();
       }, 200);
 
     } else {
@@ -3356,14 +3356,14 @@ window.AFRAME.registerComponent('standard-eyes', {
       // Scale up
       //
       intersectedEl?.object3D.scale.multiplyScalar(1.1);
-      intersectedEl?.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
+      intersectedEl?.components['rapier-shape']?.updateShape();
       break;
     case this.data.scaleDownCode:
       //
       // Scale down
       //
       intersectedEl?.object3D.scale.multiplyScalar(0.9);
-      intersectedEl?.setAttribute('rapier-shape', 'scaleAutoUpdate: true;');
+      intersectedEl?.components['rapier-shape']?.updateShape();
       break;
     case this.data.grabCode:
       //
