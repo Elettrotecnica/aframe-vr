@@ -336,7 +336,7 @@
 	      'trackpad.up': 'teleport'
 	    },
 
-	    'oculus-touch-controls': {
+	    'meta-touch-controls': {
 	      // Teleport
 	      'ybutton.down': 'aim',
 	      'ybutton.up': 'teleport',
