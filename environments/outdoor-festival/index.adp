@@ -14,7 +14,7 @@
 	}
     };
 </script>
-<script src="/resources/aframe-vr/js/gltf-model-plus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-gltf-model-plus@elettrotecnica/dist/gltf-model-plus.min.js"></script>
 <a-scene>
   <a-assets>
     <a-asset-item id="room" src="Outdoor_Festival.glb"></a-asset-item>
