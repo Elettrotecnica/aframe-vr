@@ -831,11 +831,11 @@
 
 	     vrScene.addEventListener('release', function (e) {
                  e.target.setAttribute('rapier-body', 'type: KinematicPositionBased');
-                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: true');
+                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: true; scaleAutoUpdate: true;');
 	     });
 	     vrScene.addEventListener('grab', function (e) {
                  e.target.setAttribute('rapier-body', 'type: Dynamic');
-                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: false');
+                 e.target.setAttribute('rapier-shape', 'emitCollisionEvents: false; scaleAutoUpdate: true;');
              });
 
 	     if (window.AFRAME.utils.device.checkHeadsetConnected()) {
