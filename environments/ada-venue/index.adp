@@ -48,7 +48,7 @@ AFRAME.registerComponent('window-replace', {
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/aframe-environment-component@1.5.0/dist/aframe-environment-component.min.js"></script>
-<script src="/resources/aframe-vr/js/model-utils.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AdaRoseCannon/aframe-xr-boilerplate/model-utils.min.js"></script>
 <a-scene
   autoplay-on-click
   reflection="directionalLight:#dirlight;"
