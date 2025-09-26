@@ -146,9 +146,16 @@ if {$painting_p} {
 if {[info exists webrtc_host]} {
     security::csp::require connect-src $webrtc_host
 }
+
+#
+# Note that by default A-Frame needs to fetch stuff from its own
+# servers on occasion. See
+# https://aframe.io/docs/master/introduction/faq.html#can-i-use-a-frame-offline-or-self-hosted
+#
 security::csp::require script-src aframe.io
 security::csp::require img-src cdn.aframe.io
 security::csp::require connect-src cdn.aframe.io
+
 security::csp::require script-src cdn.jsdelivr.net
 security::csp::require connect-src cdn.jsdelivr.net
 
