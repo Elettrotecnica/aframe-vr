@@ -109,7 +109,7 @@ if {$webrtc_p} {
 ::template::head::add_javascript -src "/resources/aframe-vr/js/downstream-components.js" -order 1
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/AdaRoseCannon/aframe-xr-boilerplate/simple-navmesh-constraint.min.js" -order 3
-::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-htmlmesh@2.5.0/build/aframe-html.min.js" -order 3
+::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/aframe-htmlmesh@elettrotecnica/build/aframe-html.min.js" -order 3
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/Elettrotecnica/a-painter@elettrotecnica/vendor/aframe-input-mapping-component.min.js" -order 3
 
 ::template::head::add_css -href "/resources/aframe-vr/css/w3.css" -order 1
