@@ -28,20 +28,6 @@ can definitely host on premise! ;-)
 
 ## Main features
 
-### ReadyPlayerMe half-body avatar support
-
-Users can create their avatar via the user interface provided by
-[ReadyPlayerMe](https://vr.readyplayer.me/). Currently, half-body
-avatars without hands are supported.
-
-Once your half-body avatar is ready, you can copy/paste the generated
-link in the user interface available under "Manage Avatar" on the main
-package page.
-
-The system will take care of downloading the right model without hands
-and will also generate a thumbnail for you using the ReadyPlayerMe
-API.
-
 ### Virtual hands via VR controllers
 
 The hands are currently represented for every users the same using the
@@ -164,8 +150,7 @@ We currently provide 5 environments out of the box:
 These examples can also be used as a reference to provide new ones.
 
 ## Future (?) improvements
-* better avatar integration (use native model hands, support full body
-  avatars, follow sound with eyes...)
+* A new avatar integration after [ReadyPlayerMe was discontinued](https://medium.com/@praveenchukka/readyplayer-me-is-closed-now-what-here-are-some-alternatives-349ef1b0aa18)
 * "application based" server-side validation of the networked
   actions. This makes it currently unsuitable for "low trust"
   scenarios such as competitive games

@@ -33,9 +33,6 @@
         <button class="link btn btn-primary" data-href="@settings_url@">Room Settings</button>
       </if>
       <if @write_p;literal@ true>
-	<button class="link btn btn-primary" data-href="@avatar_url@">Manage Avatar</button>
-      </if>
-      <if @write_p;literal@ true>
         <button class="link btn btn-primary" data-href="enter-vr">Enter VR</button>
       </if>
       <if @write_p;literal@ true and @stream_url@ not nil>

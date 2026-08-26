@@ -47,9 +47,6 @@ if {$spawn_objects_p} {
 # User info
 #
 set username [person::name -person_id $user_id]
-set avatar_path avatars/${user_id}.glb
-set avatar_p [ad_file exists [acs_package_root_dir $package_key]/www/${avatar_path}]
-set avatar_url ${package_url}${avatar_path}
 
 #
 # Environment
