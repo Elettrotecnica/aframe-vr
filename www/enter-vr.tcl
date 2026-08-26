@@ -102,7 +102,7 @@ if {$webrtc_p} {
     ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/meetecho/janus-gateway@v1.3.2/html/demos/janus.min.js" -order 1
 }
 
-::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe@1.7.1/dist/aframe-master.min.js" -order 0
+::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe@1.8.0/dist/aframe-master.min.js" -order 0
 ::template::head::add_javascript -src "/resources/aframe-vr/js/downstream-components.js" -order 1
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/npm/aframe-blink-controls@0.4.3/src/index.min.js" -order 2
 ::template::head::add_javascript -src "https://cdn.jsdelivr.net/gh/AdaRoseCannon/aframe-xr-boilerplate/simple-navmesh-constraint.min.js" -order 3
